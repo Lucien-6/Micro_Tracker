@@ -2007,7 +2007,7 @@ class FilterVideoThread(QThread):
 class MicroTrackerApp(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("SAM2 Tracker | 视频目标分割和追踪工具")
+        self.setWindowTitle("Micro Tracker | 显微视频目标分割和追踪工具")
         self.setMinimumSize(1200, 900)  # 调整最小窗口大小，更合理的尺寸
         self.setStyleSheet(STYLE)  # 应用全局样式
         
@@ -3076,7 +3076,7 @@ class MicroTrackerApp(QMainWindow):
             .note { background-color: #E3F2FD; padding: 12px; border-left: 4px solid #2196F3; margin: 12px 0; border-radius: 4px; }
             .warning { background-color: #FFF3E0; padding: 12px; border-left: 4px solid #FF9800; margin: 12px 0; border-radius: 4px; }
         </style>
-        <h2>SAM2 Tracker 使用指南</h2>
+        <h2>Micro Tracker 使用指南</h2>
         <div class="note" style="margin-bottom: 15px;">
             <h3 style="margin-top: 15px;">作者信息</h3>
             <p style="margin: 5px 0;">作者：LUCIEN</p>
@@ -3085,7 +3085,7 @@ class MicroTrackerApp(QMainWindow):
             <p style="margin: 5px 0;">发布日期：2025年5月7日</p>
             <p style="margin: 5px 0;">Copyright © 2025 LUCIEN. 保留所有权利。</p>
         </div>
-        <p>SAM2 Tracker 是一个基于 SAM2 (Segment Anything Model 2) 的视频对象分割和跟踪工具。本工具采用最新的 SAM2 模型，可以帮助您对视频中的多个对象进行高精度自动分割和跟踪，广泛适用于视频分析、对象检测和视觉效果制作等场景。</p>
+        <p>Micro Tracker 是一个基于 SAM2 (Segment Anything Model 2) 的显微视频对象分割和跟踪工具。本工具采用最新的 SAM2 模型，可以帮助您对显微视频中的多个对象进行高精度自动分割和跟踪，广泛适用于视频分析、对象检测和视觉效果制作等场景。</p>
         
         <h3>基本使用流程：</h3>
         <ol>
@@ -4555,7 +4555,7 @@ def main():
     window.show()
     
     # 使用定时器确保GUI完全初始化后再显示欢迎消息
-    QTimer.singleShot(100, lambda: window.log_message("欢迎使用 SAM2 Tracker - 视频目标分割和追踪工具", "highlight"))
+    QTimer.singleShot(100, lambda: window.log_message("欢迎使用 Micro Tracker - 显微视频目标分割和追踪工具", "highlight"))
     QTimer.singleShot(200, lambda: window.log_message("请选择一个视频文件开始...", "info"))
     
     sys.exit(app.exec_())

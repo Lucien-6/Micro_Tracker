@@ -76,7 +76,7 @@ SAM2 模型权重文件需要单独下载：
 ### 启动应用
 
 ```bash
-python -m SAM_tracker.py
+python -m micro_tracker.py
 ```
 
 ### 主要功能使用流程

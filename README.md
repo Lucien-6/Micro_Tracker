@@ -48,7 +48,7 @@ source microtracker_env/bin/activate
 pip install -r requirements.txt
 ```
 
-注意根据你设备实际 CUDA 版本到 Pytorch 官网(https://pytorch.org/)下载安装torch和torchvision.
+注意根据你设备实际 CUDA 版本下载安装相应的 torch 和 torchvision. (Pytorch 官网：https://pytorch.org/)
 
 ### 4. 安装 SAM2
 

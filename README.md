@@ -14,8 +14,8 @@ Micro_Tracker 是一个基于 SAM2 模型的显微镜图像/视频分析工具�
 
 ## 系统要求
 
-- Windows 10/11 或 Linux 系统
-- Python 3.8+
+- Windows 11 或 Linux 系统
+- Python 3.10+
 - NVIDIA GPU (至少 4GB 显存)和 CUDA 11.7+（推荐）
 
 ## 安装指南
@@ -23,7 +23,7 @@ Micro_Tracker 是一个基于 SAM2 模型的显微镜图像/视频分析工具�
 ### 1. 克隆仓库
 
 ```bash
-git clone https://github.com/yourusername/Micro_Tracker.git
+git clone https://github.com/Lucien-6/Micro_Tracker.git
 cd Micro_Tracker
 ```
 
@@ -31,7 +31,7 @@ cd Micro_Tracker
 
 ```bash
 # 使用conda
-conda create -n microtracker python=3.8
+conda create -n microtracker python=3.10
 conda activate microtracker
 
 # 或使用venv
@@ -48,11 +48,27 @@ source microtracker_env/bin/activate
 pip install -r requirements.txt
 ```
 
-### 4. 下载模型
+注意根据你设备实际 CUDA 版本到 Pytorch 官网(https://pytorch.org/)下载安装torch和torchvision.
 
-SAM2 模型文件需要单独下载：
+### 4. 安装 SAM2
 
-1. 访问[SAM2 官方仓库](https://github.com/facebookresearch/segment-anything)下载模型文件
+```bash
+cd models/sam2
+pip install -e .
+pip install -e ".[notebooks]"
+```
+
+### 5. 下载模型权重文件
+
+SAM2 模型权重文件需要单独下载：
+
+1. 访问[SAM2 官方仓库](https://github.com/facebookresearch/segment-anything)下载模型文件或之间点击下面链接下载。
+
+- [sam2.1_hiera_tiny](https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_tiny.pt)
+- [sam2.1_hiera_small](https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_small.pt)
+- [sam2.1_hiera_base_plus](https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_base_plus.pt)
+- [sam2.1_hiera_large](https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_large.pt)
+
 2. 将下载的模型文件(.pth)放置在`models/sam2/checkpoints`目录下
 
 ## 使用方法
@@ -60,7 +76,7 @@ SAM2 模型文件需要单独下载：
 ### 启动应用
 
 ```bash
-python SAM_tracker.py
+python -m SAM_tracker.py
 ```
 
 ### 主要功能使用流程
@@ -85,8 +101,8 @@ python SAM_tracker.py
 ### 快捷键
 
 - **空格键**：播放/暂停视频
-- **→**：下一帧
-- **←**：上一帧
+- **D**：下一帧
+- **F**：上一帧
 - **Del**：删除当前选中的框
 
 ## 文件结构
@@ -129,3 +145,11 @@ Micro_Tracker/
 ## 许可证
 
 本项目采用[LICENSE](LICENSE)文件中描述的许可证。
+
+## 致谢
+
+本项目基于下面这些优秀的项目创建:
+
+- [SAMURAI](https://github.com/yangchris11/samurai)
+- [SAM2](https://github.com/facebookresearch/sam2)
+- [Lang2SegTrack](https://github.com/wngkj/Lang2SegTrack)

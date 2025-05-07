@@ -3,7 +3,7 @@
 <!-- Badges -->
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white" alt="Python 3.10+">
-  <img src="https://img.shields.io/badge/License-MIT-green" alt="License: MIT">
+  <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License: Apache 2.0">
   <!-- Add more badges here if needed, e.g., build status, version, etc. -->
 </p>
 
@@ -16,20 +16,20 @@ Micro_Tracker 是一个基于 SAM2 模型的显微镜图像/视频分析工具�
 - [功能特点](#-功能特点)
 - [系统要求](#-系统要求)
 - [安装指南](#-安装指南)
-  - [1. 克隆仓库](#1-克隆仓库)
-  - [2. 创建虚拟环境(推荐)](#2-创建虚拟环境推荐)
-  - [3. 安装依赖](#3-安装依赖)
-  - [4. 安装 SAM2](#4-安装-sam2)
-  - [5. 下载模型权重文件](#5-下载模型权重文件)
+  - [1-克隆仓库](#1-克隆仓库)
+  - [2-创建虚拟环境-推荐](#2-创建虚拟环境-推荐)
+  - [3-安装依赖](#3-安装依赖)
+  - [4-安装-sam2](#4-安装-sam2)
+  - [5-下载模型权重文件](#5-下载模型权重文件)
 - [使用方法](#-使用方法)
   - [启动应用](#启动应用)
   - [主要功能使用流程](#主要功能使用流程)
-    - [1. 视频跟踪](#1-视频跟踪)
-    - [2. 掩膜筛选](#2-掩膜筛选)
-  - [快捷键](#快捷键)
+    - [1-视频跟踪-️](#1-视频跟踪-️)
+    - [2-掩膜筛选-](#2-掩膜筛选-)
+  - [快捷键-️](#快捷键-️)
 - [文件结构](#-文件结构)
 - [故障排除](#-故障排除)
-  - [常见问题](#常见问题)
+  - [常见问题-](#常见问题-)
 - [许可证](#-许可证)
 - [致谢](#-致谢)
 
@@ -179,7 +179,7 @@ Micro_Tracker/
 
 ## 📜 许可证
 
-本项目采用 [LICENSE](LICENSE) 文件中描述的许可证 (通常为 MIT License)。
+本项目采用 [Apache 2.0 许可证](LICENSE)。
 
 ## 🙏 致谢
 

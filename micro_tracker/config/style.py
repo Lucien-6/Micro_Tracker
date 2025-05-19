@@ -193,6 +193,7 @@ QComboBox::down-arrow:default {
 QComboBox QAbstractItemView {
     border: 1px solid #e0e0e0;
     selection-background-color: #bbdefb;
+    selection-color: #000000;  /* 设置选中项文本颜色为黑色 */
     border-radius: 0 0 4px 4px;
 }
 

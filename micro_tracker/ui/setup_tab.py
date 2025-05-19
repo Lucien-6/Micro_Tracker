@@ -207,6 +207,12 @@ class SetupTab(BaseTab):
                 image: url(icons/dropdown.png);
                 margin-right: 5px;
             }
+            QComboBox QAbstractItemView {
+                border: 1px solid #e0e0e0;
+                selection-background-color: #bbdefb;
+                selection-color: #000000;
+                border-radius: 0 0 4px 4px;
+            }
         """)
         param_layout.addRow("<b>处理设备:</b>", self.main_window.device_combo)
         

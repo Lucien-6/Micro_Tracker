@@ -1,14 +1,218 @@
-[//]: <> (The following is a suggested table of contents. You can adjust it as needed.)
+# 🔬 Micro_Tracker
 
-<!-- Badges -->
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white" alt="Python 3.10+">
   <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License: Apache 2.0">
   <img src="https://img.shields.io/badge/PyQt5-5.15%2B-green.svg" alt="PyQt5 5.15+">
-  <!-- Add more badges here if needed, e.g., build status, version, etc. -->
+  <!-- More badges as needed -->
 </p>
 
-# 🔬 Micro_Tracker
+<div align="center">
+  <a href="#english-version">English</a> | <a href="#chinese-version">中文</a>
+</div>
+
+---
+
+<a id="english-version"></a>
+
+# 🔬 Micro_Tracker [English]
+
+Micro_Tracker is a microscopy image/video analysis tool based on the SAM2 model, designed specifically for tracking and analyzing microscopic organisms and particles. The application provides an intuitive user interface that allows researchers to easily mark, track, and analyze objects under a microscope.
+
+## Table of Contents 📚
+
+- [Features](#-features)
+- [System Requirements](#-system-requirements)
+- [Installation Guide](#-installation-guide)
+  - [1. Clone Repository](#1-clone-repository)
+  - [2. Create Virtual Environment (Recommended)](#2-create-virtual-environment-recommended)
+  - [3. Install Dependencies](#3-install-dependencies)
+  - [4. Install SAM2](#4-install-sam2)
+  - [5. Download Model Weights](#5-download-model-weights)
+- [Usage](#-usage)
+  - [Launch Application](#launch-application)
+  - [Main Functionality Workflow](#main-functionality-workflow)
+    - [1. Video Tracking](#1-video-tracking-️)
+    - [2. Mask Filtering](#2-mask-filtering-)
+  - [Keyboard Shortcuts](#keyboard-shortcuts-️)
+- [Project Structure](#-project-structure)
+- [Troubleshooting](#-troubleshooting)
+  - [Common Issues](#common-issues-)
+- [License](#-license)
+- [Acknowledgements](#-acknowledgements)
+
+## ✨ Features
+
+- **🎯 Object Segmentation and Tracking**: Utilize SAM2 (Segment Anything Model 2) and SAMRUAI for high-precision object segmentation and tracking.
+- **✍️ Manual Annotation**: Support manual selection of regions of interest (ROI).
+- **🎬 Video Analysis**: Process microscopy videos and generate output videos with markers and trajectories.
+- **📊 Data Extraction**: Extract key parameters such as position, size, and shape of target objects.
+- **🎭 Mask Export**: Save segmentation results as mask images for subsequent analysis.
+- **🔎 Filtering Function**: Filter target objects based on criteria like size, position, and speed.
+- **📈 Data Export**: Export trajectory and morphological data of filtered objects as Excel spreadsheets for subsequent analysis.
+
+## 💻 System Requirements
+
+- Operating System: Windows 10/11 or Linux
+- Python Version: 3.10+
+- Hardware: NVIDIA GPU (at least 4GB VRAM) and CUDA 11.7+ (recommended)
+
+## 🚀 Installation Guide
+
+### 1. Clone Repository
+
+```bash
+git clone https://github.com/Lucien-6/Micro_Tracker.git
+cd Micro_Tracker
+```
+
+### 2. Create Virtual Environment (Recommended)
+
+```bash
+# Using conda
+conda create -n microtracker python=3.10
+conda activate microtracker
+
+# Or using venv
+python -m venv microtracker_env
+# Windows
+microtracker_env\\Scripts\\activate
+# Linux/Mac
+source microtracker_env/bin/activate
+```
+
+### 3. Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+**Note**: Please download and install PyTorch and Torchvision corresponding to your device's actual CUDA version. You can visit the [PyTorch official website](https://pytorch.org/) for more information.
+
+### 4. Install SAM2
+
+```bash
+cd models/sam2
+pip install -e .
+pip install -e ".[notebooks]"
+```
+
+### 5. Download Model Weights
+
+SAM2 model weights need to be downloaded separately:
+
+1. Visit the [SAM2 official repository](https://github.com/facebookresearch/segment-anything) to download model files, or click the following links directly:
+
+   - [sam2.1_hiera_tiny.pt](https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_tiny.pt)
+   - [sam2.1_hiera_small.pt](https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_small.pt)
+   - [sam2.1_hiera_base_plus.pt](https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_base_plus.pt)
+   - [sam2.1_hiera_large.pt](https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_large.pt)
+
+2. Place the downloaded model files (`.pt` or `.pth`) in the `models/sam2/checkpoints` directory.
+
+## 🛠️ Usage
+
+### Launch Application
+
+```bash
+python -m main.py
+```
+
+### Main Functionality Workflow
+
+#### 1. Video Tracking 🎞️
+
+1. Click the "**Browse**" button to select microscopy video files and the SAM2 model.
+2. Set output directory and related parameters.
+3. Frame the targets to be tracked on the first frame of the video (multiple targets can be framed).
+4. Click the "**Start Processing**" button.
+5. After processing is complete, preview the output video and view analysis results in the "**Result Preview**" tab.
+
+#### 2. Mask Filtering 🎭
+
+1. Go to the "**Filter**" tab.
+2. Select the directory containing mask files.
+3. Set filtering parameters (e.g., area range, instantaneous velocity, displacement, area change rate, etc.).
+4. You can specify object IDs to exclude (separate multiple IDs with commas).
+5. Click the "**Apply Filter**" button.
+6. View filtering results and statistics, including details of objects that passed filtering, were partially truncated, or completely filtered.
+7. Click "**Save Results**" to export filtered mask images and trajectory data (Excel format).
+
+### Keyboard Shortcuts ⌨️
+
+- **Space Bar**: Play/Pause video
+- **D**: Next frame
+- **F**: Previous frame
+- **Del**: Delete currently selected box
+
+## 📁 Project Structure
+
+```
+Micro_Tracker/
+├── micro_tracker/           # Main application code
+│   ├── components/          # UI components
+│   ├── config/              # Configuration files
+│   ├── controllers/         # MVC controllers
+│   ├── threads/             # Processing threads
+│   ├── ui/                  # UI interface
+│   └── utils/               # Utility functions
+├── models/                  # Models directory
+│   └── sam2/                # SAM2 model
+│       ├── checkpoints/     # Model weight files directory
+│       ├── sam2/            # SAM2 source code
+│       └── ...              # Other SAM2 related files
+├── utils/                   # Utility scripts
+├── scripts/                 # Processing scripts
+├── assets/                  # Resource files (not tracked by Git)
+├── icons/                   # UI icons
+├── main.py                  # Application entry script
+├── requirements.txt         # Dependencies list
+├── README.md                # Project description
+└── LICENSE                  # Project license
+```
+
+> **Note**: The `assets` folder has been added to `.gitignore` and will not be tracked by Git. This is to avoid committing large binary files (such as mask images, test data, etc.) to the version control system. If you need to share test data, please use other means of transfer.
+
+## 🩺 Troubleshooting
+
+### Common Issues ❓
+
+1. **Startup Failure**
+
+   - Check if the Python version is 3.10+.
+   - Ensure all dependencies are correctly installed (refer to [Install Dependencies](#3-install-dependencies)).
+
+2. **GPU Memory Insufficient**
+
+   - Try reducing the resolution of the processing video.
+   - Reduce the number of targets being tracked simultaneously.
+
+3. **Tracking Inaccurate**
+
+   - Ensure the accuracy of initial framing.
+   - Try using higher quality or clearer videos.
+
+4. **Processing Speed Slow**
+   - Confirm if the GPU is being used by the program (usually there will be relevant logs during program startup or processing).
+   - Consider using a more powerful GPU.
+
+## 📜 License
+
+This project is licensed under the [Apache 2.0 License](LICENSE).
+
+## 🙏 Acknowledgements
+
+This project was created based on the following excellent projects and gained many inspirations from them:
+
+- [SAMURAI](https://github.com/yangchris11/samurai)
+- [SAM2 (Segment Anything Model 2)](https://github.com/facebookresearch/sam2)
+- [Lang2SegTrack](https://github.com/wngkj/Lang2SegTrack)
+
+---
+
+<a id="chinese-version"></a>
+
+# 🔬 Micro_Tracker [中文]
 
 Micro_Tracker 是一个基于 SAM2 模型的显微镜图像/视频分析工具，专为微观生物体和颗粒的跟踪和分析而设计。该应用提供直观的用户界面，使研究人员能够轻松地标记、跟踪和分析显微镜下的目标物体。
 
@@ -108,7 +312,7 @@ SAM2 模型权重文件需要单独下载：
 ### 启动应用
 
 ```bash
-python -m micro_tracker.py
+python -m main.py
 ```
 
 ### 主要功能使用流程
@@ -129,7 +333,7 @@ python -m micro_tracker.py
 4.  可以指定要排除的对象 ID（多个 ID 用逗号分隔）。
 5.  点击 "**应用筛选**" 按钮。
 6.  查看筛选结果和统计信息，包括通过筛选、部分截断和完全过滤的对象详情。
-7.  点击 "**输出保存**" 导出筛选后的掩膜图像和轨迹数据（Excel 格式）。
+7.  点击 "**保存结果**" 导出筛选后的掩膜图像和轨迹数据（Excel 格式）。
 
 ### 快捷键 ⌨️
 
@@ -156,13 +360,15 @@ Micro_Tracker/
 │       └── ...              # 其他SAM2相关文件
 ├── utils/                   # 工具脚本
 ├── scripts/                 # 处理脚本
-├── assets/                  # 资源文件
+├── assets/                  # 资源文件（不会被Git跟踪）
 ├── icons/                   # UI图标
 ├── main.py                  # 应用入口脚本
 ├── requirements.txt         # 依赖列表
 ├── README.md                # 项目说明
 └── LICENSE                  # 项目许可证
 ```
+
+> **注意**：`assets` 文件夹已添加到 `.gitignore` 中，不会被 Git 跟踪。这是为了避免将大型二进制文件（如掩膜图片、测试数据等）提交到版本控制系统中。如果需要分享测试数据，请使用其他方式传输。
 
 ## 🩺 故障排除
 
@@ -201,4 +407,4 @@ Micro_Tracker/
 
 ---
 
-<p align="center"><em>Keep moving, keep thinking！</em></p>
+<p align="center"><em>Keep moving, keep thinking!</em></p>

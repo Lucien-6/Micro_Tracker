@@ -86,6 +86,10 @@ class Lang2SegTrack:
             flags: 事件标志（如按键状态）
             param: 传递给回调函数的参数（当前帧图像）
         """
+        # 只有在暂停状态下才允许标注
+        if not self.paused:
+            return
+            
         if event == cv2.EVENT_LBUTTONDOWN:  # 鼠标左键按下
             if flags & cv2.EVENT_FLAG_CTRLKEY:  # 按住Ctrl键
                 # 添加点标注
@@ -181,8 +185,12 @@ class Lang2SegTrack:
             writer.append_data(rgb)
         
         # 显示暂停/继续状态文本
-        status_text = "Paused, press SPACE to continue" if self.paused else "Press SPACE to pause"
-        cv2.putText(frame, status_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+        if self.paused:
+            status_text = "Paused, press SPACE to continue | Annotation enabled"
+            cv2.putText(frame, status_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+        else:
+            status_text = "Press SPACE to pause | Annotation disabled during playback"
+            cv2.putText(frame, status_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
         
         # 显示处理后的帧
         cv2.imshow("Video Tracking", frame)

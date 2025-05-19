@@ -4,6 +4,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white" alt="Python 3.10+">
   <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License: Apache 2.0">
+  <img src="https://img.shields.io/badge/PyQt5-5.15%2B-green.svg" alt="PyQt5 5.15+">
   <!-- Add more badges here if needed, e.g., build status, version, etc. -->
 </p>
 
@@ -27,7 +28,7 @@ Micro_Tracker 是一个基于 SAM2 模型的显微镜图像/视频分析工具�
     - [1-视频跟踪-️](#1-视频跟踪-️)
     - [2-掩膜筛选-](#2-掩膜筛选-)
   - [快捷键-️](#快捷键-️)
-- [文件结构](#-文件结构)
+- [项目结构](#-项目结构)
 - [故障排除](#-故障排除)
   - [常见问题-](#常见问题-)
 - [许可证](#-许可证)
@@ -35,7 +36,7 @@ Micro_Tracker 是一个基于 SAM2 模型的显微镜图像/视频分析工具�
 
 ## ✨ 功能特点
 
-- **🎯 实时目标跟踪**：利用 SAM2（Segment Anything Model 2）和 SAMRUAI 实现高精度的目标分割和跟踪。
+- **🎯 目标分割跟踪**：利用 SAM2（Segment Anything Model 2）和 SAMRUAI 实现高精度的目标分割和跟踪。
 - **✍️ 手动标注**：支持手动框选感兴趣区域 (ROI)。
 - **🎬 视频分析**：处理显微镜视频并生成带有标记和轨迹的输出视频。
 - **📊 数据提取**：提取目标物体的位置、大小、形状等关键参数。
@@ -45,7 +46,7 @@ Micro_Tracker 是一个基于 SAM2 模型的显微镜图像/视频分析工具�
 
 ## 💻 系统要求
 
-- 操作系统：Windows 11 或 Linux
+- 操作系统：Windows 10/11 或 Linux
 - Python 版本：3.10+
 - 硬件：NVIDIA GPU (至少 4GB 显存) 和 CUDA 11.7+ (推荐)
 
@@ -124,10 +125,11 @@ python -m micro_tracker.py
 
 1.  进入 "**筛选过滤**" 标签页。
 2.  选择包含掩膜文件的目录。
-3.  设置筛选参数 (例如：面积范围、瞬时速率等)。
-4.  点击 "**应用筛选**" 按钮。
-5.  查看筛选结果和统计信息。
-6.  点击 "**输出保存**" 导出筛选后的数据。
+3.  设置筛选参数 (例如：面积范围、瞬时速度、位移、面积变化率等)。
+4.  可以指定要排除的对象 ID（多个 ID 用逗号分隔）。
+5.  点击 "**应用筛选**" 按钮。
+6.  查看筛选结果和统计信息，包括通过筛选、部分截断和完全过滤的对象详情。
+7.  点击 "**输出保存**" 导出筛选后的掩膜图像和轨迹数据（Excel 格式）。
 
 ### 快捷键 ⌨️
 
@@ -136,22 +138,30 @@ python -m micro_tracker.py
 - **F**: 上一帧
 - **Del**: 删除当前选中的框
 
-## 📁 文件结构
+## 📁 项目结构
 
 ```
 Micro_Tracker/
-├── SAM_tracker.py         # Main application script
-├── requirements.txt       # List of dependencies
-├── README.md              # Project description
-├── LICENSE                # Project license
-├── models/                # Models directory
-│   └── sam2/              # SAM2 model
-│       ├── checkpoints/   # Directory for model weights
-│       └── ...            # Other SAM2 related files
-├── utils/                 # Utility functions
-├── scripts/               # Processing scripts
-├── assets/                # Asset files (e.g., images, icons if not in a separate folder)
-└── icons/                 # UI icons
+├── micro_tracker/           # 主要应用代码
+│   ├── components/          # UI组件
+│   ├── config/              # 配置文件
+│   ├── controllers/         # MVC控制器
+│   ├── threads/             # 处理线程
+│   ├── ui/                  # UI界面
+│   └── utils/               # 工具函数
+├── models/                  # 模型目录
+│   └── sam2/                # SAM2模型
+│       ├── checkpoints/     # 模型权重文件目录
+│       ├── sam2/            # SAM2源代码
+│       └── ...              # 其他SAM2相关文件
+├── utils/                   # 工具脚本
+├── scripts/                 # 处理脚本
+├── assets/                  # 资源文件
+├── icons/                   # UI图标
+├── main.py                  # 应用入口脚本
+├── requirements.txt         # 依赖列表
+├── README.md                # 项目说明
+└── LICENSE                  # 项目许可证
 ```
 
 ## 🩺 故障排除

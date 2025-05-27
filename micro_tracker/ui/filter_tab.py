@@ -7,6 +7,7 @@ from PyQt5.QtCore import Qt, QTimer, QRegExp
 from micro_tracker.ui.base_tab import BaseTab
 from micro_tracker.ui.filter_conditions import FilterConditionsGroup
 from micro_tracker.components.video_widgets import ResultVideoLabel
+from micro_tracker.config.style import TEXTEDIT_LOG_STYLE
 
 class FilterTab(BaseTab):
     """筛选过滤标签页类"""
@@ -199,7 +200,7 @@ class FilterTab(BaseTab):
         mask_folder_browse_btn.clicked.connect(self.main_window.browse_filter_mask_dir)
         mask_folder_layout.addWidget(self.main_window.filter_mask_dir_edit)
         mask_folder_layout.addWidget(mask_folder_browse_btn)
-        mask_select_layout.addRow("<b>掩膜文件夹:</b>", mask_folder_layout)
+        mask_select_layout.addRow("掩膜文件夹:", mask_folder_layout)
         
         mask_select_group.setLayout(mask_select_layout)
         return mask_select_group
@@ -218,13 +219,13 @@ class FilterTab(BaseTab):
         self.main_window.fps_input = QLineEdit("1.00000")
         self.main_window.fps_input.setValidator(QRegExpValidator(QRegExp(r'[0-9]+(\.[0-9]{0,5})?')))
         self.main_window.fps_input.setMinimumHeight(24)
-        param_setting_layout.addRow("<b>帧率 (FPS):</b>", self.main_window.fps_input)
+        param_setting_layout.addRow("帧率 (FPS):", self.main_window.fps_input)
         
         # 像素比例系数
         self.main_window.um_per_pixel_input = QLineEdit("1.00000")
         self.main_window.um_per_pixel_input.setValidator(QRegExpValidator(QRegExp(r'[0-9]+(\.[0-9]{0,5})?')))
         self.main_window.um_per_pixel_input.setMinimumHeight(24)
-        param_setting_layout.addRow("<b>比例系数 (</b>" + "<span style='font-family: \"Times New Roman\", Arial, sans-serif;'>μm</span>" + "<b>/pixel):</b>", self.main_window.um_per_pixel_input)
+        param_setting_layout.addRow("比例系数 (" + "<span style='font-family: \"Times New Roman\", Arial, sans-serif;'>μm</span>" + "/pixel):", self.main_window.um_per_pixel_input)
         
         param_setting_group.setLayout(param_setting_layout)
         return param_setting_group
@@ -237,7 +238,7 @@ class FilterTab(BaseTab):
         exclude_layout.setSpacing(10)
         
         # 创建标签并添加到布局
-        exclude_label = QLabel("<b>排除对象ID:</b>")
+        exclude_label = QLabel("排除对象ID:")
         exclude_label.setMinimumWidth(75)
         exclude_layout.addWidget(exclude_label)
         
@@ -262,43 +263,9 @@ class FilterTab(BaseTab):
         self.main_window.filter_log_text.setReadOnly(True)
         self.main_window.filter_log_text.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self.main_window.filter_log_text.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        self.main_window.filter_log_text.setStyleSheet("""
-            font-family: 'Consolas', 'Monaco', 'Source Code Pro', monospace; 
-            font-size: 9.5pt;
-            background-color: #fafafa;
-            border: 1px solid #e0e0e0;
-            border-radius: 4px;
-            padding: 8px;
-            color: #424242;
-            
-            /* Vertical scrollbar styles moved back here */
-            QScrollBar:vertical {
-                border: none;
-                background: #f0f0f0;
-                width: 14px;
-                margin: 0px;
-            }
-            
-            QScrollBar::handle:vertical {
-                background: #505050;  /* 黑灰色 */
-                min-height: 30px;
-                margin: 2px;
-                border-radius: 4px;
-            }
-            
-            QScrollBar::handle:vertical:hover {
-                background: #404040;  /* 更深的黑灰色 */
-            }
-            
-            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
-                height: 0px;
-            }
-            
-            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
-                background: #f0f0f0;
-            }
-        """)
-        # 移除最小/最大高度限制，让日志区域自由扩展
+        
+        # 不再单独应用样式，完全依赖全局样式中的QTextEdit[readOnly="true"]规则
+        
         filter_progress_layout.addWidget(self.main_window.filter_log_text, 1)  # 添加伸缩因子1
         
         # 筛选进度条（使用和主界面相同的进度条样式）
@@ -325,20 +292,6 @@ class FilterTab(BaseTab):
         """)
         self.main_window.filter_progress_bar.setVisible(False)  # 默认隐藏进度条
         filter_progress_layout.addWidget(self.main_window.filter_progress_bar)
-        
-        # 添加一个函数来确保滚动条正确显示
-        def ensure_filter_scrollbars_visible():
-            # 添加一些测试文本确保滚动条初始化正确
-            for i in range(20):
-                self.main_window.filter_log_text.append(f"初始化日志行 {i+1}")
-            
-            # 强制更新UI并滚动到顶部
-            QApplication.processEvents()
-            self.main_window.filter_log_text.clear()
-            QApplication.processEvents()
-        
-        # 在UI初始化完成后调用此函数
-        QTimer.singleShot(100, ensure_filter_scrollbars_visible)
         
         filter_progress_group.setLayout(filter_progress_layout)
         # 设置筛选处理进度区域为可扩展的

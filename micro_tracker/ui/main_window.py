@@ -12,7 +12,7 @@ from PyQt5.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QLabel,
 from PyQt5.QtGui import QIcon, QTextCursor
 from PyQt5.QtCore import Qt, QDateTime, QMutex
 
-from micro_tracker.config.style import STYLE
+from micro_tracker.config.style import COMPLETE_STYLE
 from micro_tracker.ui.setup_tab import SetupTab
 from micro_tracker.ui.result_preview_tab import ResultPreviewTab
 from micro_tracker.ui.filter_tab import FilterTab
@@ -28,7 +28,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("Micro Tracker | 显微视频目标分割和追踪工具")
         self.setMinimumSize(1200, 900)  # 调整最小窗口大小
-        self.setStyleSheet(STYLE)  # 应用全局样式
+        self.setStyleSheet(COMPLETE_STYLE)  # 应用预组合的完整样式，避免运行时叠加导致的解析问题
         
         # 添加应用图标
         app_icon = QIcon("icons/icon.png") if os.path.exists("icons/icon.png") else QIcon.fromTheme("video-x-generic")
@@ -70,19 +70,6 @@ class MainWindow(QMainWindow):
         main_layout = QVBoxLayout(central_widget)
         main_layout.setContentsMargins(10, 10, 10, 10)
         main_layout.setSpacing(8)
-        
-        # 为表单标签设置全局样式
-        current_style = self.styleSheet()
-        self.setStyleSheet(current_style + """
-            QFormLayout QLabel {
-                margin-top: 1px;
-                margin-bottom: 1px;
-                min-height: 24px;
-                line-height: 24px;
-                padding-top: 0px;
-                qproperty-alignment: 'AlignVCenter | AlignRight';
-            }
-        """)
         
         # 创建选项卡控件
         self.tab_widget = QTabWidget()
@@ -706,15 +693,22 @@ class MainWindow(QMainWindow):
     
     def closeEvent(self, event):
         """处理窗口关闭事件，弹出确认对话框"""
-        reply = QMessageBox.question(
-            self,
-            "确认退出",
-            "您确定要关闭Micro Tracker吗？\n未保存的数据和结果将会丢失。",
-            QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.No  # 默认No按钮
-        )
+        # 创建自定义消息框以使用中文按钮
+        msg_box = QMessageBox(self)
+        msg_box.setWindowTitle("确认退出")
+        msg_box.setText("您确定要关闭Micro Tracker吗？\n未保存的数据和结果将会丢失。")
+        msg_box.setIcon(QMessageBox.Question)
+        
+        # 添加自定义按钮
+        confirm_btn = msg_box.addButton("确认", QMessageBox.YesRole)
+        cancel_btn = msg_box.addButton("取消", QMessageBox.NoRole)
+        msg_box.setDefaultButton(cancel_btn)  # 默认选中取消按钮
+        
+        # 显示对话框并获取结果
+        msg_box.exec_()
+        clicked_button = msg_box.clickedButton()
 
-        if reply == QMessageBox.Yes:
+        if clicked_button == confirm_btn:
             # 如果有正在运行的线程，关闭它们
             if hasattr(self, 'video_thread') and self.video_thread and self.video_thread.isRunning():
                 self.video_thread.stop()

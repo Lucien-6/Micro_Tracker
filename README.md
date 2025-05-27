@@ -1,9 +1,36 @@
-# 🔬 Micro_Tracker
+<div align="center">
+
+```
+ ███╗   ███╗██╗ ██████╗██████╗  ██████╗     ████████╗██████╗  █████╗  ██████╗██╗  ██╗███████╗██████╗
+ ████╗ ████║██║██╔════╝██╔══██╗██╔═══██╗    ╚══██╔══╝██╔══██╗██╔══██╗██╔════╝██║ ██╔╝██╔════╝██╔══██╗
+ ██╔████╔██║██║██║     ██████╔╝██║   ██║       ██║   ██████╔╝███████║██║     █████╔╝ █████╗  ██████╔╝
+ ██║╚██╔╝██║██║██║     ██╔══██╗██║   ██║       ██║   ██╔══██╗██╔══██║██║     ██╔═██╗ ██╔══╝  ██╔══██╗
+ ██║ ╚═╝ ██║██║╚██████╗██║  ██║╚██████╔╝       ██║   ██║  ██║██║  ██║╚██████╗██║  ██╗███████╗██║  ██║
+ ╚═╝     ╚═╝╚═╝ ╚═════╝╚═╝  ╚═╝ ╚═════╝        ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝
+```
+
+<h1>🔬 Micro Tracker</h1>
+<h3><em>基于SAM2的显微视频目标分割和追踪工具</em></h3>
+<h4>SAM2-based Microscopy Video Object Segmentation and Tracking Tool</h4>
+
+<p>
+  <img src="https://img.shields.io/badge/Version-v1.2.1-brightgreen?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/Status-Stable-success?style=for-the-badge" alt="Status">
+  <img src="https://img.shields.io/badge/Release-2025.05.27-blue?style=for-the-badge" alt="Release">
+</p>
+
+<p><strong>🎯 专业的显微镜视频分析工具 | Professional Microscopy Video Analysis Tool</strong></p>
+
+</div>
+
+---
 
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white" alt="Python 3.10+">
   <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License: Apache 2.0">
   <img src="https://img.shields.io/badge/PyQt5-5.15%2B-green.svg" alt="PyQt5 5.15+">
+  <img src="https://img.shields.io/badge/SAM2-Supported-orange.svg" alt="SAM2 Supported">
+  <img src="https://img.shields.io/badge/CUDA-11.7%2B-green?logo=nvidia" alt="CUDA 11.7+">
   <!-- More badges as needed -->
 </p>
 
@@ -18,6 +45,32 @@
 # 🔬 Micro_Tracker [English]
 
 Micro_Tracker is a microscopy image/video analysis tool based on the SAM2 model, designed specifically for tracking and analyzing microscopic organisms and particles. The application provides an intuitive user interface that allows researchers to easily mark, track, and analyze objects under a microscope.
+
+## 🖥️ Application Interface
+
+<div align="center">
+  <table>
+    <tr>
+      <td align="center" width="33%">
+        <img src="assets/screenshots/annotation_tab.png" alt="Annotation Tab" width="280"/><br/>
+        <strong>🎯 Video Annotation</strong><br/>
+        <em>Interactive object marking and tracking setup</em>
+      </td>
+      <td align="center" width="33%">
+        <img src="assets/screenshots/result_tab.png" alt="Result Preview" width="280"/><br/>
+        <strong>📊 Result Preview</strong><br/>
+        <em>Real-time processing results visualization</em>
+      </td>
+      <td align="center" width="33%">
+        <img src="assets/screenshots/filter_tab.png" alt="Filter Analysis" width="280"/><br/>
+        <strong>🔍 Advanced Filtering</strong><br/>
+        <em>Sophisticated data analysis and export</em>
+      </td>
+    </tr>
+  </table>
+</div>
+
+> 💡 **Note**: Screenshots show the application running on Windows 11 with a sample microscopy video of microorganisms. The interface adapts to different screen sizes and operating systems.
 
 ## Table of Contents 📚
 
@@ -115,7 +168,7 @@ SAM2 model weights need to be downloaded separately:
 ### Launch Application
 
 ```bash
-python -m main.py
+python -m main
 ```
 
 ### Main Functionality Workflow
@@ -163,15 +216,13 @@ Micro_Tracker/
 │       └── ...              # Other SAM2 related files
 ├── utils/                   # Utility scripts
 ├── scripts/                 # Processing scripts
-├── assets/                  # Resource files (not tracked by Git)
+├── assets/                  # Resource files
 ├── icons/                   # UI icons
 ├── main.py                  # Application entry script
 ├── requirements.txt         # Dependencies list
 ├── README.md                # Project description
 └── LICENSE                  # Project license
 ```
-
-> **Note**: The `assets` folder has been added to `.gitignore` and will not be tracked by Git. This is to avoid committing large binary files (such as mask images, test data, etc.) to the version control system. If you need to share test data, please use other means of transfer.
 
 ## 🩺 Troubleshooting
 
@@ -215,6 +266,32 @@ This project was created based on the following excellent projects and gained ma
 # 🔬 Micro_Tracker [中文]
 
 Micro_Tracker 是一个基于 SAM2 模型的显微镜图像/视频分析工具，专为微观生物体和颗粒的跟踪和分析而设计。该应用提供直观的用户界面，使研究人员能够轻松地标记、跟踪和分析显微镜下的目标物体。
+
+## 🖥️ GUI 界面
+
+<div align="center">
+  <table>
+    <tr>
+      <td align="center" width="33%">
+        <img src="assets/screenshots/annotation_tab.png" alt="Annotation Tab" width="280"/><br/>
+        <strong>🎯 视频标注</strong><br/>
+        <em>交互式目标标记和追踪设置</em>
+      </td>
+      <td align="center" width="33%">
+        <img src="assets/screenshots/result_tab.png" alt="Result Preview" width="280"/><br/>
+        <strong>📊 结果预览</strong><br/>
+        <em>实时处理结果可视化展示</em>
+      </td>
+      <td align="center" width="33%">
+        <img src="assets/screenshots/filter_tab.png" alt="Filter Analysis" width="280"/><br/>
+        <strong>🔍 高级筛选</strong><br/>
+        <em>精密的数据分析和导出功能</em>
+      </td>
+    </tr>
+  </table>
+</div>
+
+> 💡 **说明**: 截图展示了应用程序在 Windows 11 系统上运行微生物显微视频样本的界面。界面可适应不同屏幕尺寸和操作系统。
 
 ## 目录 📚
 
@@ -312,7 +389,7 @@ SAM2 模型权重文件需要单独下载：
 ### 启动应用
 
 ```bash
-python -m main.py
+python -m main
 ```
 
 ### 主要功能使用流程
@@ -360,15 +437,13 @@ Micro_Tracker/
 │       └── ...              # 其他SAM2相关文件
 ├── utils/                   # 工具脚本
 ├── scripts/                 # 处理脚本
-├── assets/                  # 资源文件（不会被Git跟踪）
+├── assets/                  # 资源文件
 ├── icons/                   # UI图标
 ├── main.py                  # 应用入口脚本
 ├── requirements.txt         # 依赖列表
 ├── README.md                # 项目说明
 └── LICENSE                  # 项目许可证
 ```
-
-> **注意**：`assets` 文件夹已添加到 `.gitignore` 中，不会被 Git 跟踪。这是为了避免将大型二进制文件（如掩膜图片、测试数据等）提交到版本控制系统中。如果需要分享测试数据，请使用其他方式传输。
 
 ## 🩺 故障排除
 

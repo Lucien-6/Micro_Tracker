@@ -24,69 +24,7 @@ class GuideTab(BaseTab):
         
         guide_text = QTextEdit()
         guide_text.setReadOnly(True)
-        guide_text.setStyleSheet("""
-            font-family: 'Segoe UI', 'Microsoft YaHei', Arial, sans-serif;
-            font-size: 10pt; 
-            background-color: #ffffff;
-            border: 1px solid #e0e0e0;
-            border-radius: 4px;
-            padding: 8px;
-            color: #424242;
-            
-            /* 滚动条样式 */
-            QScrollBar:vertical {
-                border: none;
-                background: #f0f0f0;
-                width: 14px;
-                margin: 0px;
-            }
-            
-            QScrollBar::handle:vertical {
-                background: #505050;  /* 黑灰色 */
-                min-height: 30px;
-                margin: 2px;
-                border-radius: 4px;
-            }
-            
-            QScrollBar::handle:vertical:hover {
-                background: #404040;  /* 更深的黑灰色 */
-            }
-            
-            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
-                height: 0px;
-            }
-            
-            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
-                background: #f0f0f0;
-            }
-            
-            /* 水平滚动条样式 */
-            QScrollBar:horizontal {
-                border: none;
-                background: #f0f0f0;
-                height: 14px;
-                margin: 0px;
-            }
-            
-            QScrollBar::handle:horizontal {
-                background: #505050;  /* 黑灰色 */
-                min-width: 30px;
-                margin: 2px;
-                border-radius: 4px;
-            }
-            
-            QScrollBar::handle:horizontal:hover {
-                background: #404040;  /* 更深的黑灰色 */
-            }
-            
-            QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
-                width: 0px;
-            }
-            
-            QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
-                background: #f0f0f0;
-            }
-        """)
+        # 不再应用自定义样式，使用全局样式
         
         # 加载使用指南 HTML 内容
         guide_text.setHtml(self.load_guide_html())
@@ -115,8 +53,8 @@ class GuideTab(BaseTab):
             <h3 style="margin-top: 15px;">作者信息</h3>
             <p style="margin: 5px 0;">作者：LUCIEN</p>
             <p style="margin: 5px 0;">邮箱：lucien-6@qq.com</p>
-            <p style="margin: 5px 0;">版本：1.2.0</p>
-            <p style="margin: 5px 0;">发布日期：2025年5月17日</p>
+            <p style="margin: 5px 0;">版本：1.2.1</p>
+            <p style="margin: 5px 0;">发布日期：2025年5月27日</p>
             <p style="margin: 5px 0;">Copyright © 2025 LUCIEN. 保留所有权利。</p>
         </div>
         <p>Micro Tracker 是一个基于 SAM2 (Segment Anything Model 2) 的显微视频对象分割和跟踪工具。本工具采用最新的 SAM2 模型，可以帮助您对显微视频中的多个对象进行高精度自动分割和跟踪，广泛适用于视频分析、对象检测和视觉效果制作等场景。</p>
@@ -327,12 +265,12 @@ class GuideTab(BaseTab):
             <p>为了获得最佳性能和兼容性，请确保您的系统满足以下要求：</p>
             <ul>
                 <li>操作系统：Windows 10/11, Linux, macOS</li>
-                <li>Python版本：3.8 - 3.10</li>
+                <li>Python版本：3.10+</li>
                 <li>PyTorch版本：1.9.0 或更高版本 (CUDA版本视GPU而定)</li>
                 <li>如果使用GPU加速，请确保已正确安装NVIDIA驱动和CUDA工具包</li>
             </ul>
             <p>如果遇到任何问题，请首先检查日志输出，并确保所有依赖项已正确安装。您可以通过邮件联系作者获取技术支持。</p>
         </div>
         
-        <div class="note">\n            <p style="text-align: center; font-size: 9pt; color: #757575;">Micro Tracker v1.2.0 | Copyright © 2025 LUCIEN</p>\n        </div>
+        <div class="note">\n            <p style="text-align: center; font-size: 9pt; color: #757575;">Micro Tracker v1.2.1 | Copyright © 2025 LUCIEN</p>\n        </div>
         """ 

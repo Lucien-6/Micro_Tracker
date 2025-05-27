@@ -193,4 +193,4 @@ cython_debug/
 .DS_Store
 
 # Assets folder
-assets/
+# assets/

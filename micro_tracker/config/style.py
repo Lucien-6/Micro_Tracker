@@ -87,14 +87,6 @@ QLineEdit:focus {
     border: 1px solid #2979ff;
 }
 
-QTextEdit {
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
-    background-color: white;
-    selection-background-color: #bbdefb;
-    padding: 4px;
-}
-
 QLabel {
     color: #424242;
     font-size: 9.5pt;
@@ -162,7 +154,7 @@ QComboBox {
     border: 1px solid #e0e0e0;
     border-radius: 4px;
     padding: 2px 6px;
-    padding-right: 25px;  /* 为下拉箭头留出空间 */
+    padding-right: 25px;
     background-color: white;
     min-height: 20px;
 }
@@ -182,7 +174,6 @@ QComboBox::down-arrow {
     margin-right: 5px;
 }
 
-/* 默认箭头样式 */
 QComboBox::down-arrow:default {
     width: 12px;
     height: 12px;
@@ -193,7 +184,7 @@ QComboBox::down-arrow:default {
 QComboBox QAbstractItemView {
     border: 1px solid #e0e0e0;
     selection-background-color: #bbdefb;
-    selection-color: #000000;  /* 设置选中项文本颜色为黑色 */
+    selection-color: #000000;
     border-radius: 0 0 4px 4px;
 }
 
@@ -205,14 +196,14 @@ QScrollBar:vertical {
 }
 
 QScrollBar::handle:vertical {
-    background: #505050;  /* 黑灰色 */
+    background: #505050;
     min-height: 30px;
     margin: 2px;
     border-radius: 4px;
 }
 
 QScrollBar::handle:vertical:hover {
-    background: #404040;  /* 更深的黑灰色 */
+    background: #404040;
 }
 
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
@@ -231,14 +222,14 @@ QScrollBar:horizontal {
 }
 
 QScrollBar::handle:horizontal {
-    background: #505050;  /* 黑灰色 */
+    background: #505050;
     min-width: 30px;
     margin: 2px;
     border-radius: 4px;
 }
 
 QScrollBar::handle:horizontal:hover {
-    background: #404040;  /* 更深的黑灰色 */
+    background: #404040;
 }
 
 QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
@@ -259,5 +250,69 @@ QSplitter::handle:horizontal {
 
 QSplitter::handle:vertical {
     height: 2px;
+}
+"""
+
+# 将QTextEdit日志样式直接集成到全局样式中，避免单独应用导致的解析问题
+TEXTEDIT_ENHANCED_STYLE = """
+QTextEdit {
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    background-color: white;
+    selection-background-color: #bbdefb;
+    padding: 4px;
+}
+
+QTextEdit:read-only {
+    font-family: 'Consolas', monospace;
+    font-size: 9pt;
+    background-color: #fafafa;
+    color: #424242;
+}
+"""
+
+# 表单标签样式
+FORM_LABEL_STYLE = """
+QFormLayout QLabel {
+    margin-top: 1px;
+    margin-bottom: 1px;
+    min-height: 24px;
+    line-height: 24px;
+    padding-top: 0px;
+}
+"""
+
+# 组合完整样式，包含增强的QTextEdit样式
+COMPLETE_STYLE = STYLE + FORM_LABEL_STYLE + TEXTEDIT_ENHANCED_STYLE
+
+# 空的QTextEdit样式，用于避免重复应用
+TEXTEDIT_LOG_STYLE = ""
+
+# 单独的滚动条样式，将通过全局样式应用
+SCROLLBAR_STYLE_OVERRIDE = """
+QScrollBar:vertical {
+    border: none;
+    background: #f0f0f0;
+    width: 14px;
+    margin: 0px;
+}
+
+QScrollBar::handle:vertical {
+    background: #505050;
+    min-height: 30px;
+    margin: 2px;
+    border-radius: 4px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: #404040;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0px;
+}
+
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    background: #f0f0f0;
 }
 """ 

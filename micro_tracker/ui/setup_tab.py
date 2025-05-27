@@ -10,6 +10,7 @@ import torch
 
 from micro_tracker.ui.base_tab import BaseTab
 from micro_tracker.components.video_widgets import VideoLabel
+from micro_tracker.config.style import TEXTEDIT_LOG_STYLE
 
 class SetupTab(BaseTab):
     """参数设置与标注标签页类"""
@@ -111,7 +112,7 @@ class SetupTab(BaseTab):
         video_browse_btn.clicked.connect(self.main_window.browse_video)
         video_layout.addWidget(self.main_window.video_path_edit)
         video_layout.addWidget(video_browse_btn)
-        file_layout.addRow("<b>输入视频:</b>", video_layout)
+        file_layout.addRow("输入视频:", video_layout)
         
         # 模型文件选择
         model_layout = QHBoxLayout()
@@ -127,7 +128,7 @@ class SetupTab(BaseTab):
         model_browse_btn.clicked.connect(self.main_window.browse_model)
         model_layout.addWidget(self.main_window.model_path_edit)
         model_layout.addWidget(model_browse_btn)
-        file_layout.addRow("<b>SAM2 模型:</b>", model_layout)
+        file_layout.addRow("SAM2 模型:", model_layout)
         
         # 输出视频路径
         output_layout = QHBoxLayout()
@@ -144,7 +145,7 @@ class SetupTab(BaseTab):
         output_browse_btn.clicked.connect(self.main_window.browse_output)
         output_layout.addWidget(self.main_window.output_path_edit)
         output_layout.addWidget(output_browse_btn)
-        file_layout.addRow("<b>输出视频:</b>", output_layout)
+        file_layout.addRow("结果视频输出:", output_layout)
         
         # 掩码保存目录
         mask_layout = QHBoxLayout()
@@ -161,7 +162,7 @@ class SetupTab(BaseTab):
         mask_browse_btn.clicked.connect(self.main_window.browse_mask_dir)
         mask_layout.addWidget(self.main_window.mask_dir_edit)
         mask_layout.addWidget(mask_browse_btn)
-        file_layout.addRow("<b>掩码目录:</b>", mask_layout)
+        file_layout.addRow("掩码保存目录:", mask_layout)
         
         file_group.setLayout(file_layout)
         return file_group
@@ -214,7 +215,7 @@ class SetupTab(BaseTab):
                 border-radius: 0 0 4px 4px;
             }
         """)
-        param_layout.addRow("<b>处理设备:</b>", self.main_window.device_combo)
+        param_layout.addRow("处理设备:", self.main_window.device_combo)
         
         # 保存视频选项
         save_options_layout = QHBoxLayout()
@@ -264,43 +265,7 @@ class SetupTab(BaseTab):
         self.main_window.log_text.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self.main_window.log_text.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         
-        # 设置更新的样式，确保滚动条可见
-        self.main_window.log_text.setStyleSheet("""
-            font-family: 'Consolas', 'Monaco', 'Source Code Pro', monospace; 
-            font-size: 9.5pt;
-            background-color: #fafafa;
-            border: 1px solid #e0e0e0;
-            border-radius: 4px;
-            padding: 8px;
-            color: #424242;
-            
-            /* Vertical scrollbar styles moved back here */
-            QScrollBar:vertical {
-                border: none;
-                background: #f0f0f0;
-                width: 14px;
-                margin: 0px;
-            }
-            
-            QScrollBar::handle:vertical {
-                background: #505050;  /* 黑灰色 */
-                min-height: 30px;
-                margin: 2px;
-                border-radius: 4px;
-            }
-            
-            QScrollBar::handle:vertical:hover {
-                background: #404040;  /* 更深的黑灰色 */
-            }
-            
-            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
-                height: 0px;
-            }
-            
-            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
-                background: #f0f0f0;
-            }
-        """)
+        # 不再单独应用样式，完全依赖全局样式中的QTextEdit[readOnly="true"]规则
         
         progress_layout.addWidget(self.main_window.log_text)
         
@@ -327,20 +292,6 @@ class SetupTab(BaseTab):
         """)
         self.main_window.progress_bar.setVisible(False)
         progress_layout.addWidget(self.main_window.progress_bar)
-        
-        # 添加一个函数来确保滚动条正确显示
-        def ensure_scrollbars_visible():
-            # 添加一些测试文本确保滚动条初始化正确
-            for i in range(20):
-                self.main_window.log_text.append(f"初始化日志行 {i+1}")
-            
-            # 强制更新UI并滚动到顶部
-            QApplication.processEvents()
-            self.main_window.log_text.clear()
-            QApplication.processEvents()
-        
-        # 在UI初始化完成后调用此函数
-        QTimer.singleShot(100, ensure_scrollbars_visible)
         
         progress_group.setLayout(progress_layout)
         # 设置处理进度区域为垂直方向可扩展

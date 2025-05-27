@@ -550,7 +550,8 @@ class FilterMaskThread(QThread):
                         'center': (frame_data['center_x_px'], frame_data['center_y_px']),
                         'major_axis': frame_data['major_axis'],
                         'minor_axis': frame_data['minor_axis'],
-                        'angle': frame_data['angle']
+                        'angle': frame_data['angle'],
+                        'contour': frame_data.get('contour')  # 安全获取轮廓信息
                     }
                 
                 # 绘制轨迹和特征
@@ -600,8 +601,8 @@ class FilterMaskThread(QThread):
                         ellipse_data = None
                         
                         # 重新获取轮廓并拟合椭圆以确保正确性
-                        contour = frame_data['contour']
-                        if len(contour) >= 5:  # 需要至少5个点才能拟合椭圆
+                        contour = trajectory_data.get('contour')
+                        if contour is not None and len(contour) >= 5:  # 需要至少5个点才能拟合椭圆
                             try:
                                 ellipse = cv2.fitEllipse(contour)
                                 center_point, axes_len, ellipse_angle = ellipse

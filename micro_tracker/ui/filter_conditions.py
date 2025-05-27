@@ -54,7 +54,7 @@ class FilterConditionsGroup:
         area_filter_layout = QHBoxLayout()
         area_filter_layout.setSpacing(10)
         
-        area_filter_layout.addWidget(QLabel("<b>面积区间:</b>"))
+        area_filter_layout.addWidget(QLabel("面积区间:"))
         
         self.main_window.area_filter_check = QCheckBox("启用")
         self.main_window.area_filter_check.setMinimumHeight(24)
@@ -91,7 +91,7 @@ class FilterConditionsGroup:
         area_change_filter_layout = QHBoxLayout()
         area_change_filter_layout.setSpacing(10)
         
-        area_change_filter_layout.addWidget(QLabel("<b>面积变化率阈值:</b>"))
+        area_change_filter_layout.addWidget(QLabel("面积变化率阈值:"))
         
         self.main_window.area_change_check = QCheckBox("启用")
         self.main_window.area_change_check.setMinimumHeight(24)
@@ -119,7 +119,7 @@ class FilterConditionsGroup:
         velocity_filter_layout = QHBoxLayout()
         velocity_filter_layout.setSpacing(10)
         
-        velocity_filter_layout.addWidget(QLabel("<b>瞬时速度区间:</b>"))
+        velocity_filter_layout.addWidget(QLabel("瞬时速度区间:"))
         
         self.main_window.velocity_check = QCheckBox("启用")
         self.main_window.velocity_check.setMinimumHeight(24)
@@ -156,7 +156,7 @@ class FilterConditionsGroup:
         displacement_filter_layout = QHBoxLayout()
         displacement_filter_layout.setSpacing(10)
         
-        displacement_filter_layout.addWidget(QLabel("<b>总位移区间:</b>"))
+        displacement_filter_layout.addWidget(QLabel("总位移区间:"))
         
         self.main_window.displacement_check = QCheckBox("启用")
         self.main_window.displacement_check.setMinimumHeight(24)
@@ -193,7 +193,7 @@ class FilterConditionsGroup:
         boundary_filter_layout = QHBoxLayout()
         boundary_filter_layout.setSpacing(10)
         
-        boundary_filter_layout.addWidget(QLabel("<b>边界截断排除:</b>"))
+        boundary_filter_layout.addWidget(QLabel("边界截断排除:"))
         
         self.main_window.boundary_check = QCheckBox("启用边界截断排除")
         self.main_window.boundary_check.setMinimumHeight(24)
@@ -208,7 +208,7 @@ class FilterConditionsGroup:
         min_distance_filter_layout = QHBoxLayout()
         min_distance_filter_layout.setSpacing(10)
         
-        min_distance_filter_layout.addWidget(QLabel("<b>相互最短距离阈值:</b>"))
+        min_distance_filter_layout.addWidget(QLabel("相互最短距离阈值:"))
         
         self.main_window.min_distance_check = QCheckBox("启用")
         self.main_window.min_distance_check.setMinimumHeight(24)

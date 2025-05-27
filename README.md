@@ -9,17 +9,8 @@
  ╚═╝     ╚═╝╚═╝ ╚═════╝╚═╝  ╚═╝ ╚═════╝        ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝
 ```
 
-<h1>🔬 Micro Tracker</h1>
 <h3><em>基于SAM2的显微视频目标分割和追踪工具</em></h3>
 <h4>SAM2-based Microscopy Video Object Segmentation and Tracking Tool</h4>
-
-<p>
-  <img src="https://img.shields.io/badge/Version-v1.2.1-brightgreen?style=for-the-badge" alt="Version">
-  <img src="https://img.shields.io/badge/Status-Stable-success?style=for-the-badge" alt="Status">
-  <img src="https://img.shields.io/badge/Release-2025.05.27-blue?style=for-the-badge" alt="Release">
-</p>
-
-<p><strong>🎯 专业的显微镜视频分析工具 | Professional Microscopy Video Analysis Tool</strong></p>
 
 </div>
 
@@ -59,7 +50,7 @@ Micro_Tracker is a microscopy image/video analysis tool based on the SAM2 model,
       <td align="center" width="33%">
         <img src="assets/screenshots/result_tab.png" alt="Result Preview" width="280"/><br/>
         <strong>📊 Result Preview</strong><br/>
-        <em>Real-time processing results visualization</em>
+        <em>Preview the tracking result video</em>
       </td>
       <td align="center" width="33%">
         <img src="assets/screenshots/filter_tab.png" alt="Filter Analysis" width="280"/><br/>
@@ -280,7 +271,7 @@ Micro_Tracker 是一个基于 SAM2 模型的显微镜图像/视频分析工具�
       <td align="center" width="33%">
         <img src="assets/screenshots/result_tab.png" alt="Result Preview" width="280"/><br/>
         <strong>📊 结果预览</strong><br/>
-        <em>实时处理结果可视化展示</em>
+        <em>预览追踪结果视频</em>
       </td>
       <td align="center" width="33%">
         <img src="assets/screenshots/filter_tab.png" alt="Filter Analysis" width="280"/><br/>

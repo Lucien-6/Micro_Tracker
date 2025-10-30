@@ -175,16 +175,23 @@ class OverlayLayer(QGraphicsItem):
             - 切换帧时会清除当前选中的边界框
             - 会自动从 bboxes_per_frame 字典同步到 bboxes 列表
             - 触发重绘更新UI显示
+            - 即使切换到相同帧索引也会同步（用于强制刷新）
         
         Version:
             Added in Phase 1 MVP for multi-frame annotation support
         """
         try:
-            if self.current_frame_idx != frame_idx:
-                self.current_frame_idx = frame_idx
-                self.selected_bbox = -1  # 切换帧时清除选择
-                self._sync_bboxes_from_current_frame()
-                self.update()
+            # 总是执行同步和更新，即使帧索引相同
+            # 这确保了数据一致性，特别是在外部修改bboxes_per_frame后
+            old_frame_idx = self.current_frame_idx
+            self.current_frame_idx = frame_idx
+            
+            # 只有在帧真正切换时才清除选择
+            if old_frame_idx != frame_idx:
+                self.selected_bbox = -1
+            
+            self._sync_bboxes_from_current_frame()
+            self.update()
         except Exception as e:
             print(f"Error in set_current_frame: {e}")
             import traceback
@@ -199,17 +206,14 @@ class OverlayLayer(QGraphicsItem):
         
         Notes:
             - 只在多帧模式下执行
-            - 会进行数据相同性检查以优化性能
+            - 总是执行同步以确保一致性
         """
         try:
             if not self.multi_frame_mode:
                 return
             
-            # 优化：检查是否需要同步
+            # 从字典获取当前帧的边界框
             current_bboxes = self.bboxes_per_frame.get(self.current_frame_idx, [])
-            if current_bboxes == self.bboxes:
-                return  # 数据相同，跳过
-            
             self.bboxes = current_bboxes.copy()
         except Exception as e:
             print(f"Error in _sync_bboxes_from_current_frame: {e}")

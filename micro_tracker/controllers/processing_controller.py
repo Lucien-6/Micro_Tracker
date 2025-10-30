@@ -19,11 +19,12 @@ class ProcessingController:
     
     def start_processing(self):
         """启动视频处理"""
-        # 获取边界框列表
-        bbox_list = self.main_window.video_label.get_bbox_list()
-        if not bbox_list:
+        # === Phase 1 MVP: 获取多帧标注数据 ===
+        multi_frame_annotations = self.main_window.video_label.get_multi_frame_annotations()
+        
+        if not multi_frame_annotations:
             self.main_window.log_message("错误: 未标注任何边界框！", "error")
-            QMessageBox.warning(self.main_window, "警告", "请至少绘制一个边界框！")
+            QMessageBox.warning(self.main_window, "警告", "请至少在一帧上绘制一个边界框！")
             return
         
         # 准备处理参数
@@ -49,12 +50,20 @@ class ProcessingController:
             
         args.device = self.main_window.device_combo.currentData()
         
+        # === Phase 1 MVP: 多帧标注数据 ===
+        args.multi_frame_annotations = multi_frame_annotations
+        
         # 显示进度条
         self.main_window.progress_bar.setVisible(True)
         
         # 清空日志
         self.main_window.log_text.clear()
-        self.main_window.log_message("====== 开始处理视频 ======", "highlight")
+        
+        # === Phase 1 MVP: 根据标注模式显示不同的日志 ===
+        if len(multi_frame_annotations) > 1:
+            self.main_window.log_message("====== 开始处理视频（多帧标注模式）======", "highlight")
+        else:
+            self.main_window.log_message("====== 开始处理视频 ======", "highlight")
         self.main_window.log_message("参数设置:", "highlight")
         self.main_window.log_message(f"输入视频: {args.video_path}", "info")
         self.main_window.log_message(f"使用模型: {args.model_path}", "info")
@@ -67,16 +76,32 @@ class ProcessingController:
             self.main_window.log_message("不保存掩码", "warning")
         self.main_window.log_message(f"保存处理视频: {'是' if args.save_to_video else '否'}", "info")
         
+        # === Phase 1 MVP: 显示标注统计 ===
+        total_annotations = sum(len(bboxes) for bboxes in multi_frame_annotations.values())
+        annotated_frames = len(multi_frame_annotations)
+        
         self.main_window.log_message("标注信息:", "highlight")
-        self.main_window.log_message(f"边界框数量: {len(bbox_list)}", "info")
-        for i, bbox in enumerate(bbox_list):
-            self.main_window.log_message(f"边界框 {i}: ({int(bbox[0])},{int(bbox[1])},{int(bbox[2])},{int(bbox[3])})", "info")
+        self.main_window.log_message(f"标注帧数: {annotated_frames}", "info")
+        self.main_window.log_message(f"边界框总数: {total_annotations}", "info")
+        
+        # 显示每一帧的标注详情（限制显示前10帧）
+        display_frames = sorted(multi_frame_annotations.keys())[:10]
+        for frame_idx in display_frames:
+            bboxes = multi_frame_annotations[frame_idx]
+            obj_ids = [bbox[4] for bbox in bboxes]
+            self.main_window.log_message(
+                f"  第 {frame_idx} 帧: {len(bboxes)} 个对象 (ID: {obj_ids})", 
+                "info"
+            )
+        
+        if len(multi_frame_annotations) > 10:
+            self.main_window.log_message(f"  ... 还有 {len(multi_frame_annotations)-10} 帧未显示", "info")
         
         self.main_window.log_message("-" * 50, "info")
         self.main_window.log_message("正在准备处理环境...", "info")
         
         # 创建处理线程
-        self.main_window.processing_thread = self.main_window.ProcessingThread(args, bbox_list)
+        self.main_window.processing_thread = self.main_window.ProcessingThread(args, multi_frame_annotations)
         self.main_window.processing_thread.progress_update.connect(self.main_window.update_progress)
         self.main_window.processing_thread.progress_percent.connect(self.main_window.update_progress_bar)
         self.main_window.processing_thread.processing_finished.connect(self.main_window.processing_done)

@@ -348,6 +348,19 @@ def process_video_multiframe(args, multi_frame_annotations):
         if progress_callback:
             progress_callback(f"\n--- 段 {seg_idx+1}/{len(segments)} ---")
         
+        # === Phase 2修正: 每个段重新初始化inference_state ===
+        # 这是必需的，因为SAM2的inference_state在每个段之间不兼容
+        if seg_idx > 0:
+            if progress_callback:
+                progress_callback(f"  重新初始化inference_state（段间隔离）")
+            
+            try:
+                inference_state = predictor.init_state(video_path=args.video_path)
+            except Exception as e:
+                if progress_callback:
+                    progress_callback(f"  ✗ inference_state初始化失败: {e}")
+                raise
+        
         # 获取该段起始帧的标注
         frame_annotations = multi_frame_annotations[seg_start]
         

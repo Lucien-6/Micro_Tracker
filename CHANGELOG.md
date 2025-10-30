@@ -6,6 +6,14 @@
 
 ## [v1.1.0-phase1-mvp] - 2025-10-30
 
+### 🐛 紧急修复 (Hotfix - 2025-10-30)
+
+- **修复 `bbox_process` 函数兼容性问题**
+  - 函数现在支持5值格式 `[x1, y1, x2, y2, obj_id]`
+  - 保持对旧4值格式的向后兼容
+  - 修复了运行时错误: `ValueError: too many values to unpack (expected 4)`
+  - 添加了完整的单元测试覆盖
+
 ### ✨ 新增功能 (Added)
 
 - **多帧标注支持（Phase 1 MVP）**

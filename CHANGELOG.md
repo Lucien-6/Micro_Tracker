@@ -17,6 +17,11 @@
 
 ### 🐛 紧急修复 (Hotfix - 2025-10-30)
 
+- **修复SAM2 box prompt参数错误**
+  - `clear_old_points` 必须设置为 `True` 才能添加box提示
+  - 修复了运行时错误: `cannot add box without clearing old points`
+  - 修复了错误: `RuntimeError: No points are provided; please add points first`
+
 - **修复进度回调函数签名不匹配**
   - 创建统一的 `multiframe_progress_callback`（接受消息字符串）
   - 修复了运行时错误: `TypeError: missing 1 required positional argument 'total'`

@@ -7,22 +7,43 @@ from PIL import Image
 
 
 def bbox_process(bbox_list, labels=None):
+    """
+    处理边界框列表，转换为SAM2所需的prompts格式
+    
+    Args:
+        bbox_list: 边界框列表，支持两种格式：
+                   - [x1, y1, x2, y2] (4个值)
+                   - [x1, y1, x2, y2, obj_id] (5个值，Phase 1 MVP格式)
+        labels: 可选的标签列表
+    
+    Returns:
+        prompts: {obj_id: ((x1, y1, x2, y2), label)}
+    """
     prompts = {}
     for fid, bbox in enumerate(bbox_list):
-        x1, y1, x2, y2 = bbox
-        label = labels[fid] if labels else f"obj_{fid}"
-        prompts[fid] = ((int(x1), int(y1), int(x2), int(y2)), label)
+        # Phase 1 MVP: 支持5个值的格式 [x1, y1, x2, y2, obj_id]
+        if len(bbox) == 5:
+            x1, y1, x2, y2, obj_id = bbox
+            label = labels[fid] if labels else f"obj_{obj_id}"
+        elif len(bbox) == 4:
+            x1, y1, x2, y2 = bbox
+            obj_id = fid
+            label = labels[fid] if labels else f"obj_{fid}"
+        else:
+            raise ValueError(f"Invalid bbox format: expected 4 or 5 values, got {len(bbox)}")
+        
+        prompts[obj_id] = ((int(x1), int(y1), int(x2), int(y2)), label)
     return prompts
 
 def determine_model_cfg(model_path):
     if "large" in model_path:
-        return "configs/samurai/sam2.1_hiera_l.yaml"
+        return "configs/sam2.1/sam2.1_hiera_l.yaml"
     elif "base_plus" in model_path:
-        return "configs/samurai/sam2.1_hiera_b+.yaml"
+        return "configs/sam2.1/sam2.1_hiera_b+.yaml"
     elif "small" in model_path:
-        return "configs/samurai/sam2.1_hiera_s.yaml"
+        return "configs/sam2.1/sam2.1_hiera_s.yaml"
     elif "tiny" in model_path:
-        return "configs/samurai/sam2.1_hiera_t.yaml"
+        return "configs/sam2.1/sam2.1_hiera_t.yaml"
     else:
         raise ValueError("Unknown model size in path!")
 

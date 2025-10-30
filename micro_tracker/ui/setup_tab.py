@@ -373,32 +373,19 @@ class SetupTab(BaseTab):
         
         preview_layout.addLayout(control_layout)
         
-        # === Phase 1 MVP: 标注状态指示器 ===
+        # === Phase 2: 标注状态指示器（简化）===
         annotation_status_layout = QHBoxLayout()
         annotation_status_layout.setContentsMargins(0, 10, 0, 0)
         annotation_status_layout.setSpacing(10)
         
-        # 模式指示器
-        mode_indicator = QLabel("● 多帧标注模式")
-        mode_indicator.setStyleSheet("""
-            background-color: #E3F2FD;
-            padding: 6px 12px;
-            border-radius: 4px;
-            border: 1px solid #64B5F6;
-            color: #1976D2;
-            font-weight: bold;
-            font-size: 9pt;
-        """)
-        annotation_status_layout.addWidget(mode_indicator)
-        
-        # 已标注帧数统计
+        # 已标注帧数统计（移除模式指示器，因为总是多帧模式）
         self.main_window.annotated_frames_label = QLabel("已标注: 0帧 / 0个对象")
         self.main_window.annotated_frames_label.setStyleSheet("""
-            background-color: #FFF3E0;
+            background-color: #E8F5E9;
             padding: 6px 12px;
             border-radius: 4px;
-            border: 1px solid #FFB74D;
-            color: #F57C00;
+            border: 1px solid #81C784;
+            color: #2E7D32;
             font-weight: bold;
             font-size: 9pt;
         """)

@@ -54,15 +54,21 @@ class ProcessingThread(QThread):
                     self.progress_update.emit("警告: CUDA不可用，已回退到CPU")
                     self.args.device = "cpu"
             
-            # === Phase 2: 判断处理模式并导入对应脚本 ===
-            is_multi_frame = isinstance(self.bbox_list, dict) and len(self.bbox_list) > 1
+            # === Phase 2: 统一使用多帧处理模式 ===
+            # 确保数据格式统一为字典
+            if isinstance(self.bbox_list, list):
+                # 旧格式列表 → 转换为单帧字典
+                self.bbox_list = {0: self.bbox_list}
+                self.progress_update.emit("转换为标准多帧格式（单帧）")
             
-            if is_multi_frame:
-                self.progress_update.emit(f"🚀 启用Phase 2多帧SAM2提示模式（{len(self.bbox_list)} 个标注帧）")
-                from scripts.process_video_multiframe import process_video_multiframe
-            else:
-                self.progress_update.emit("使用单帧标注模式")
-                from scripts.process_video import main as process_video_main, process_video_in_chunks
+            # 统计标注信息
+            annotated_frames = len(self.bbox_list)
+            total_annotations = sum(len(bboxes) for bboxes in self.bbox_list.values())
+            
+            self.progress_update.emit(f"📊 标注统计: {annotated_frames}帧, {total_annotations}个对象")
+            
+            # 导入多帧处理脚本（统一处理路径）
+            from scripts.process_video_multiframe import process_video_multiframe
             
             # 获取视频信息
             cap = cv2.VideoCapture(self.args.video_path)
@@ -74,100 +80,25 @@ class ProcessingThread(QThread):
             duration = total_frames / fps if fps > 0 else 0
             cap.release()
             
+            self.progress_update.emit(f"视频信息: {total_frames}帧, {fps:.1f}fps, {duration:.1f}秒")
+            
             # 设置进度条最大值
             self.progress_percent.emit(0)
             
-            # 根据视频帧数决定使用哪个处理函数
-            use_chunks = False
-            if total_frames > 1000:  # 如果视频超过1000帧，使用分块处理
-                use_chunks = True
-                self.progress_update.emit(f"视频较长 ({total_frames} 帧, {duration:.1f} 秒)，将使用分块处理...")
-            
-            # 设置进度回调函数
-            last_progress_time = time.time()
-            last_frame_count = 0
-            
-            def progress_callback(current_frame, total):
-                nonlocal last_progress_time, last_frame_count
+            # === Phase 2: 统一的进度回调（接受消息字符串）===
+            def multiframe_progress_callback(message):
+                """统一的多帧处理进度回调"""
                 if not self.is_running:
-                    return False  # 返回False表示终止处理
-                
-                # 计算进度百分比
-                percent = int((current_frame / total) * 100)
-                self.progress_percent.emit(percent)
-                
-                # 限制更新频率，避免大量日志
-                current_time = time.time()
-                if current_time - last_progress_time > 1.0 or current_frame == total - 1:
-                    # 计算处理速度
-                    time_diff = current_time - last_progress_time
-                    if time_diff > 0:
-                        frame_diff = current_frame - last_frame_count
-                        fps_val = frame_diff / time_diff
-                        
-                        # 计算预计剩余时间
-                        remaining_frames = total - current_frame
-                        eta = remaining_frames / fps_val if fps_val > 0 else 0
-                        eta_min = int(eta // 60)
-                        eta_sec = int(eta % 60)
-                        
-                        # 更新进度信息
-                        self.progress_update.emit(
-                            f"处理中: {current_frame}/{total} 帧 ({percent}%) - "
-                            f"速度: {fps_val:.1f} FPS, 预计剩余时间: {eta_min}分{eta_sec}秒"
-                        )
-                    
-                    # 更新上次进度时间和帧数
-                    last_progress_time = current_time
-                    last_frame_count = current_frame
-                
-                return True  # 返回True表示继续处理
+                    return False
+                self.progress_update.emit(message)
+                return True
             
-            # === Phase 2: 根据模式选择处理方式 ===
+            # 设置进度回调
+            self.args.progress_callback = multiframe_progress_callback
             
-            if is_multi_frame:
-                # === Phase 2: 多帧SAM2提示处理 ===
-                self.progress_update.emit("开始多帧SAM2提示处理...")
-                self.progress_update.emit(f"将在 {len(self.bbox_list)} 个标注帧添加SAM2提示")
-                
-                # Phase 2专用进度回调（接受消息字符串）
-                def multiframe_progress_callback(message):
-                    """Phase 2多帧处理的进度回调"""
-                    if not self.is_running:
-                        return False
-                    self.progress_update.emit(message)
-                    return True
-                
-                # 设置Phase 2回调
-                self.args.progress_callback = multiframe_progress_callback
-                
-                # 直接调用多帧处理函数（无需转换数据）
-                process_video_multiframe(self.args, self.bbox_list)
-                
-            else:
-                # 单帧模式或向后兼容模式
-                self.progress_update.emit(f"正在加载模型到{self.args.device}设备...")
-                self.progress_update.emit("处理开始，这可能需要几分钟时间...")
-                
-                # Phase 1回调（接受帧数参数）
-                self.args.progress_callback = progress_callback
-                
-                if isinstance(self.bbox_list, dict):
-                    # 字典但只有一帧
-                    first_frame_idx = list(self.bbox_list.keys())[0]
-                    bbox_list_for_sam2 = self.bbox_list[first_frame_idx]
-                else:
-                    # 列表（旧格式）
-                    bbox_list_for_sam2 = self.bbox_list
-                
-                # 单帧处理
-                if use_chunks:
-                    # 使用500帧为一块进行处理
-                    chunk_frames = 500
-                    self.progress_update.emit(f"将视频分为{(total_frames + chunk_frames - 1) // chunk_frames}个块")
-                    process_video_in_chunks(self.args, bbox_list_for_sam2, chunk_frames=chunk_frames)
-                else:
-                    process_video_main(self.args, bbox_list_for_sam2)
+            # === 统一使用多帧SAM2提示处理 ===
+            self.progress_update.emit("🚀 开始SAM2多帧提示处理...")
+            process_video_multiframe(self.args, self.bbox_list)
             
             # 处理完成
             elapsed_time = time.time() - start_time

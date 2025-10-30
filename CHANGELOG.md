@@ -6,11 +6,19 @@
 
 ## [v1.2.0-phase2] - 2025-10-30
 
+### 🔧 架构改进 (Refactored - 2025-10-30)
+
+- **统一使用多帧处理模式**
+  - 移除单帧/多帧模式判断和切换逻辑
+  - 单帧标注现在视为多帧的特例（只有1个标注帧）
+  - 代码简化约70行，逻辑更清晰
+  - 旧格式列表自动转换为字典 `{0: bbox_list}`
+  - UI简化：移除"多帧标注模式"指示器（因为总是多帧）
+
 ### 🐛 紧急修复 (Hotfix - 2025-10-30)
 
 - **修复进度回调函数签名不匹配**
-  - Phase 2创建专用的 `multiframe_progress_callback`（接受消息字符串）
-  - Phase 1保持原有回调（接受帧数参数）
+  - 创建统一的 `multiframe_progress_callback`（接受消息字符串）
   - 修复了运行时错误: `TypeError: missing 1 required positional argument 'total'`
 
 ### ✨ 新增功能 (Added)

@@ -648,12 +648,32 @@ class MainWindow(QMainWindow):
     def on_bbox_added(self, bbox):
         """当添加新边界框时的处理"""
         frame_idx = self.current_frame_index
-        self.log_message(
-            f"在第 {frame_idx} 帧添加边界框: ID={bbox[4]}, "
-            f"坐标=({int(bbox[0])},{int(bbox[1])},{int(bbox[2])},{int(bbox[3])})", 
-            "success"
-        )
+        obj_id = bbox[4]
+        
+        # === Phase 2: 根据标注模式显示不同消息 ===
+        mode = self.video_label.overlay_layer.annotation_mode
+        if mode == "new_object":
+            self.log_message(
+                f"在第 {frame_idx} 帧添加新对象 {obj_id}, "
+                f"坐标=({int(bbox[0])},{int(bbox[1])},{int(bbox[2])},{int(bbox[3])})", 
+                "success"
+            )
+        else:  # refine_object
+            self.log_message(
+                f"在第 {frame_idx} 帧为对象 {obj_id} 添加修正标注, "
+                f"坐标=({int(bbox[0])},{int(bbox[1])},{int(bbox[2])},{int(bbox[3])})", 
+                "highlight"
+            )
+        
         self._update_annotation_status_display()
+        
+        # === Phase 2: 刷新对象选择器和标注管理器 ===
+        if hasattr(self, 'tabs'):
+            setup_tab = self.tabs.widget(0)
+            if hasattr(setup_tab, 'update_object_selector'):
+                setup_tab.update_object_selector()
+            if hasattr(setup_tab, 'annotation_manager'):
+                setup_tab.annotation_manager.refresh_table()
     
     def on_bbox_selected(self, index):
         """当选中边界框时的处理"""
@@ -666,6 +686,14 @@ class MainWindow(QMainWindow):
         frame_idx = self.current_frame_index
         self.log_message(f"删除第 {frame_idx} 帧的边界框: ID={bbox_id}", "warning")
         self._update_annotation_status_display()
+        
+        # === Phase 2: 刷新对象选择器和标注管理器 ===
+        if hasattr(self, 'tabs'):
+            setup_tab = self.tabs.widget(0)
+            if hasattr(setup_tab, 'update_object_selector'):
+                setup_tab.update_object_selector()
+            if hasattr(setup_tab, 'annotation_manager'):
+                setup_tab.annotation_manager.refresh_table()
     
     def create_unit_label(self, unit_text):
         """创建统一样式的单位标签，特别处理带有微米符号的单位"""

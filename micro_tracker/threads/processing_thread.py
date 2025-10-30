@@ -124,13 +124,22 @@ class ProcessingThread(QThread):
                 return True  # 返回True表示继续处理
             
             # === Phase 2: 根据模式选择处理方式 ===
-            # 修改原始Args对象，添加进度回调
-            self.args.progress_callback = progress_callback
             
             if is_multi_frame:
                 # === Phase 2: 多帧SAM2提示处理 ===
                 self.progress_update.emit("开始多帧SAM2提示处理...")
                 self.progress_update.emit(f"将在 {len(self.bbox_list)} 个标注帧添加SAM2提示")
+                
+                # Phase 2专用进度回调（接受消息字符串）
+                def multiframe_progress_callback(message):
+                    """Phase 2多帧处理的进度回调"""
+                    if not self.is_running:
+                        return False
+                    self.progress_update.emit(message)
+                    return True
+                
+                # 设置Phase 2回调
+                self.args.progress_callback = multiframe_progress_callback
                 
                 # 直接调用多帧处理函数（无需转换数据）
                 process_video_multiframe(self.args, self.bbox_list)
@@ -139,6 +148,9 @@ class ProcessingThread(QThread):
                 # 单帧模式或向后兼容模式
                 self.progress_update.emit(f"正在加载模型到{self.args.device}设备...")
                 self.progress_update.emit("处理开始，这可能需要几分钟时间...")
+                
+                # Phase 1回调（接受帧数参数）
+                self.args.progress_callback = progress_callback
                 
                 if isinstance(self.bbox_list, dict):
                     # 字典但只有一帧

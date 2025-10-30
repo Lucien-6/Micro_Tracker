@@ -17,6 +17,12 @@
 
 ### 🐛 紧急修复 (Hotfix - 2025-10-30)
 
+- **修复多段处理时的inference_state冲突**
+  - 在每个段开始前重新初始化inference_state（seg_idx > 0）
+  - 确保段与段之间相互独立，避免状态累积
+  - 修复了错误: `KeyError: 'best_iou_score'`
+  - 修复了错误: `AssertionError: all_consolidated_frame_inds == input_frames_inds`
+
 - **修复SAM2 box prompt参数错误**
   - `clear_old_points` 必须设置为 `True` 才能添加box提示
   - 修复了运行时错误: `cannot add box without clearing old points`

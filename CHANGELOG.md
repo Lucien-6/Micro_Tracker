@@ -6,6 +6,13 @@
 
 ## [v1.2.0-phase2] - 2025-10-30
 
+### 🐛 紧急修复 (Hotfix - 2025-10-30)
+
+- **修复进度回调函数签名不匹配**
+  - Phase 2创建专用的 `multiframe_progress_callback`（接受消息字符串）
+  - Phase 1保持原有回调（接受帧数参数）
+  - 修复了运行时错误: `TypeError: missing 1 required positional argument 'total'`
+
 ### ✨ 新增功能 (Added)
 
 - **真正的多帧SAM2提示处理**

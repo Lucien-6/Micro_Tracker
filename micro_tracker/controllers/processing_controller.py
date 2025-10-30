@@ -59,11 +59,8 @@ class ProcessingController:
         # 清空日志
         self.main_window.log_text.clear()
         
-        # === Phase 1 MVP: 根据标注模式显示不同的日志 ===
-        if len(multi_frame_annotations) > 1:
-            self.main_window.log_message("====== 开始处理视频（多帧标注模式）======", "highlight")
-        else:
-            self.main_window.log_message("====== 开始处理视频 ======", "highlight")
+        # === Phase 2: 统一的日志输出 ===
+        self.main_window.log_message("====== 开始处理视频 ======", "highlight")
         self.main_window.log_message("参数设置:", "highlight")
         self.main_window.log_message(f"输入视频: {args.video_path}", "info")
         self.main_window.log_message(f"使用模型: {args.model_path}", "info")

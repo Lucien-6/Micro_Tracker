@@ -364,13 +364,47 @@ class SetupTab(BaseTab):
         
         preview_layout.addLayout(control_layout)
         
+        # === Phase 1 MVP: 标注状态指示器 ===
+        annotation_status_layout = QHBoxLayout()
+        annotation_status_layout.setContentsMargins(0, 10, 0, 0)
+        annotation_status_layout.setSpacing(10)
+        
+        # 模式指示器
+        mode_indicator = QLabel("● 多帧标注模式")
+        mode_indicator.setStyleSheet("""
+            background-color: #E3F2FD;
+            padding: 6px 12px;
+            border-radius: 4px;
+            border: 1px solid #64B5F6;
+            color: #1976D2;
+            font-weight: bold;
+            font-size: 9pt;
+        """)
+        annotation_status_layout.addWidget(mode_indicator)
+        
+        # 已标注帧数统计
+        self.main_window.annotated_frames_label = QLabel("已标注: 0帧 / 0个对象")
+        self.main_window.annotated_frames_label.setStyleSheet("""
+            background-color: #FFF3E0;
+            padding: 6px 12px;
+            border-radius: 4px;
+            border: 1px solid #FFB74D;
+            color: #F57C00;
+            font-weight: bold;
+            font-size: 9pt;
+        """)
+        annotation_status_layout.addWidget(self.main_window.annotated_frames_label)
+        
+        annotation_status_layout.addStretch(1)
+        preview_layout.addLayout(annotation_status_layout)
+        
         # 操作说明
         help_text = QLabel(
             "操作说明: \n"
-            "1. 在视频画面上点击并拖动鼠标来绘制边界框\n"
-            "2. 点击边界框可选中它，按 Delete 键删除选中的边界框\n"
-            "3. 使用滑块浏览视频帧，在第一帧上绘制要追踪的目标边界框\n"
-            "4. 键盘控制: 空格键-播放/暂停, F键-下一帧, D键-上一帧\n"
+            "1. 使用滑块或快捷键（F/D）浏览视频帧\n"
+            "2. 在任意帧上点击并拖动鼠标绘制边界框\n"
+            "3. 可在不同帧为同一对象或新对象添加标注\n"
+            "4. 键盘: 空格-播放/暂停, F-下一帧, D-上一帧, Del-删除边界框\n"
         )
         help_text.setAlignment(Qt.AlignCenter)
         help_text.setStyleSheet("""

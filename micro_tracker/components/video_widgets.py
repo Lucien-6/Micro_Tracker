@@ -21,7 +21,15 @@ class OverlayLayer(QGraphicsItem):
         super().__init__(parent)
         # 高分辨率比例因子，使覆盖层分辨率高于视频
         self.resolution_factor = 2.0
+        
+        # === Phase 1 MVP: 多帧模式支持 ===
+        self.multi_frame_mode = True  # 启用多帧模式
+        self.current_frame_idx = 0    # 当前显示的帧索引
+        self.bboxes_per_frame = {}    # {frame_idx: [[x1,y1,x2,y2,id], ...]}
+        
+        # === 保留：向后兼容 ===
         self.bboxes = []  # 边界框列表 [[x1, y1, x2, y2, id], ...]
+        
         self.selected_bbox = -1  # 选中的边界框索引
         self.colors = COLOR # Use the imported or default COLOR
         self.tracks = {}  # 轨迹点 {obj_id: [points], ...}
@@ -155,6 +163,115 @@ class OverlayLayer(QGraphicsItem):
         self.current_bbox = [0, 0, 0, 0, -1]
         self.update()
     
+    # === Phase 1 MVP: 多帧管理方法 ===
+    def set_current_frame(self, frame_idx):
+        """
+        设置当前帧索引，触发边界框显示更新
+        
+        Args:
+            frame_idx (int): 要切换到的帧索引（从0开始）
+        
+        Notes:
+            - 切换帧时会清除当前选中的边界框
+            - 会自动从 bboxes_per_frame 字典同步到 bboxes 列表
+            - 触发重绘更新UI显示
+        
+        Version:
+            Added in Phase 1 MVP for multi-frame annotation support
+        """
+        try:
+            if self.current_frame_idx != frame_idx:
+                self.current_frame_idx = frame_idx
+                self.selected_bbox = -1  # 切换帧时清除选择
+                self._sync_bboxes_from_current_frame()
+                self.update()
+        except Exception as e:
+            print(f"Error in set_current_frame: {e}")
+            import traceback
+            traceback.print_exc()
+            # 回退到安全状态
+            self.bboxes = []
+            self.update()
+    
+    def _sync_bboxes_from_current_frame(self):
+        """
+        从当前帧的字典同步到 bboxes 列表（用于绘制）
+        
+        Notes:
+            - 只在多帧模式下执行
+            - 会进行数据相同性检查以优化性能
+        """
+        try:
+            if not self.multi_frame_mode:
+                return
+            
+            # 优化：检查是否需要同步
+            current_bboxes = self.bboxes_per_frame.get(self.current_frame_idx, [])
+            if current_bboxes == self.bboxes:
+                return  # 数据相同，跳过
+            
+            self.bboxes = current_bboxes.copy()
+        except Exception as e:
+            print(f"Error in _sync_bboxes_from_current_frame: {e}")
+            self.bboxes = []
+    
+    def _sync_bboxes_to_current_frame(self):
+        """
+        从 bboxes 列表同步回当前帧的字典
+        
+        Notes:
+            - 只在多帧模式下执行
+            - 如果当前帧没有边界框，会从字典中删除该帧
+        """
+        try:
+            if not self.multi_frame_mode:
+                return
+            
+            if len(self.bboxes) > 0:
+                self.bboxes_per_frame[self.current_frame_idx] = self.bboxes.copy()
+            else:
+                # 如果当前帧没有边界框，从字典中删除该帧
+                self.bboxes_per_frame.pop(self.current_frame_idx, None)
+        except Exception as e:
+            print(f"Error in _sync_bboxes_to_current_frame: {e}")
+    
+    def get_annotated_frame_indices(self):
+        """
+        获取所有已标注的帧索引列表
+        
+        Returns:
+            list: 排序后的帧索引列表
+        """
+        if self.multi_frame_mode:
+            return sorted(self.bboxes_per_frame.keys())
+        else:
+            return [0] if len(self.bboxes) > 0 else []
+    
+    def get_annotation_count(self):
+        """
+        获取当前帧的标注数量
+        
+        Returns:
+            int: 当前帧的边界框数量
+        """
+        if self.multi_frame_mode:
+            return len(self.bboxes_per_frame.get(self.current_frame_idx, []))
+        else:
+            return len(self.bboxes)
+    
+    def get_all_annotations(self):
+        """
+        获取所有帧的标注数据（用于处理）
+        
+        Returns:
+            dict: {frame_idx: [[x1, y1, x2, y2, id], ...]}
+        """
+        if self.multi_frame_mode:
+            return self.bboxes_per_frame.copy()
+        else:
+            # 向后兼容：单帧模式返回第0帧
+            return {0: self.bboxes.copy()} if len(self.bboxes) > 0 else {}
+    
     def start_drawing(self, x, y, next_id):
         self.drawing = True
         self.current_bbox = [x, y, x, y, next_id]
@@ -179,6 +296,10 @@ class OverlayLayer(QGraphicsItem):
         if (x2 - x1) > 10 and (y2 - y1) > 10:
             new_bbox_data = [x1, y1, x2, y2, bbox_id]
             self.bboxes.append(new_bbox_data)
+            
+            # === Phase 1 MVP: 同步到多帧字典 ===
+            self._sync_bboxes_to_current_frame()
+            
             self.tracks[bbox_id] = [(int((x1+x2)/2), int((y1+y2)/2))]
             self.object_features[bbox_id] = {'center': (x1, y1)}
             self.update()
@@ -202,6 +323,10 @@ class OverlayLayer(QGraphicsItem):
             return -1
         deleted_id = self.bboxes[self.selected_bbox][4]
         del self.bboxes[self.selected_bbox]
+        
+        # === Phase 1 MVP: 同步到多帧字典 ===
+        self._sync_bboxes_to_current_frame()
+        
         if deleted_id in self.tracks:
             del self.tracks[deleted_id]
         if deleted_id in self.object_features:
@@ -213,6 +338,10 @@ class OverlayLayer(QGraphicsItem):
     def clear_bboxes(self):
         count = len(self.bboxes)
         self.bboxes = []
+        
+        # === Phase 1 MVP: 同步到多帧字典 ===
+        self._sync_bboxes_to_current_frame()
+        
         self.selected_bbox = -1
         self.tracks = {}
         self.object_features = {}
@@ -329,7 +458,45 @@ class MultiLayerVideoView(QGraphicsView):
         super().keyPressEvent(event)
         
     def get_bbox_list(self):
+        """获取边界框列表（保持原有接口）"""
         return [[bbox[0], bbox[1], bbox[2], bbox[3]] for bbox in self.overlay_layer.bboxes]
+    
+    # === Phase 1 MVP: 多帧API方法 ===
+    def get_multi_frame_annotations(self):
+        """
+        获取多帧标注数据
+        
+        Returns:
+            dict: {frame_idx: [[x1, y1, x2, y2, obj_id], ...]}
+        """
+        return self.overlay_layer.get_all_annotations()
+    
+    def set_current_frame_index(self, frame_idx):
+        """
+        设置当前帧索引，更新边界框显示
+        
+        Args:
+            frame_idx (int): 帧索引
+        """
+        self.overlay_layer.set_current_frame(frame_idx)
+    
+    def get_annotated_frame_indices(self):
+        """
+        获取所有已标注的帧索引
+        
+        Returns:
+            list: 帧索引列表
+        """
+        return self.overlay_layer.get_annotated_frame_indices()
+    
+    def get_current_frame_annotation_count(self):
+        """
+        获取当前帧的标注数量
+        
+        Returns:
+            int: 标注数量
+        """
+        return self.overlay_layer.get_annotation_count()
         
     def clear_bboxes(self):
         return self.overlay_layer.clear_bboxes()

@@ -41,6 +41,10 @@ class MainWindow(QMainWindow):
         self.mask_dir = ""
         self.save_mask_enabled = True  # 默认启用掩码保存
         
+        # === Phase 1 MVP: 多帧模式状态 ===
+        self.multi_frame_mode = True  # 启用多帧模式
+        self.current_frame_index = 0  # 当前帧索引
+        
         # 线程类引用
         self.VideoThread = VideoThread
         self.ProcessingThread = ProcessingThread
@@ -377,12 +381,31 @@ class MainWindow(QMainWindow):
         
         # 更新帧信息标签，将帧索引加1使其从1开始显示
         total_frames = self.video_thread.total_frames if self.video_thread else 0
-        self.frame_info_label.setText(f"当前帧: {frame_index+1} / {total_frames}")
+        
+        # === Phase 1 MVP: 显示标注状态 ===
+        if hasattr(self, 'video_label') and self.video_label:
+            annotation_count = self.video_label.get_current_frame_annotation_count()
+            if annotation_count > 0:
+                self.frame_info_label.setText(
+                    f"当前帧: {frame_index+1} / {total_frames} [✓ {annotation_count}个]"
+                )
+                self.frame_info_label.setStyleSheet("font-weight: bold; color: #4CAF50;")
+            else:
+                self.frame_info_label.setText(f"当前帧: {frame_index+1} / {total_frames}")
+                self.frame_info_label.setStyleSheet("font-weight: bold; color: #455a64;")
+        else:
+            self.frame_info_label.setText(f"当前帧: {frame_index+1} / {total_frames}")
     
     def set_frame_index(self, index):
         """设置视频当前帧索引"""
         if self.video_thread and self.video_thread.isRunning():
             self.video_thread.set_frame_index(index)
+            
+            # === Phase 1 MVP: 更新边界框显示 ===
+            self.current_frame_index = index
+            if hasattr(self, 'video_label') and self.video_label:
+                self.video_label.set_current_frame_index(index)
+                self._update_annotation_status_display()
     
     def toggle_play_pause(self):
         """切换视频播放/暂停状态"""
@@ -624,7 +647,13 @@ class MainWindow(QMainWindow):
     
     def on_bbox_added(self, bbox):
         """当添加新边界框时的处理"""
-        self.log_message(f"添加边界框: ID={bbox[4]}, 坐标=({int(bbox[0])},{int(bbox[1])},{int(bbox[2])},{int(bbox[3])})", "success")
+        frame_idx = self.current_frame_index
+        self.log_message(
+            f"在第 {frame_idx} 帧添加边界框: ID={bbox[4]}, "
+            f"坐标=({int(bbox[0])},{int(bbox[1])},{int(bbox[2])},{int(bbox[3])})", 
+            "success"
+        )
+        self._update_annotation_status_display()
     
     def on_bbox_selected(self, index):
         """当选中边界框时的处理"""
@@ -634,7 +663,9 @@ class MainWindow(QMainWindow):
     
     def on_bbox_deleted(self, bbox_id):
         """当删除边界框时的处理"""
-        self.log_message(f"删除边界框: ID={bbox_id}", "warning")
+        frame_idx = self.current_frame_index
+        self.log_message(f"删除第 {frame_idx} 帧的边界框: ID={bbox_id}", "warning")
+        self._update_annotation_status_display()
     
     def create_unit_label(self, unit_text):
         """创建统一样式的单位标签，特别处理带有微米符号的单位"""
@@ -656,6 +687,43 @@ class MainWindow(QMainWindow):
         # 第三个标签页 - 筛选过滤
         elif index == 2 and hasattr(self, 'filter_video_label'):
             self.filter_video_label.setFocus()
+    
+    # === Phase 1 MVP: 辅助方法 ===
+    def _update_annotation_status_display(self):
+        """
+        更新标注状态显示
+        
+        Notes:
+            - 更新已标注帧数标签
+            - 使用定时器防抖优化性能
+        """
+        if not hasattr(self, 'video_label') or not self.video_label:
+            return
+        
+        # 使用定时器防抖，避免频繁更新
+        if not hasattr(self, '_status_update_timer'):
+            from PyQt5.QtCore import QTimer
+            self._status_update_timer = QTimer()
+            self._status_update_timer.setSingleShot(True)
+            self._status_update_timer.timeout.connect(self._do_update_annotation_status)
+        
+        # 100ms 内只更新一次
+        self._status_update_timer.start(100)
+    
+    def _do_update_annotation_status(self):
+        """实际执行状态更新"""
+        if not hasattr(self, 'video_label') or not self.video_label:
+            return
+        
+        # 更新已标注帧数标签（如果存在）
+        if hasattr(self, 'annotated_frames_label'):
+            annotated_frames = self.video_label.get_annotated_frame_indices()
+            annotations_dict = self.video_label.get_multi_frame_annotations()
+            total_annotations = sum(len(bboxes) for bboxes in annotations_dict.values())
+            
+            self.annotated_frames_label.setText(
+                f"已标注: {len(annotated_frames)}帧 / {total_annotations}个对象"
+            )
     
     def log_message(self, message, msg_type="info"):
         """记录信息到日志区域，使用不同颜色区分不同类型

@@ -54,16 +54,15 @@ class ProcessingThread(QThread):
                     self.progress_update.emit("警告: CUDA不可用，已回退到CPU")
                     self.args.device = "cpu"
             
-            # === Phase 1 MVP: 判断处理模式 ===
+            # === Phase 2: 判断处理模式并导入对应脚本 ===
             is_multi_frame = isinstance(self.bbox_list, dict) and len(self.bbox_list) > 1
             
             if is_multi_frame:
-                self.progress_update.emit(f"检测到多帧标注模式（{len(self.bbox_list)} 帧）")
+                self.progress_update.emit(f"🚀 启用Phase 2多帧SAM2提示模式（{len(self.bbox_list)} 个标注帧）")
+                from scripts.process_video_multiframe import process_video_multiframe
             else:
                 self.progress_update.emit("使用单帧标注模式")
-            
-            # 导入必要的库
-            from scripts.process_video import main as process_video_main, process_video_in_chunks
+                from scripts.process_video import main as process_video_main, process_video_in_chunks
             
             # 获取视频信息
             cap = cv2.VideoCapture(self.args.video_path)
@@ -124,25 +123,23 @@ class ProcessingThread(QThread):
                 
                 return True  # 返回True表示继续处理
             
-            # === Phase 1 MVP: 根据模式选择处理方式 ===
+            # === Phase 2: 根据模式选择处理方式 ===
+            # 修改原始Args对象，添加进度回调
+            self.args.progress_callback = progress_callback
+            
             if is_multi_frame:
-                # 多帧模式：需要转换数据格式
-                self.progress_update.emit("转换多帧标注数据...")
+                # === Phase 2: 多帧SAM2提示处理 ===
+                self.progress_update.emit("开始多帧SAM2提示处理...")
+                self.progress_update.emit(f"将在 {len(self.bbox_list)} 个标注帧添加SAM2提示")
                 
-                # 将字典格式转换为兼容格式
-                # 策略：使用第一个标注帧作为起点
-                first_frame_idx = min(self.bbox_list.keys())
-                bbox_list_for_sam2 = self.bbox_list[first_frame_idx]
-                
-                self.progress_update.emit(f"使用第 {first_frame_idx} 帧作为初始标注帧")
-                
-                # TODO: Phase 2 中实现真正的多帧提示处理
-                # 当前 MVP 阶段：只使用第一个标注帧，保持功能稳定
-                self.progress_update.emit("注意: 当前仅使用第一个标注帧进行处理")
-                self.progress_update.emit("完整的多帧处理功能将在下一阶段实现")
+                # 直接调用多帧处理函数（无需转换数据）
+                process_video_multiframe(self.args, self.bbox_list)
                 
             else:
                 # 单帧模式或向后兼容模式
+                self.progress_update.emit(f"正在加载模型到{self.args.device}设备...")
+                self.progress_update.emit("处理开始，这可能需要几分钟时间...")
+                
                 if isinstance(self.bbox_list, dict):
                     # 字典但只有一帧
                     first_frame_idx = list(self.bbox_list.keys())[0]
@@ -150,20 +147,15 @@ class ProcessingThread(QThread):
                 else:
                     # 列表（旧格式）
                     bbox_list_for_sam2 = self.bbox_list
-            
-            # 修改原始Args对象，添加进度回调
-            self.args.progress_callback = progress_callback
-            self.progress_update.emit(f"正在加载模型到{self.args.device}设备...")
-            self.progress_update.emit("处理开始，这可能需要几分钟时间...")
-            
-            # === 执行处理（使用转换后的数据）===
-            if use_chunks:
-                # 使用500帧为一块进行处理，而不是基于时间
-                chunk_frames = 500
-                self.progress_update.emit(f"将视频分为{(total_frames + chunk_frames - 1) // chunk_frames}个块进行处理，每块最多{chunk_frames}帧")
-                process_video_in_chunks(self.args, bbox_list_for_sam2, chunk_frames=chunk_frames)
-            else:
-                process_video_main(self.args, bbox_list_for_sam2)
+                
+                # 单帧处理
+                if use_chunks:
+                    # 使用500帧为一块进行处理
+                    chunk_frames = 500
+                    self.progress_update.emit(f"将视频分为{(total_frames + chunk_frames - 1) // chunk_frames}个块")
+                    process_video_in_chunks(self.args, bbox_list_for_sam2, chunk_frames=chunk_frames)
+                else:
+                    process_video_main(self.args, bbox_list_for_sam2)
             
             # 处理完成
             elapsed_time = time.time() - start_time

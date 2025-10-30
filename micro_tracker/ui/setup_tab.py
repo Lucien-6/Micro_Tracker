@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, 
                              QFileDialog, QLineEdit, QSlider, QCheckBox, QComboBox, 
                              QGroupBox, QFormLayout, QProgressBar, QMessageBox, QSizePolicy, 
-                             QTextEdit, QApplication)
+                             QTextEdit, QApplication, QRadioButton, QButtonGroup)
 from PyQt5.QtGui import QIcon, QTextCursor, QRegExpValidator
 from PyQt5.QtCore import Qt, QTimer, QRegExp
 
@@ -11,6 +11,7 @@ import torch
 from micro_tracker.ui.base_tab import BaseTab
 from micro_tracker.components.video_widgets import VideoLabel
 from micro_tracker.config.style import TEXTEDIT_LOG_STYLE
+from micro_tracker.ui.annotation_manager import AnnotationManagerWidget
 
 class SetupTab(BaseTab):
     """参数设置与标注标签页类"""
@@ -57,6 +58,14 @@ class SetupTab(BaseTab):
         # 添加参数设置区域
         param_group = self.create_parameter_settings_group()
         left_layout.addWidget(param_group)
+        
+        # === Phase 2: 添加标注管理器 ===
+        annotation_manager_group = QGroupBox("标注管理")
+        annotation_manager_layout = QVBoxLayout()
+        self.annotation_manager = AnnotationManagerWidget(self.main_window)
+        annotation_manager_layout.addWidget(self.annotation_manager)
+        annotation_manager_group.setLayout(annotation_manager_layout)
+        left_layout.addWidget(annotation_manager_group)
         
         # 创建一个垂直布局的伸缩器，使后面的处理进度区域占据所有剩余空间
         left_bottom_container = QWidget()
@@ -398,12 +407,79 @@ class SetupTab(BaseTab):
         annotation_status_layout.addStretch(1)
         preview_layout.addLayout(annotation_status_layout)
         
+        # === Phase 2: 标注模式选择器 ===
+        annotation_mode_group = QGroupBox("标注模式")
+        annotation_mode_layout = QVBoxLayout()
+        annotation_mode_layout.setSpacing(8)
+        
+        # 模式选择按钮
+        mode_selection_layout = QHBoxLayout()
+        
+        self.new_object_radio = QRadioButton("🆕 新对象")
+        self.new_object_radio.setChecked(True)
+        self.new_object_radio.setToolTip("为新出现的对象添加标注")
+        self.new_object_radio.setStyleSheet("""
+            QRadioButton {
+                font-size: 9pt;
+                padding: 4px;
+            }
+            QRadioButton::indicator {
+                width: 16px;
+                height: 16px;
+            }
+        """)
+        
+        self.refine_object_radio = QRadioButton("✏️ 修正对象")
+        self.refine_object_radio.setToolTip("为已存在的对象添加新帧标注")
+        self.refine_object_radio.setStyleSheet("""
+            QRadioButton {
+                font-size: 9pt;
+                padding: 4px;
+            }
+        """)
+        
+        self.mode_button_group = QButtonGroup()
+        self.mode_button_group.addButton(self.new_object_radio)
+        self.mode_button_group.addButton(self.refine_object_radio)
+        
+        mode_selection_layout.addWidget(self.new_object_radio)
+        mode_selection_layout.addWidget(self.refine_object_radio)
+        annotation_mode_layout.addLayout(mode_selection_layout)
+        
+        # 对象选择下拉框
+        object_selector_layout = QHBoxLayout()
+        object_selector_label = QLabel("选择对象:")
+        object_selector_label.setStyleSheet("font-size: 9pt;")
+        
+        self.main_window.object_selector_combo = QComboBox()
+        self.main_window.object_selector_combo.setEnabled(False)
+        self.main_window.object_selector_combo.setMinimumWidth(200)
+        self.main_window.object_selector_combo.setStyleSheet("""
+            QComboBox {
+                font-size: 9pt;
+                padding: 4px;
+            }
+        """)
+        
+        object_selector_layout.addWidget(object_selector_label)
+        object_selector_layout.addWidget(self.main_window.object_selector_combo)
+        object_selector_layout.addStretch()
+        annotation_mode_layout.addLayout(object_selector_layout)
+        
+        annotation_mode_group.setLayout(annotation_mode_layout)
+        preview_layout.addWidget(annotation_mode_group)
+        
+        # 连接信号
+        self.new_object_radio.toggled.connect(self.on_annotation_mode_changed)
+        self.refine_object_radio.toggled.connect(self.on_annotation_mode_changed)
+        self.main_window.object_selector_combo.currentIndexChanged.connect(self.on_object_selected)
+        
         # 操作说明
         help_text = QLabel(
             "操作说明: \n"
-            "1. 使用滑块或快捷键（F/D）浏览视频帧\n"
-            "2. 在任意帧上点击并拖动鼠标绘制边界框\n"
-            "3. 可在不同帧为同一对象或新对象添加标注\n"
+            "1. 选择标注模式（新对象/修正对象）\n"
+            "2. 使用滑块或快捷键（F/D）浏览视频帧\n"
+            "3. 在任意帧上点击并拖动鼠标绘制边界框\n"
             "4. 键盘: 空格-播放/暂停, F-下一帧, D-上一帧, Del-删除边界框\n"
         )
         help_text.setAlignment(Qt.AlignCenter)
@@ -422,4 +498,68 @@ class SetupTab(BaseTab):
         preview_group.setLayout(preview_layout)
         right_layout.addWidget(preview_group)
         
-        return right_panel 
+        return right_panel
+    
+    # === Phase 2: 标注模式切换回调方法 ===
+    def on_annotation_mode_changed(self):
+        """标注模式切换处理"""
+        if self.new_object_radio.isChecked():
+            # 新对象模式
+            self.main_window.object_selector_combo.setEnabled(False)
+            self.main_window.video_label.overlay_layer.set_annotation_mode("new_object")
+            self.main_window.log_message("📝 标注模式: 新对象", "info")
+        else:
+            # 修正模式
+            self.main_window.object_selector_combo.setEnabled(True)
+            self.update_object_selector()
+            self.main_window.log_message("✏️ 标注模式: 修正对象", "warning")
+    
+    def update_object_selector(self):
+        """更新对象选择下拉框"""
+        combo = self.main_window.object_selector_combo
+        combo.clear()
+        
+        # 获取对象注册表
+        registry = self.main_window.video_label.overlay_layer.object_registry
+        
+        if not registry:
+            combo.addItem("（无可用对象，请先添加对象）", None)
+            return
+        
+        # 按对象ID排序
+        for obj_id in sorted(registry.keys()):
+            info = registry[obj_id]
+            first_frame = info["first_frame"]
+            frame_count = len(info["frames"])
+            
+            # 显示对象信息
+            text = f"对象 {obj_id} (首次: 第{first_frame}帧, {frame_count}个标注)"
+            combo.addItem(text, obj_id)
+        
+        # 默认选中第一个
+        if combo.count() > 0:
+            combo.setCurrentIndex(0)
+            self.on_object_selected(0)
+    
+    def on_object_selected(self, index):
+        """用户选择了要修正的对象"""
+        combo = self.main_window.object_selector_combo
+        
+        if index < 0 or combo.count() == 0:
+            return
+        
+        obj_id = combo.currentData()
+        
+        if obj_id is not None:
+            # 设置修正模式
+            self.main_window.video_label.overlay_layer.set_annotation_mode("refine_object", obj_id)
+            
+            # 获取该对象的信息
+            registry = self.main_window.video_label.overlay_layer.object_registry
+            if obj_id in registry:
+                info = registry[obj_id]
+                frames_str = ", ".join(map(str, info["frames"]))
+                self.main_window.log_message(
+                    f"✏️ 选中对象 {obj_id}，已在帧 [{frames_str}] 标注", 
+                    "highlight"
+                ) 

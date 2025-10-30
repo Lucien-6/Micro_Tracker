@@ -27,6 +27,26 @@ class OverlayLayer(QGraphicsItem):
         self.current_frame_idx = 0    # 当前显示的帧索引
         self.bboxes_per_frame = {}    # {frame_idx: [[x1,y1,x2,y2,id], ...]}
         
+        # === Phase 2: 对象ID管理 ===
+        self.object_registry = {}  # {obj_id: {"first_frame": int, "frames": [int], "color": tuple}}
+        self.annotation_mode = "new_object"  # "new_object" 或 "refine_object"
+        self.selected_object_id_for_refine = None  # 修正模式下选中的对象ID
+        self.next_available_id = 0  # 下一个可用ID
+        
+        # 固定颜色调色板（Phase 2）
+        self.color_palette = [
+            (255, 0, 0),     # 红
+            (0, 255, 0),     # 绿
+            (0, 0, 255),     # 蓝
+            (255, 255, 0),   # 黄
+            (255, 0, 255),   # 品红
+            (0, 255, 255),   # 青
+            (255, 128, 0),   # 橙
+            (128, 0, 255),   # 紫
+            (192, 192, 192), # 银
+            (128, 128, 0),   # 橄榄
+        ]
+        
         # === 保留：向后兼容 ===
         self.bboxes = []  # 边界框列表 [[x1, y1, x2, y2, id], ...]
         
@@ -56,7 +76,10 @@ class OverlayLayer(QGraphicsItem):
     
     def _draw_bboxes(self, painter):
         for i, bbox in enumerate(self.bboxes):
-            color = self.colors[i % len(self.colors)]
+            # === Phase 2: 使用对象固定颜色 ===
+            obj_id = bbox[4]
+            color = self.get_object_color(obj_id)
+            
             qcolor = QColor(color[0], color[1], color[2])
             pen = QPen(qcolor)
             pen.setWidth(2)
@@ -71,6 +94,15 @@ class OverlayLayer(QGraphicsItem):
                 int(bbox[2] - bbox[0]), 
                 int(bbox[3] - bbox[1])
             )
+        
+        # === Phase 2: 修正模式时高亮正在修正的对象 ===
+        if self.annotation_mode == "refine_object" and self.selected_object_id_for_refine is not None:
+            for bbox in self.bboxes:
+                if bbox[4] == self.selected_object_id_for_refine:
+                    # 绘制闪烁金色边框
+                    painter.setPen(QPen(QColor(255, 215, 0), 3, Qt.DashLine))
+                    painter.drawRect(int(bbox[0]), int(bbox[1]), 
+                                   int(bbox[2] - bbox[0]), int(bbox[3] - bbox[1]))
     
     def _draw_current_bbox(self, painter):
         if not self.drawing:
@@ -138,8 +170,10 @@ class OverlayLayer(QGraphicsItem):
         painter.setFont(font)
         for i, bbox in enumerate(self.bboxes):
             obj_id = bbox[4]
-            color_idx = obj_id % len(self.colors) if obj_id >= 0 else 0
-            color = self.colors[color_idx]
+            
+            # === Phase 2: 使用对象固定颜色 ===
+            color = self.get_object_color(obj_id)
+            
             is_selected = (i == self.selected_bbox)
             text = f"obj_{obj_id}"
             if is_selected:
@@ -276,9 +310,82 @@ class OverlayLayer(QGraphicsItem):
             # 向后兼容：单帧模式返回第0帧
             return {0: self.bboxes.copy()} if len(self.bboxes) > 0 else {}
     
-    def start_drawing(self, x, y, next_id):
+    # === Phase 2: 对象ID管理方法 ===
+    def register_object(self, obj_id, frame_idx):
+        """
+        注册对象或更新对象信息
+        
+        Args:
+            obj_id (int): 对象ID
+            frame_idx (int): 帧索引
+        """
+        if obj_id not in self.object_registry:
+            # 新对象：分配颜色
+            color_idx = obj_id % len(self.color_palette)
+            self.object_registry[obj_id] = {
+                "first_frame": frame_idx,
+                "frames": [frame_idx],
+                "color": self.color_palette[color_idx]
+            }
+        else:
+            # 已有对象：添加新帧
+            if frame_idx not in self.object_registry[obj_id]["frames"]:
+                self.object_registry[obj_id]["frames"].append(frame_idx)
+                self.object_registry[obj_id]["frames"].sort()
+    
+    def unregister_object(self, obj_id):
+        """移除对象注册"""
+        if obj_id in self.object_registry:
+            del self.object_registry[obj_id]
+    
+    def get_next_object_id(self):
+        """获取下一个可用的对象ID"""
+        while self.next_available_id in self.object_registry:
+            self.next_available_id += 1
+        return self.next_available_id
+    
+    def set_annotation_mode(self, mode, obj_id=None):
+        """
+        设置标注模式
+        
+        Args:
+            mode (str): "new_object" 或 "refine_object"
+            obj_id (int, optional): 修正模式下的对象ID
+        """
+        if mode not in ["new_object", "refine_object"]:
+            raise ValueError(f"Invalid annotation mode: {mode}")
+        
+        self.annotation_mode = mode
+        self.selected_object_id_for_refine = obj_id
+        
+        if mode == "refine_object" and obj_id is None:
+            raise ValueError("修正模式下必须指定对象ID")
+    
+    def get_object_color(self, obj_id):
+        """获取对象的固定颜色"""
+        if obj_id in self.object_registry:
+            return self.object_registry[obj_id]["color"]
+        else:
+            # 未注册对象：临时分配颜色
+            color_idx = obj_id % len(self.color_palette)
+            return self.color_palette[color_idx]
+    
+    def start_drawing(self, x, y, next_id=None):
+        """开始绘制边界框"""
         self.drawing = True
-        self.current_bbox = [x, y, x, y, next_id]
+        
+        # === Phase 2: 根据标注模式决定对象ID ===
+        if self.annotation_mode == "new_object":
+            obj_id = self.get_next_object_id()
+        elif self.annotation_mode == "refine_object":
+            obj_id = self.selected_object_id_for_refine
+            if obj_id is None:
+                raise ValueError("修正模式下必须先选择对象")
+        else:
+            # 向后兼容
+            obj_id = next_id if next_id is not None else self.get_next_object_id()
+        
+        self.current_bbox = [x, y, x, y, obj_id]
         self.update()
     
     def update_drawing(self, x, y):
@@ -301,7 +408,10 @@ class OverlayLayer(QGraphicsItem):
             new_bbox_data = [x1, y1, x2, y2, bbox_id]
             self.bboxes.append(new_bbox_data)
             
-            # === Phase 1 MVP: 同步到多帧字典 ===
+            # === Phase 2: 注册对象 ===
+            self.register_object(bbox_id, self.current_frame_idx)
+            
+            # Phase 1 MVP: 同步到多帧字典
             self._sync_bboxes_to_current_frame()
             
             self.tracks[bbox_id] = [(int((x1+x2)/2), int((y1+y2)/2))]
@@ -328,8 +438,18 @@ class OverlayLayer(QGraphicsItem):
         deleted_id = self.bboxes[self.selected_bbox][4]
         del self.bboxes[self.selected_bbox]
         
-        # === Phase 1 MVP: 同步到多帧字典 ===
+        # Phase 1 MVP: 同步到多帧字典
         self._sync_bboxes_to_current_frame()
+        
+        # === Phase 2: 从当前帧的对象注册中移除 ===
+        if deleted_id in self.object_registry:
+            frames = self.object_registry[deleted_id]["frames"]
+            if self.current_frame_idx in frames:
+                frames.remove(self.current_frame_idx)
+            
+            # 如果该对象所有帧都被删除，完全移除
+            if len(frames) == 0:
+                self.unregister_object(deleted_id)
         
         if deleted_id in self.tracks:
             del self.tracks[deleted_id]

@@ -100,7 +100,7 @@ def process_segment(predictor, inference_state, segment_start, segment_end,
                 frame_idx=segment_start,
                 obj_id=obj_id,
                 box=np.array([x1, y1, x2, y2], dtype=np.float32),
-                clear_old_points=False  # Phase 2: 不清除旧提示，累积标注
+                clear_old_points=True  # Phase 2修正: 必须清除旧点以添加box
             )
             
             if progress_callback:

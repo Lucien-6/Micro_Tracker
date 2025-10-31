@@ -85,12 +85,23 @@ class ProcessingThread(QThread):
             # 设置进度条最大值
             self.progress_percent.emit(0)
             
-            # === Phase 2: 统一的进度回调（接受消息字符串）===
-            def multiframe_progress_callback(message):
-                """统一的多帧处理进度回调"""
+            # === Phase 2: 统一的进度回调（接受消息字符串和可选的百分比）===
+            def multiframe_progress_callback(message, percent=None):
+                """
+                统一的多帧处理进度回调
+                
+                Args:
+                    message (str): 进度消息
+                    percent (int, optional): 进度百分比 (0-100)
+                """
                 if not self.is_running:
                     return False
                 self.progress_update.emit(message)
+                
+                # 如果提供了百分比，更新进度条
+                if percent is not None:
+                    self.progress_percent.emit(percent)
+                
                 return True
             
             # 设置进度回调

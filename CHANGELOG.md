@@ -4,61 +4,139 @@
 
 ---
 
-## [v1.3.0] - 2025-10-31
+## [v2.0] - 2025-10-31
 
-### ✨ 新增功能 (Added)
+### 🎉 正式发布 (Major Release)
 
-- **🎨 实时mask预览功能**
-  - 标注时自动显示预测的mask，提供即时视觉反馈
-  - 使用独立的 `SAM2ImagePredictor` 进行单帧预测
-  - 异步处理，不阻塞主线程UI
-  - 切换帧时自动恢复预览mask
-  - 删除标注时同步清除预览mask
-  - 默认自动启用，无需手动配置
+此版本标志着 Micro Tracker 的重大里程碑，完整实现了多帧智能标注和实时预览功能，提供了生产级别的显微视频分析能力。
 
-- **🧩 预览管理器架构**
-  - 新增 `MaskPreviewManager` 类管理预览状态
-  - 懒加载机制，仅在需要时初始化predictor
-  - 缓存当前帧图像特征，提高预测效率
-  - 支持多对象并行预览
+### ✨ 核心功能亮点
 
-### 🔧 改进 (Changed)
+#### 1. 多帧智能标注系统
+- **双模式标注**：
+  - 🆕 新对象模式：自动分配唯一ID和固定颜色
+  - ✏️ 修正对象模式：为已有对象添加关键帧标注
+- **对象颜色管理**：
+  - 每个对象ID映射固定颜色，跨帧保持一致
+  - 正在修正的对象用金色虚线高亮显示
+  - 边界框粗细和样式优化，提升可视性
+  
+#### 2. 实时预览功能
+- **SAM2集成**：添加标注后自动生成mask预览
+- **智能缓存**：帧切换时自动恢复预览状态
+- **性能优化**：懒加载预览管理器，减少启动时间
+- **降级策略**：GPU不可用时自动降级为纯标注模式
 
-- **UI优化**
-  - 移除"实时预览"开关（功能默认启用）
-  - 预览mask使用半透明渲染，视觉效果更佳
-  - 优化mask绘制性能（使用NumPy批量处理）
+#### 3. 标注管理面板
+- **标注列表**：显示所有已标注帧（帧索引 + 对象数量）
+- **快速跳转**：点击按钮快速定位到指定标注帧
+- **批量操作**：删除指定帧标注或清除所有标注
+- **数据持久化**：
+  - 导出标注为JSON格式
+  - 导入JSON恢复标注数据
+  - 与视频项目解耦，便于协作
 
-- **代码架构**
-  - 新增 `micro_tracker/utils/preview_manager.py` 模块
-  - 重构 `OverlayLayer` 以支持预览mask管理
-  - 改进 `MainWindow` 的帧切换逻辑
+#### 4. 多帧SAM2处理引擎
+- **分段前向传播**：
+  - 将标注帧作为段边界
+  - 在每个段的起始帧应用SAM2提示
+  - 段间独立处理，避免状态累积
+- **提示策略优化**：
+  - 每个标注帧调用 `add_new_points_or_box`
+  - 正确设置 `clear_old_points=True`
+  - 避免状态冲突和错误累积
+
+### 🔧 架构改进 (Refactored)
+
+- **统一多帧模式**：
+  - 移除单帧/多帧判断逻辑，简化代码约70行
+  - 单帧标注现在视为多帧的特例（只有1个标注帧）
+  - UI简化：移除"多帧标注模式"指示器
+  
+- **代码重构**：
+  - 优化 `OverlayLayer` 数据结构
+  - 统一标注状态管理逻辑
+  - 改进事件处理和信号连接
 
 ### 🐛 修复 (Fixed)
 
-- 修复删除标注时预览mask未清除的问题
-- 修复切换帧后预览mask未恢复的问题
-- 修复对象修正模式下点击事件的预览更新
+- **多段处理冲突**：
+  - 每个段开始前重新初始化 `inference_state`
+  - 修复 `KeyError: 'best_iou_score'`
+  - 修复 `AssertionError: all_consolidated_frame_inds == input_frames_inds`
 
-### 🗑️ 清理 (Cleanup)
+- **SAM2 box prompt错误**：
+  - 正确设置 `clear_old_points=True`
+  - 修复 `RuntimeError: cannot add box without clearing old points`
+  - 修复 `RuntimeError: No points are provided`
 
-- 删除 `backups/` 文件夹（Phase 1/2备份）
-- 删除 `tests/` 文件夹（开发测试文件）
-- 删除 `models/sam2/demo/` 文件夹（SAM2演示代码）
-- 删除 `models/sam2/notebooks/` 文件夹（示例notebook）
-- 删除临时开发文档（PHASE*.md文件）
-- 项目体积减少约10MB
+- **进度回调签名**：
+  - 创建统一的 `multiframe_progress_callback`
+  - 修复 `TypeError: missing 1 required positional argument 'total'`
 
-### 📝 文档更新 (Documentation)
+- **帧切换同步**：
+  - 修复 `set_current_frame` 在相同帧索引下不同步的bug
+  - 优化边界框同步逻辑
 
-- 完善README功能特点介绍
-- 更新英文和中文使用指南
-- 添加快捷键A的说明
-- 更新项目结构说明
+### 📚 文档更新
+
+- **使用指南**：完整重写多帧标注和实时预览章节
+- **README**：更新功能特性和使用流程说明
+- **CHANGELOG**：整理所有版本历史
+
+### 🎯 用户体验提升
+
+- **操作提示**：
+  - 日志区分"新对象"和"修正对象"操作
+  - 实时显示已标注帧数和对象数量
+  - 标注帧用绿色高亮显示
+  
+- **最佳实践指引**：
+  - 在使用指南中明确标注时机
+  - 建议关键帧数量（5-10个）
+  - 提供标注策略说明
+
+### ⚙️ 技术细节
+
+**修改的核心文件**：
+- `micro_tracker/components/video_widgets.py` - 数据结构和渲染逻辑
+- `micro_tracker/ui/setup_tab.py` - 标注模式UI和管理面板
+- `micro_tracker/ui/main_window.py` - 主窗口集成和事件处理
+- `micro_tracker/controllers/processing_controller.py` - 处理逻辑
+- `micro_tracker/threads/processing_thread.py` - 多帧处理引擎
+- `micro_tracker/utils/preview_manager.py` - 实时预览管理器
+
+**新增文件**：
+- `micro_tracker/ui/annotation_manager.py` - 标注管理UI组件
+
+### 🔄 向后兼容性
+
+- ✅ 完全向后兼容旧版本标注格式
+- ✅ 自动转换列表格式为字典格式
+- ✅ 支持纯单帧标注工作流
+
+### 🚀 性能优化
+
+- 懒加载预览管理器，减少初始化时间
+- 使用定时器防抖优化状态更新
+- 预览mask智能缓存和恢复
+
+### 📊 测试覆盖
+
+- ✅ 多帧标注数据结构测试
+- ✅ 对象ID管理测试
+- ✅ 标注导入/导出测试
+- ✅ 边界框向后兼容性测试
+
+### 🎓 致谢
+
+感谢以下项目的启发和支持：
+- [SAM2 (Segment Anything Model 2)](https://github.com/facebookresearch/sam2)
+- [SAMURAI](https://github.com/yangchris11/samurai)
 
 ---
 
-## [v1.2.0-phase2] - 2025-10-30
+## [v1.2.0-phase2] - 2025-10-30 (开发版本)
 
 ### 🔧 架构改进 (Refactored - 2025-10-30)
 

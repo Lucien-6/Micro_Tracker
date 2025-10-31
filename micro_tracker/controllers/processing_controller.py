@@ -19,8 +19,8 @@ class ProcessingController:
     
     def start_processing(self):
         """启动视频处理"""
-        # === Phase 1 MVP: 获取多帧标注数据 ===
-        multi_frame_annotations = self.main_window.video_label.get_multi_frame_annotations()
+        # === Phase 2: 获取refinement格式标注数据（包含边界框和点击）===
+        multi_frame_annotations = self.main_window.video_label.get_refinement_annotations()
         
         if not multi_frame_annotations:
             self.main_window.log_message("错误: 未标注任何边界框！", "error")
@@ -73,21 +73,22 @@ class ProcessingController:
             self.main_window.log_message("不保存掩码", "warning")
         self.main_window.log_message(f"保存处理视频: {'是' if args.save_to_video else '否'}", "info")
         
-        # === Phase 1 MVP: 显示标注统计 ===
-        total_annotations = sum(len(bboxes) for bboxes in multi_frame_annotations.values())
+        # === Phase 2: 显示标注统计（支持新格式）===
+        # 新格式: {frame_idx: {obj_id: {"box": [...], "points": [...], "labels": [...]}}}
+        total_annotations = sum(len(frame_data) for frame_data in multi_frame_annotations.values())
         annotated_frames = len(multi_frame_annotations)
         
         self.main_window.log_message("标注信息:", "highlight")
         self.main_window.log_message(f"标注帧数: {annotated_frames}", "info")
-        self.main_window.log_message(f"边界框总数: {total_annotations}", "info")
+        self.main_window.log_message(f"对象总数: {total_annotations}", "info")
         
         # 显示每一帧的标注详情（限制显示前10帧）
         display_frames = sorted(multi_frame_annotations.keys())[:10]
         for frame_idx in display_frames:
-            bboxes = multi_frame_annotations[frame_idx]
-            obj_ids = [bbox[4] for bbox in bboxes]
+            frame_data = multi_frame_annotations[frame_idx]  # {obj_id: {...}}
+            obj_ids = list(frame_data.keys())
             self.main_window.log_message(
-                f"  第 {frame_idx} 帧: {len(bboxes)} 个对象 (ID: {obj_ids})", 
+                f"  第 {frame_idx} 帧: {len(frame_data)} 个对象 (ID: {obj_ids})", 
                 "info"
             )
         

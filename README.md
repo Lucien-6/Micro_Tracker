@@ -33,7 +33,7 @@
 
 # 🔬 Micro_Tracker [English]
 
-Micro_Tracker is a microscopy image/video analysis tool based on the SAM2 model, designed specifically for tracking and analyzing microscopic organisms and particles. The application provides an intuitive user interface that allows researchers to easily mark, track, and analyze objects under a microscope.
+Micro_Tracker is a powerful microscopy video analysis tool based on the SAM2 model, designed specifically for tracking and analyzing microscopic organisms and particles. The application provides an intuitive user interface with multi-frame annotation support, real-time mask preview, and advanced filtering capabilities, allowing researchers to easily mark, track, and analyze objects in microscopy videos with high precision.
 
 ## 🖥️ Application Interface
 
@@ -85,22 +85,15 @@ Micro_Tracker is a microscopy image/video analysis tool based on the SAM2 model,
 
 ## ✨ Features
 
-### Core Segmentation & Tracking
-- **🎯 Object Segmentation and Tracking**: Utilize SAM2 (Segment Anything Model 2) for high-precision object segmentation and tracking.
-- **🔄 Multi-Frame Annotation**: Add annotations on any frame in the video, with intelligent object ID management and color consistency.
-- **✨ Real-Time Mask Preview**: Automatically displays predicted masks while annotating, providing instant visual feedback.
-- **✏️ Click-Based Refinement**: Add positive/negative points (A key) to refine masks on keyframes with shape changes or occlusions.
-
-### Data Management & Analysis
+- **🎯 Object Segmentation and Tracking**: Utilize SAM2 (Segment Anything Model 2) and SAMRUAI for high-precision object segmentation and tracking.
+- **🎯 Multi-Frame Annotation**: Support multi-frame intelligent annotation with two modes - new object mode and refine object mode. Add annotations at key frames (deformation, occlusion) to significantly improve tracking quality.
+- **👁️ Real-Time Preview**: Automatically generate mask preview using SAM2 after adding annotations, helping verify annotation quality instantly.
+- **📋 Annotation Management**: Comprehensive annotation management panel with frame list, quick jump, delete, and import/export functionality (JSON format).
+- **🎬 Video Analysis**: Process microscopy videos and generate output videos with markers and trajectories.
 - **📊 Data Extraction**: Extract key parameters such as position, size, and shape of target objects.
 - **🎭 Mask Export**: Save segmentation results as mask images for subsequent analysis.
-- **🔎 Advanced Filtering**: Filter target objects based on criteria like area, velocity, displacement, and area change rate.
-- **📈 Data Export**: Export trajectory and morphological data as Excel spreadsheets for subsequent analysis.
-
-### User Interface
-- **📝 Annotation Management**: View, jump to, delete annotations with an intuitive management panel.
-- **💾 Import/Export**: Save and load annotations in JSON format for session persistence.
-- **🎬 Video Playback**: Built-in video player with frame-by-frame navigation and playback controls.
+- **🔎 Filtering Function**: Filter target objects based on criteria like size, position, and speed.
+- **📈 Data Export**: Export trajectory and morphological data of filtered objects as Excel spreadsheets for subsequent analysis.
 
 ## 💻 System Requirements
 
@@ -173,36 +166,39 @@ python -m main
 
 #### 1. Video Tracking 🎞️
 
-**Initial Setup:**
 1. Click the "**Browse**" button to select microscopy video files and the SAM2 model.
 2. Set output directory and related parameters.
-3. The real-time mask preview feature will automatically initialize when the video loads.
+3. **Multi-Frame Intelligent Annotation**:
+   
+   **New Object Annotation**:
+   - Select "🆕 New Object" mode
+   - Browse to the frame where the object first appears (usually frame 0)
+   - Hold left mouse button and drag to draw bounding box
+   - System automatically assigns unique ID and fixed color
+   - Real-time preview mask will be automatically generated and displayed
+   
+   **Refine Object Annotation**:
+   - Select "✏️ Refine Object" mode
+   - Choose the object ID to refine from dropdown
+   - Browse to key frames (deformation, occlusion, etc.)
+   - Draw new bounding box for the same object (using same ID and color)
+   - The object being refined will be highlighted with golden dashed line
+   
+   **Best Practices**:
+   - Annotate at frame 0 when object first appears
+   - Add annotations when object shape changes significantly
+   - Add annotations before and after occlusion
+   - Recommend 5-10 key frames, not too many
+   
+   **Annotation Management**:
+   - View all annotated frames in the annotation panel
+   - Click "Jump" to quickly navigate to specific frames
+   - Click "Delete" to remove unwanted annotations
+   - Use "Export Annotations" to save annotation data as JSON file
+   - Use "Import Annotations" to restore annotation data from JSON file
 
-**Multi-Frame Intelligent Annotation:**
-
-**Adding New Objects:**
-- Select "🆕 New Object" mode
-- Navigate to any frame and draw a bounding box around the object
-- System automatically assigns a unique ID and consistent color
-- **Real-time preview**: Predicted mask appears instantly as you annotate
-
-**Refining Existing Objects:**
-- Select "✏️ Refine Object" mode
-- Choose the target object from the dropdown menu
-- Navigate to keyframes (e.g., shape changes, occlusions)
-- Draw a new bounding box for the same object (maintains ID and color)
-- **Click refinement**: Press **A** key to add positive points for mask correction
-- The object will be highlighted with a golden dashed outline during refinement
-
-**Annotation Management:**
-- View all annotated frames in the "Annotation Management" panel
-- Click "Jump" to quickly navigate to any annotated frame
-- Click "Delete" to remove unwanted annotations
-- Use "Export/Import" to save and load annotations in JSON format
-
-**Processing:**
 4. Click the "**Start Processing**" button.
-5. The system applies SAM2 prompts at each annotated frame, significantly improving tracking quality.
+5. System will automatically detect annotation mode and apply SAM2 prompts at each annotated frame using segmented forward propagation strategy to significantly improve tracking quality.
 6. After processing is complete, preview the output video and view analysis results in the "**Result Preview**" tab.
 
 #### 2. Mask Filtering 🎭
@@ -217,79 +213,35 @@ python -m main
 
 ### Keyboard Shortcuts ⌨️
 
-**Video Navigation:**
 - **Space Bar**: Play/Pause video
 - **D**: Next frame
 - **F**: Previous frame
-
-**Annotation Operations:**
-- **A**: Add positive point (for mask refinement in "Refine Object" mode)
-- **Del**: Delete currently selected bounding box
-
-> 💡 **Tip**: Use the **A** key to add positive points on keyframes where the object shape changes significantly. This helps SAM2 maintain accurate tracking through occlusions and deformations.
-
-### Best Practices 📌
-
-**When to Add Annotations:**
-1. **Frame 0**: When the object first appears
-2. **Deformation Frames**: When the object's shape changes significantly
-3. **Before/After Occlusions**: Before the object is occluded and after it reappears
-
-**Annotation Strategy:**
-- Keep the number of annotated frames reasonable (recommended: 5-10 keyframes)
-- Prioritize annotating frames where tracking fails
-- Use "Refine Object" mode to maintain consistent object IDs
-- Leverage the real-time preview to verify annotation quality instantly
-
-**Performance Tips:**
-- Use the **tiny** or **small** model for faster processing on lower-end GPUs
-- Reduce video resolution if encountering memory issues
-- Close unnecessary applications to free up GPU memory
+- **Del**: Delete currently selected box
 
 ## 📁 Project Structure
 
 ```
 Micro_Tracker/
-├── micro_tracker/                    # Main application code
-│   ├── components/                   # UI components
-│   │   ├── custom_widgets.py        # Custom PyQt5 widgets
-│   │   └── video_widgets.py         # Video display and overlay
-│   ├── config/                       # Configuration files
-│   │   └── style.py                  # UI styling
-│   ├── controllers/                  # MVC controllers
-│   │   ├── filter_controller.py     # Filtering logic
-│   │   └── processing_controller.py # Video processing control
-│   ├── threads/                      # Processing threads
-│   │   ├── processing_thread.py     # SAM2 video processing
-│   │   ├── filter_*.py               # Filtering threads
-│   │   └── video_thread.py           # Video playback
-│   ├── ui/                           # UI interface
-│   │   ├── main_window.py            # Main window
-│   │   ├── setup_tab.py              # Annotation tab
-│   │   ├── result_preview_tab.py    # Results tab
-│   │   ├── filter_tab.py             # Filtering tab
-│   │   ├── annotation_manager.py    # Annotation management
-│   │   └── ...                       # Other UI modules
-│   └── utils/                        # Utility functions
-│       └── preview_manager.py        # Real-time mask preview
-├── models/                           # Models directory
-│   └── sam2/                         # SAM2 model
-│       ├── checkpoints/              # Model weight files (.pt)
-│       └── sam2/                     # SAM2 source code
-├── utils/                            # Shared utility scripts
-│   ├── color.py                      # Color utilities
-│   └── utils.py                      # General utilities
-├── scripts/                          # Processing scripts
-│   └── process_video_multiframe.py  # Multi-frame processing core
-├── assets/                           # Resource files
-│   ├── screenshots/                  # UI screenshots
-│   └── *.mp4                         # Demo videos
-├── icons/                            # UI icons
-├── main.py                           # Application entry point
-├── requirements.txt                  # Python dependencies
-├── CHANGELOG.md                      # Version history
-├── README.md                         # This file
-└── LICENSE                           # Apache 2.0 License
+├── micro_tracker/           # Main application code
+│   ├── components/          # UI components
+│   ├── config/              # Configuration files
+│   ├── controllers/         # MVC controllers
+│   ├── threads/             # Processing threads
+│   ├── ui/                  # UI interface
+│   └── utils/               # Utility functions
+├── models/                  # Models directory
+│   └── sam2/                # SAM2 model
+│       ├── checkpoints/     # Model weight files directory
+│       ├── sam2/            # SAM2 source code
+│       └── ...              # Other SAM2 related files
+├── utils/                   # Utility scripts
+├── scripts/                 # Processing scripts
+├── assets/                  # Resource files
+├── icons/                   # UI icons
+├── main.py                  # Application entry script
+├── requirements.txt         # Dependencies list
+├── README.md                # Project description
+└── LICENSE                  # Project license
 ```
 
 ## 🩺 Troubleshooting
@@ -300,34 +252,20 @@ Micro_Tracker/
 
    - Check if the Python version is 3.10+.
    - Ensure all dependencies are correctly installed (refer to [Install Dependencies](#3-install-dependencies)).
-   - Verify SAM2 installation: `cd models/sam2 && pip install -e .`
 
 2. **GPU Memory Insufficient**
 
    - Try reducing the resolution of the processing video.
    - Reduce the number of targets being tracked simultaneously.
-   - Use a smaller model (tiny or small instead of large).
-   - Close the real-time preview if needed (though it's lightweight).
 
-3. **Real-Time Preview Not Showing**
-
-   - Check the log messages for preview initialization status.
-   - Verify the model path is correctly configured.
-   - Ensure the video is loaded successfully.
-   - Try reloading the video to re-initialize the preview.
-
-4. **Tracking Inaccurate**
+3. **Tracking Inaccurate**
 
    - Ensure the accuracy of initial framing.
-   - Add more keyframe annotations where tracking fails.
-   - Use the **A** key to add positive points for refinement.
    - Try using higher quality or clearer videos.
 
-5. **Processing Speed Slow**
-   - Confirm if the GPU is being used by the program (check logs during startup or processing).
+4. **Processing Speed Slow**
+   - Confirm if the GPU is being used by the program (usually there will be relevant logs during program startup or processing).
    - Consider using a more powerful GPU.
-   - Reduce the number of annotated frames if possible.
-   - Use a smaller SAM2 model variant.
 
 ## 📜 License
 
@@ -347,7 +285,7 @@ This project was created based on the following excellent projects and gained ma
 
 # 🔬 Micro_Tracker [中文]
 
-Micro_Tracker 是一个基于 SAM2 模型的显微镜图像/视频分析工具，专为微观生物体和颗粒的跟踪和分析而设计。该应用提供直观的用户界面，使研究人员能够轻松地标记、跟踪和分析显微镜下的目标物体。
+Micro_Tracker 是一个功能强大的基于 SAM2 模型的显微镜视频分析工具，专为微观生物体和颗粒的跟踪和分析而设计。该应用提供直观的用户界面，支持多帧智能标注、实时mask预览和高级筛选功能，使研究人员能够高精度地标记、跟踪和分析显微镜视频中的目标物体。
 
 ## 🖥️ GUI 界面
 
@@ -399,22 +337,15 @@ Micro_Tracker 是一个基于 SAM2 模型的显微镜图像/视频分析工具�
 
 ## ✨ 功能特点
 
-### 核心分割与追踪
-- **🎯 目标分割跟踪**：利用 SAM2（Segment Anything Model 2）实现高精度的目标分割和跟踪。
-- **🔄 多帧智能标注**：在视频的任意帧添加标注，支持智能对象ID管理和颜色一致性。
-- **✨ 实时mask预览**：标注时自动显示预测的mask，提供即时视觉反馈。
-- **✏️ 点击修正功能**：在关键帧（形变、遮挡）添加正向/负向点（A键）以修正mask。
-
-### 数据管理与分析
+- **🎯 目标分割跟踪**：利用 SAM2（Segment Anything Model 2）和 SAMRUAI 实现高精度的目标分割和跟踪。
+- **🎯 多帧智能标注**：支持在视频任意帧添加标注，提供"新对象"和"修正对象"两种模式。在关键帧（形变、遮挡）添加标注可显著提升追踪质量。
+- **👁️ 实时预览功能**：添加标注后自动使用SAM2生成mask预览，实时验证标注质量。
+- **📋 标注管理功能**：完善的标注管理面板，支持帧列表查看、快速跳转、删除和导入/导出（JSON格式）。
+- **🎬 视频分析**：处理显微镜视频并生成带有标记和轨迹的输出视频。
 - **📊 数据提取**：提取目标物体的位置、大小、形状等关键参数。
 - **🎭 掩膜导出**：将分割结果保存为掩膜图像，便于后续分析。
-- **🔎 高级筛选**：根据面积、速度、位移、面积变化率等条件筛选目标物体。
-- **📈 数据导出**：将轨迹与形态数据导出为 Excel 表格，便于后续分析。
-
-### 用户界面
-- **📝 标注管理**：通过直观的管理面板查看、跳转、删除标注。
-- **💾 导入/导出**：以JSON格式保存和加载标注，支持会话持久化。
-- **🎬 视频播放**：内置视频播放器，支持逐帧导航和播放控制。
+- **🔎 筛选功能**：根据尺寸、位置、速度等条件筛选目标物体。
+- **📈 数据导出**：将通过筛选的对象轨迹与形态数据输出保存为 Excel 表格，便于后续分析使用。
 
 ## 💻 系统要求
 
@@ -487,36 +418,39 @@ python -m main
 
 #### 1. 视频跟踪 🎞️
 
-**初始设置：**
 1.  点击 "**浏览**" 按钮选择显微镜视频文件和 SAM2 模型。
 2.  设置输出目录和相关参数。
-3.  加载视频时，实时mask预览功能会自动初始化。
+3.  **多帧智能标注**（推荐使用以获得最佳追踪效果）:
+    
+    **新对象标注**:
+    - 选择"🆕 新对象"模式
+    - 浏览到对象首次出现的帧（通常是第0帧）
+    - 按住鼠标左键拖动绘制边界框
+    - 系统自动分配唯一ID和固定颜色
+    - 实时预览mask会自动生成并显示
+    
+    **修正对象标注**:
+    - 选择"✏️ 修正对象"模式
+    - 从下拉框选择要修正的对象ID
+    - 浏览到关键帧（对象形变、遮挡前后等）
+    - 绘制该对象的新边界框（使用相同ID和颜色）
+    - 正在修正的对象会以金色虚线高亮显示
+    
+    **标注最佳实践**:
+    - 在第0帧标注对象首次出现位置
+    - 在对象形状显著变化时添加标注
+    - 在对象被遮挡前后添加标注
+    - 建议标注5-10个关键帧，不宜过多
+    
+    **标注管理**:
+    - 在"标注管理"面板查看所有已标注帧
+    - 点击"跳转"快速定位到指定标注帧
+    - 点击"删除"移除不需要的标注
+    - 使用"导出标注"保存标注数据为JSON文件
+    - 使用"导入标注"从JSON文件恢复标注数据
 
-**多帧智能标注：**
-
-**添加新对象：**
-- 选择"🆕 新对象"模式
-- 浏览到任意帧，绘制新对象的边界框
-- 系统自动分配唯一ID和固定颜色
-- **实时预览**：标注时立即显示预测的mask
-
-**修正现有对象：**
-- 选择"✏️ 修正对象"模式
-- 从下拉框选择要修正的对象
-- 浏览到关键帧（如对象形变、遮挡处）
-- 绘制该对象的新边界框（保持相同ID和颜色）
-- **点击修正**：按 **A** 键添加正向点以修正mask
-- 修正时该对象会以金色虚线高亮显示
-
-**标注管理：**
-- 在"标注管理"面板查看所有标注帧
-- 点击"跳转"快速定位到任意标注帧
-- 点击"删除"移除不需要的标注
-- 使用"导出/导入"以JSON格式保存和加载标注
-
-**处理：**
 4.  点击 "**开始处理**" 按钮。
-5.  系统会在每个标注帧应用SAM2提示，显著提升追踪质量。
+5.  系统会自动检测标注模式，在每个标注帧应用SAM2提示，采用分段前向传播策略，显著提升追踪质量。
 6.  处理完成后，在 "**结果预览**" 标签页查看结果。
 
 #### 2. 掩膜筛选 🎭
@@ -531,79 +465,35 @@ python -m main
 
 ### 快捷键 ⌨️
 
-**视频导航：**
 - **空格键**: 播放/暂停视频
 - **D**: 下一帧
 - **F**: 上一帧
-
-**标注操作：**
-- **A**: 添加正向点（在"修正对象"模式下用于mask修正）
-- **Del**: 删除当前选中的边界框
-
-> 💡 **提示**: 在对象形状发生显著变化的关键帧使用 **A** 键添加正向点。这可以帮助SAM2在遮挡和形变情况下保持准确追踪。
-
-### 最佳实践 📌
-
-**何时添加标注：**
-1. **第0帧**: 对象首次出现时
-2. **形变帧**: 对象形状显著变化时
-3. **遮挡前后**: 对象被遮挡前和恢复后
-
-**标注策略：**
-- 标注帧数量适中（建议：5-10个关键帧）
-- 优先标注追踪失败的位置
-- 使用"修正对象"模式保持对象ID一致
-- 利用实时预览功能即时验证标注质量
-
-**性能优化：**
-- 低端GPU使用 **tiny** 或 **small** 模型以获得更快处理速度
-- 遇到内存问题时降低视频分辨率
-- 关闭不必要的应用程序以释放GPU显存
+- **Del**: 删除当前选中的框
 
 ## 📁 项目结构
 
 ```
 Micro_Tracker/
-├── micro_tracker/                    # 主要应用代码
-│   ├── components/                   # UI组件
-│   │   ├── custom_widgets.py        # 自定义PyQt5控件
-│   │   └── video_widgets.py         # 视频显示与覆盖层
-│   ├── config/                       # 配置文件
-│   │   └── style.py                  # UI样式
-│   ├── controllers/                  # MVC控制器
-│   │   ├── filter_controller.py     # 筛选逻辑
-│   │   └── processing_controller.py # 视频处理控制
-│   ├── threads/                      # 处理线程
-│   │   ├── processing_thread.py     # SAM2视频处理
-│   │   ├── filter_*.py               # 筛选线程
-│   │   └── video_thread.py           # 视频播放
-│   ├── ui/                           # UI界面
-│   │   ├── main_window.py            # 主窗口
-│   │   ├── setup_tab.py              # 标注选项卡
-│   │   ├── result_preview_tab.py    # 结果选项卡
-│   │   ├── filter_tab.py             # 筛选选项卡
-│   │   ├── annotation_manager.py    # 标注管理
-│   │   └── ...                       # 其他UI模块
-│   └── utils/                        # 工具函数
-│       └── preview_manager.py        # 实时mask预览
-├── models/                           # 模型目录
-│   └── sam2/                         # SAM2模型
-│       ├── checkpoints/              # 模型权重文件 (.pt)
-│       └── sam2/                     # SAM2源代码
-├── utils/                            # 共享工具脚本
-│   ├── color.py                      # 颜色工具
-│   └── utils.py                      # 通用工具
-├── scripts/                          # 处理脚本
-│   └── process_video_multiframe.py  # 多帧处理核心
-├── assets/                           # 资源文件
-│   ├── screenshots/                  # UI截图
-│   └── *.mp4                         # 演示视频
-├── icons/                            # UI图标
-├── main.py                           # 应用入口
-├── requirements.txt                  # Python依赖
-├── CHANGELOG.md                      # 版本历史
-├── README.md                         # 本文件
-└── LICENSE                           # Apache 2.0许可证
+├── micro_tracker/           # 主要应用代码
+│   ├── components/          # UI组件
+│   ├── config/              # 配置文件
+│   ├── controllers/         # MVC控制器
+│   ├── threads/             # 处理线程
+│   ├── ui/                  # UI界面
+│   └── utils/               # 工具函数
+├── models/                  # 模型目录
+│   └── sam2/                # SAM2模型
+│       ├── checkpoints/     # 模型权重文件目录
+│       ├── sam2/            # SAM2源代码
+│       └── ...              # 其他SAM2相关文件
+├── utils/                   # 工具脚本
+├── scripts/                 # 处理脚本
+├── assets/                  # 资源文件
+├── icons/                   # UI图标
+├── main.py                  # 应用入口脚本
+├── requirements.txt         # 依赖列表
+├── README.md                # 项目说明
+└── LICENSE                  # 项目许可证
 ```
 
 ## 🩺 故障排除
@@ -613,35 +503,21 @@ Micro_Tracker/
 1.  **启动失败**
 
     - 检查 Python 版本是否为 3.10+。
-    - 确保所有依赖项已正确安装（参照 [安装依赖](#3-安装依赖)）。
-    - 验证SAM2安装：`cd models/sam2 && pip install -e .`
+    - 确保所有依赖项已正确安装 (参照 [安装依赖](#3-安装依赖))。
 
 2.  **GPU 内存不足**
 
     - 尝试降低处理视频的分辨率。
     - 减少同时跟踪的目标数量。
-    - 使用较小的模型（tiny或small而非large）。
-    - 如需要可关闭实时预览（虽然它很轻量）。
 
-3.  **实时预览未显示**
-
-    - 检查日志消息中的预览初始化状态。
-    - 验证模型路径配置是否正确。
-    - 确保视频已成功加载。
-    - 尝试重新加载视频以重新初始化预览。
-
-4.  **跟踪不准确**
+3.  **跟踪不准确**
 
     - 确保初始框选的准确性。
-    - 在追踪失败处添加更多关键帧标注。
-    - 使用 **A** 键添加正向点进行修正。
     - 尝试使用更高质量或更清晰的视频。
 
-5.  **处理速度慢**
-    - 确认 GPU 是否正在被程序使用（检查启动或处理时的日志）。
+4.  **处理速度慢**
+    - 确认 GPU 是否正在被程序使用 (通常在程序启动时或处理过程中会有相关日志)。
     - 考虑使用性能更强的 GPU。
-    - 如可能，减少标注帧数量。
-    - 使用较小的SAM2模型版本。
 
 ## 📜 许可证
 

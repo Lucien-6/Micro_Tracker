@@ -4,6 +4,60 @@
 
 ---
 
+## [v1.3.0] - 2025-10-31
+
+### ✨ 新增功能 (Added)
+
+- **🎨 实时mask预览功能**
+  - 标注时自动显示预测的mask，提供即时视觉反馈
+  - 使用独立的 `SAM2ImagePredictor` 进行单帧预测
+  - 异步处理，不阻塞主线程UI
+  - 切换帧时自动恢复预览mask
+  - 删除标注时同步清除预览mask
+  - 默认自动启用，无需手动配置
+
+- **🧩 预览管理器架构**
+  - 新增 `MaskPreviewManager` 类管理预览状态
+  - 懒加载机制，仅在需要时初始化predictor
+  - 缓存当前帧图像特征，提高预测效率
+  - 支持多对象并行预览
+
+### 🔧 改进 (Changed)
+
+- **UI优化**
+  - 移除"实时预览"开关（功能默认启用）
+  - 预览mask使用半透明渲染，视觉效果更佳
+  - 优化mask绘制性能（使用NumPy批量处理）
+
+- **代码架构**
+  - 新增 `micro_tracker/utils/preview_manager.py` 模块
+  - 重构 `OverlayLayer` 以支持预览mask管理
+  - 改进 `MainWindow` 的帧切换逻辑
+
+### 🐛 修复 (Fixed)
+
+- 修复删除标注时预览mask未清除的问题
+- 修复切换帧后预览mask未恢复的问题
+- 修复对象修正模式下点击事件的预览更新
+
+### 🗑️ 清理 (Cleanup)
+
+- 删除 `backups/` 文件夹（Phase 1/2备份）
+- 删除 `tests/` 文件夹（开发测试文件）
+- 删除 `models/sam2/demo/` 文件夹（SAM2演示代码）
+- 删除 `models/sam2/notebooks/` 文件夹（示例notebook）
+- 删除临时开发文档（PHASE*.md文件）
+- 项目体积减少约10MB
+
+### 📝 文档更新 (Documentation)
+
+- 完善README功能特点介绍
+- 更新英文和中文使用指南
+- 添加快捷键A的说明
+- 更新项目结构说明
+
+---
+
 ## [v1.2.0-phase2] - 2025-10-30
 
 ### 🔧 架构改进 (Refactored - 2025-10-30)

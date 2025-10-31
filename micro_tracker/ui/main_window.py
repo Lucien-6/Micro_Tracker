@@ -63,6 +63,9 @@ class MainWindow(QMainWindow):
         self.processing_controller = ProcessingController(self)
         self.filter_controller = FilterController(self)
         
+        # === 实时预览管理器（懒加载）===
+        self.preview_manager = None
+        
         # 初始化UI
         self.init_ui()
         
@@ -91,6 +94,18 @@ class MainWindow(QMainWindow):
         self.tab_widget.addTab(self.result_tab, "结果预览")
         self.tab_widget.addTab(self.filter_tab, "筛选过滤")
         self.tab_widget.addTab(self.guide_tab, "使用指南")
+    
+    def get_preview_manager(self):
+        """
+        懒加载获取预览管理器
+        
+        Returns:
+            MaskPreviewManager: 预览管理器实例
+        """
+        if self.preview_manager is None:
+            from micro_tracker.utils.preview_manager import MaskPreviewManager
+            self.preview_manager = MaskPreviewManager(self)
+        return self.preview_manager
     
     # ==== 文件操作方法 ====
     
@@ -131,15 +146,32 @@ class MainWindow(QMainWindow):
             self.check_start_enabled()
     
     def browse_model(self):
-        """浏览选择模型文件"""
+        """浏览选择自定义模型文件"""
+        # 从当前选择的模型路径获取目录
+        current_dir = os.path.dirname(self.model_path) if self.model_path else "models/sam2/checkpoints"
+        
         file_path, _ = QFileDialog.getOpenFileName(
-            self, "选择SAM2模型文件", "", "模型文件 (*.pt *.pth);;所有文件 (*)"
+            self, "选择SAM2模型文件", current_dir, "模型文件 (*.pt *.pth);;所有文件 (*)"
         )
         if file_path:
             self.model_path = file_path
-            self.model_path_edit.setText(os.path.basename(file_path))
-            self.model_path_edit.setToolTip(file_path)
-            self.log_message(f"选择模型文件: {file_path}", "info")
+            
+            # 检查是否在下拉列表中
+            combo = self.model_combo
+            found = False
+            for i in range(combo.count()):
+                if combo.itemData(i) == file_path:
+                    combo.setCurrentIndex(i)
+                    found = True
+                    break
+            
+            # 如果不在列表中，添加为自定义选项
+            if not found:
+                display_name = f"📁 自定义: {os.path.basename(file_path)}"
+                combo.addItem(display_name, file_path)
+                combo.setCurrentIndex(combo.count() - 1)
+            
+            self.log_message(f"选择模型文件: {os.path.basename(file_path)}", "info")
             self.check_start_enabled()
     
     def browse_output(self):
@@ -262,6 +294,19 @@ class MainWindow(QMainWindow):
         # 启动视频线程 - 线程默认已设置为暂停状态
         self.video_thread.start()
         self.log_message("视频加载完成，请在第一帧上标注目标边界框", "success")
+        
+        # === 自动初始化实时预览功能 ===
+        self.log_message("正在初始化实时预览功能...", "info")
+        try:
+            preview_mgr = self.get_preview_manager()
+            success = preview_mgr.initialize_predictor()
+            
+            if success:
+                self.log_message("✓ 实时预览已启用（添加标注后自动显示mask）", "success")
+            else:
+                self.log_message("⚠️ 实时预览初始化失败，将仅显示边界框标注", "warning")
+        except Exception as e:
+            self.log_message(f"⚠️ 实时预览初始化异常: {e}，将仅显示边界框标注", "warning")
     
     # 委托给ProcessingController的方法
     def start_processing(self):
@@ -382,19 +427,19 @@ class MainWindow(QMainWindow):
         # 更新帧信息标签，将帧索引加1使其从1开始显示
         total_frames = self.video_thread.total_frames if self.video_thread else 0
         
-        # === Phase 1 MVP: 显示标注状态 ===
+        # === Phase 1 MVP: 显示标注状态（简化版：仅通过颜色指示）===
         if hasattr(self, 'video_label') and self.video_label:
             annotation_count = self.video_label.get_current_frame_annotation_count()
+            self.frame_info_label.setText(f"当前帧: {frame_index+1} / {total_frames}")
             if annotation_count > 0:
-                self.frame_info_label.setText(
-                    f"当前帧: {frame_index+1} / {total_frames} [✓ {annotation_count}个]"
-                )
+                # 有标注时显示绿色
                 self.frame_info_label.setStyleSheet("font-weight: bold; color: #4CAF50;")
             else:
-                self.frame_info_label.setText(f"当前帧: {frame_index+1} / {total_frames}")
+                # 无标注时显示默认颜色
                 self.frame_info_label.setStyleSheet("font-weight: bold; color: #455a64;")
         else:
             self.frame_info_label.setText(f"当前帧: {frame_index+1} / {total_frames}")
+            self.frame_info_label.setStyleSheet("font-weight: bold; color: #455a64;")
     
     def set_frame_index(self, index):
         """设置视频当前帧索引"""
@@ -406,6 +451,12 @@ class MainWindow(QMainWindow):
             if hasattr(self, 'video_label') and self.video_label:
                 self.video_label.set_current_frame_index(index)
                 self._update_annotation_status_display()
+                
+                # === 清除预览（切换帧时）===
+                self.video_label.overlay_layer.clear_preview_masks()
+                
+                # === 自动恢复预览（如果新帧有标注）===
+                self._restore_preview_for_current_frame()
     
     def toggle_play_pause(self):
         """切换视频播放/暂停状态"""
@@ -674,6 +725,126 @@ class MainWindow(QMainWindow):
                 setup_tab.update_object_selector()
             if hasattr(setup_tab, 'annotation_manager'):
                 setup_tab.annotation_manager.refresh_table()
+        
+        # === 触发实时预览 ===
+        if hasattr(self, 'video_label') and self.video_label:
+            if self.video_label.overlay_layer.preview_enabled:
+                self._generate_preview_for_object(bbox[4])
+    
+    def _generate_preview_for_object(self, obj_id, silent=False):
+        """
+        为指定对象生成实时预览
+        
+        Args:
+            obj_id (int): 对象ID
+            silent (bool): 静默模式，不输出日志（用于批量恢复）
+        
+        Notes:
+            - 收集该对象的所有提示（box + points）
+            - 调用PreviewManager生成mask
+            - 将mask设置到OverlayLayer显示
+        """
+        try:
+            preview_mgr = self.get_preview_manager()
+            overlay = self.video_label.overlay_layer
+            
+            # 获取当前帧图像
+            cap = cv2.VideoCapture(self.video_path)
+            cap.set(cv2.CAP_PROP_POS_FRAMES, self.current_frame_index)
+            ret, frame = cap.read()
+            cap.release()
+            
+            if not ret:
+                if not silent:
+                    self.log_message("⚠️ 无法读取当前帧，跳过预览", "warning")
+                return
+            
+            # 设置当前帧到预览管理器
+            preview_mgr.set_current_frame(self.current_frame_index, frame)
+            
+            # 收集该对象的所有提示
+            prompts = {"box": None, "points": [], "labels": []}
+            
+            # 1. 从bbox获取边界框
+            for bbox in overlay.bboxes:
+                if bbox[4] == obj_id:
+                    prompts["box"] = [bbox[0], bbox[1], bbox[2], bbox[3]]
+                    break
+            
+            # 2. 从annotations_per_frame获取点击
+            frame_idx = self.current_frame_index
+            if frame_idx in overlay.annotations_per_frame:
+                if obj_id in overlay.annotations_per_frame[frame_idx]:
+                    ann = overlay.annotations_per_frame[frame_idx][obj_id]
+                    prompts["points"] = ann.get("points", [])
+                    prompts["labels"] = ann.get("labels", [])
+            
+            # 3. 包含临时点击（如果属于该对象）
+            if (overlay.temp_points and 
+                overlay.current_editing_obj_id == obj_id and
+                overlay.temp_points_frame_idx == frame_idx):
+                prompts["points"] = prompts["points"] + overlay.temp_points
+                prompts["labels"] = prompts["labels"] + overlay.temp_labels
+            
+            # 4. 验证至少有一个提示
+            if not prompts["box"] and not prompts["points"]:
+                if not silent:
+                    self.log_message(f"⚠️ 对象 {obj_id} 没有任何提示，无法生成预览", "warning")
+                return
+            
+            # 5. 生成预览mask
+            mask = preview_mgr.generate_preview(obj_id, prompts)
+            
+            if mask is not None:
+                overlay.set_preview_mask(obj_id, mask)
+                if not silent:
+                    self.log_message(f"✓ 对象 {obj_id} 预览已更新", "success")
+            else:
+                if not silent:
+                    self.log_message(f"✗ 对象 {obj_id} 预览生成失败", "error")
+        
+        except Exception as e:
+            if not silent:
+                import traceback
+                self.log_message(f"✗ 预览生成异常: {e}", "error")
+                traceback.print_exc()
+    
+    def _restore_preview_for_current_frame(self):
+        """
+        恢复当前帧的预览mask（切换帧后自动调用）
+        
+        Notes:
+            - 检查当前帧是否有标注
+            - 如果有，为每个对象自动生成预览
+            - 静默失败，不影响用户体验
+        """
+        if not hasattr(self, 'video_label') or not self.video_label:
+            return
+        
+        overlay = self.video_label.overlay_layer
+        
+        # 检查是否启用预览
+        if not overlay.preview_enabled:
+            return
+        
+        # 获取当前帧的所有对象
+        current_frame = self.current_frame_index
+        if current_frame not in overlay.bboxes_per_frame:
+            return  # 当前帧没有标注
+        
+        # 获取当前帧的所有对象ID
+        bboxes = overlay.bboxes_per_frame[current_frame]
+        if not bboxes:
+            return
+        
+        # 为每个对象生成预览（静默模式）
+        for bbox in bboxes:
+            obj_id = bbox[4]
+            try:
+                self._generate_preview_for_object(obj_id, silent=True)
+            except Exception:
+                # 静默失败，不影响用户体验
+                pass
     
     def on_bbox_selected(self, index):
         """当选中边界框时的处理"""

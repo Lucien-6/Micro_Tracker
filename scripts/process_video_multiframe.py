@@ -22,128 +22,235 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from utils.utils import determine_model_cfg
 
 
-def analyze_frame_segments(annotated_frames, total_frames):
+def process_video_with_refinement(args, annotations_data):
     """
-    分析标注帧，计算处理段
+    新的统一处理函数，支持refinement
     
     Args:
-        annotated_frames (list): 排序后的标注帧列表，例如 [0, 50, 120]
-        total_frames (int): 视频总帧数
+        args: 处理参数对象，包含以下属性:
+            - video_path (str): 视频路径
+            - model_path (str): SAM2模型路径
+            - device (str): 设备 (cuda/cpu)
+            - video_output_path (str): 输出视频路径
+            - mask_dir (str, optional): 掩码保存目录
+            - save_to_video (bool): 是否保存视频
+            - progress_callback (callable, optional): 进度回调函数
+        annotations_data (dict): 统一格式的标注数据
+            格式: {frame_idx: {obj_id: {"box": [x1,y1,x2,y2], "points": [(x,y)], "labels": [0/1], "mask": np.array}}}
     
-    Returns:
-        list: 处理段列表 [(start, end), ...]
-              例如 [(0, 49), (50, 119), (120, 199)]
-    
-    Notes:
-        - 每个段从一个标注帧开始，到下一个标注帧的前一帧结束
-        - 最后一段从最后一个标注帧到视频末尾
-    
-    Examples:
-        >>> analyze_frame_segments([0, 50, 120], 200)
-        [(0, 49), (50, 119), (120, 199)]
-        
-        >>> analyze_frame_segments([0], 100)
-        [(0, 99)]
-    """
-    if not annotated_frames:
-        return []
-    
-    segments = []
-    for i, frame_idx in enumerate(annotated_frames):
-        start = frame_idx
-        
-        # 结束帧：下一个标注帧的前一帧，或视频末尾
-        if i < len(annotated_frames) - 1:
-            end = annotated_frames[i + 1] - 1
-        else:
-            end = total_frames - 1
-        
-        segments.append((start, end))
-    
-    return segments
-
-
-def process_segment(predictor, inference_state, segment_start, segment_end, 
-                   frame_annotations, progress_callback=None):
-    """
-    处理单个帧段
-    
-    Args:
-        predictor: SAM2 video predictor实例
-        inference_state: SAM2 inference state
-        segment_start (int): 段起始帧索引
-        segment_end (int): 段结束帧索引
-        frame_annotations (list): 该起始帧的标注 [[x1,y1,x2,y2,obj_id], ...]
-        progress_callback (callable, optional): 进度回调函数
-    
-    Returns:
-        dict: 该段的所有帧masks，格式 {frame_idx: {obj_id: mask_array}}
-    
-    Raises:
-        Exception: SAM2处理失败时抛出
+    Workflow:
+        1. 初始化SAM2模型和单一inference state
+        2. 按帧顺序添加所有提示（box和points）
+        3. 一次性传播整个视频
+        4. 保存结果（视频和掩码）
     
     Notes:
-        - 在segment_start帧添加所有边界框提示
-        - 使用propagate_in_video前向传播到segment_end
-        - clear_old_points=False，累积所有标注
+        - 支持混合提示类型（box + points）
+        - 使用单一inference_state保持temporal consistency
+        - clear_old_points=False以累积所有提示
     """
+    progress_callback = getattr(args, 'progress_callback', None)
+    
+    # 记录每个对象的首次标注帧（用于后续过滤）
+    obj_first_frame = {}
+    for frame_idx, frame_data in annotations_data.items():
+        for obj_id in frame_data.keys():
+            if obj_id not in obj_first_frame:
+                obj_first_frame[obj_id] = frame_idx
+    
+    # 1. 初始化SAM2
     if progress_callback:
-        progress_callback(f"  → 处理段 [{segment_start}-{segment_end}]帧")
-    
-    # 1. 在起始帧添加所有边界框提示
-    for bbox in frame_annotations:
-        x1, y1, x2, y2, obj_id = bbox
-        
-        try:
-            _, out_obj_ids, out_mask_logits = predictor.add_new_points_or_box(
-                inference_state=inference_state,
-                frame_idx=segment_start,
-                obj_id=obj_id,
-                box=np.array([x1, y1, x2, y2], dtype=np.float32),
-                clear_old_points=True  # Phase 2修正: 必须清除旧点以添加box
-            )
-            
-            if progress_callback:
-                progress_callback(f"    ✓ 第 {segment_start} 帧添加对象 {obj_id} 的提示")
-        
-        except Exception as e:
-            if progress_callback:
-                progress_callback(f"    ✗ 警告: 添加对象 {obj_id} 提示失败: {e}")
-            continue
-    
-    # 2. 前向传播
-    segment_masks = {}
+        progress_callback("==== Refinement模式: SAM2处理 ====", 0)
+        progress_callback("正在初始化SAM2模型...", 5)
     
     try:
-        for out_frame_idx, out_obj_ids, out_mask_logits in predictor.propagate_in_video(
-            inference_state,
-            start_frame_idx=segment_start,
-            max_frame_num_to_track=segment_end - segment_start + 1,
-            reverse=False
-        ):
-            # 存储该帧的所有对象masks
+        # 延迟导入SAM2
+        from sam2.build_sam import build_sam2_video_predictor
+        
+        model_cfg = determine_model_cfg(args.model_path)
+        predictor = build_sam2_video_predictor(model_cfg, args.model_path, device=args.device)
+        
+        if progress_callback:
+            progress_callback(f"✓ 模型加载成功: {Path(args.model_path).name}", 10)
+    except Exception as e:
+        if progress_callback:
+            progress_callback(f"✗ 模型加载失败: {e}")
+        raise
+    
+    # 2. 初始化inference state（只做一次）
+    if progress_callback:
+        progress_callback("正在加载视频...", 15)
+    
+    try:
+        inference_state = predictor.init_state(video_path=args.video_path)
+        
+        if progress_callback:
+            progress_callback(f"✓ 视频加载成功: {Path(args.video_path).name}", 20)
+    except Exception as e:
+        if progress_callback:
+            progress_callback(f"✗ 视频加载失败: {e}")
+        raise
+    
+    # 3. 获取视频信息
+    cap = cv2.VideoCapture(args.video_path)
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    cap.release()
+    
+    if progress_callback:
+        progress_callback(f"视频信息: {total_frames}帧, {fps:.2f} FPS", 20)
+        progress_callback(f"\n==== 添加所有提示 ====", 25)
+        progress_callback(f"标注帧数: {len(annotations_data)}", 25)
+    
+    # 4. 按帧顺序添加所有提示
+    # 首先确保所有对象都已注册（避免初始化问题）
+    all_obj_ids = set()
+    for frame_data in annotations_data.values():
+        all_obj_ids.update(frame_data.keys())
+    
+    # 先处理所有的box提示（必须在points之前）
+    for frame_idx in sorted(annotations_data.keys()):
+        frame_annotations = annotations_data[frame_idx]
+        
+        if progress_callback:
+            progress_callback(f"\n处理第 {frame_idx} 帧的标注:")
+        
+        for obj_id, prompts in frame_annotations.items():
+            try:
+                # 准备参数
+                box = None
+                points = None
+                labels = None
+                
+                # 处理box提示
+                if "box" in prompts and prompts["box"]:
+                    box = np.array(prompts["box"], dtype=np.float32)
+                    if progress_callback:
+                        progress_callback(f"  - 对象 {obj_id}: 添加边界框 {prompts['box']}")
+                
+                # 处理点击提示
+                if "points" in prompts and prompts["points"]:
+                    points = np.array(prompts["points"], dtype=np.float32)
+                    labels = np.array(prompts["labels"], dtype=np.int32)
+                    if progress_callback:
+                        num_pos = sum(1 for l in labels if l == 1)
+                        num_neg = sum(1 for l in labels if l == 0)
+                        progress_callback(f"  - 对象 {obj_id}: 添加 {num_pos} 个正向点击, {num_neg} 个负向点击")
+                
+                # 添加提示到SAM2
+                # 策略：先添加box（如果有），再添加points（如果有）
+                if box is not None:
+                    # 先添加box，必须清除旧点
+                    _, out_obj_ids, out_mask_logits = predictor.add_new_points_or_box(
+                        inference_state=inference_state,
+                        frame_idx=frame_idx,
+                        obj_id=obj_id,
+                        box=box,
+                        clear_old_points=True  # box必须清除
+                    )
+                    
+                    # 如果还有points，再单独添加
+                    if points is not None and len(points) > 0:
+                        _, out_obj_ids, out_mask_logits = predictor.add_new_points_or_box(
+                            inference_state=inference_state,
+                            frame_idx=frame_idx,
+                            obj_id=obj_id,
+                            points=points,
+                            labels=labels,
+                            clear_old_points=False  # 第二次不清除，累积
+                        )
+                elif points is not None and len(points) > 0:
+                    # 只有points，没有box
+                    _, out_obj_ids, out_mask_logits = predictor.add_new_points_or_box(
+                        inference_state=inference_state,
+                        frame_idx=frame_idx,
+                        obj_id=obj_id,
+                        points=points,
+                        labels=labels,
+                        clear_old_points=True  # 第一次添加需要清除
+                    )
+                else:
+                    # 既没有box也没有points，跳过
+                    if progress_callback:
+                        progress_callback(f"    ⚠️ 对象 {obj_id} 没有任何提示")
+                    continue
+                
+                if progress_callback:
+                    progress_callback(f"    ✓ 成功添加对象 {obj_id} 的提示")
+            
+            except Exception as e:
+                if progress_callback:
+                    progress_callback(f"    ✗ 警告: 添加对象 {obj_id} 提示失败: {e}")
+                continue
+    
+    # 5. 一次性传播整个视频
+    if progress_callback:
+        progress_callback(f"\n==== 传播到整个视频 ====", 30)
+        progress_callback(f"对象首次标注帧: {obj_first_frame}", 30)
+    
+    all_masks = {}
+    
+    try:
+        frame_count = 0
+        for out_frame_idx, out_obj_ids, out_mask_logits in predictor.propagate_in_video(inference_state):
+            # 存储该帧的所有对象masks（仅保存已到达首次标注帧的对象）
             frame_masks = {}
             for i, obj_id in enumerate(out_obj_ids):
-                # 转换为二值mask
-                mask = (out_mask_logits[i] > 0.0).cpu().numpy().squeeze()
-                frame_masks[obj_id] = mask
+                # 检查当前帧是否在对象的有效追踪范围内
+                if out_frame_idx >= obj_first_frame.get(obj_id, 0):
+                    # 转换为二值mask
+                    mask = (out_mask_logits[i] > 0.0).cpu().numpy().squeeze()
+                    frame_masks[obj_id] = mask
+                # 否则跳过该对象（不保存在首次标注帧之前的mask）
             
-            segment_masks[out_frame_idx] = frame_masks
+            if frame_masks:  # 只有当帧中有有效对象时才保存
+                all_masks[out_frame_idx] = frame_masks
+            frame_count += 1
             
-            # 进度回调（每10帧报告一次）
-            if progress_callback and (out_frame_idx - segment_start) % 10 == 0:
-                progress = int((out_frame_idx - segment_start) / (segment_end - segment_start + 1) * 100)
-                progress_callback(f"    传播进度: {progress}% ({out_frame_idx}/{segment_end}帧)")
+            # 进度回调（每20帧报告一次）
+            if progress_callback and frame_count % 20 == 0:
+                # 传播阶段占0-70%的进度
+                progress = int(frame_count / total_frames * 70)
+                progress_callback(f"  传播进度: {frame_count}/{total_frames}帧", progress)
     
     except Exception as e:
         if progress_callback:
-            progress_callback(f"    ✗ 错误: 传播失败: {e}")
+            progress_callback(f"  ✗ 错误: 传播失败: {e}")
         raise
     
     if progress_callback:
-        progress_callback(f"  ✓ 段处理完成，获得 {len(segment_masks)} 帧结果")
+        progress_callback(f"  ✓ 传播完成，获得 {len(all_masks)} 帧结果", 70)  # 传播完成算70%
+        
+        # 统计每个对象的实际追踪范围
+        obj_tracking_stats = {}
+        for frame_idx, frame_masks in all_masks.items():
+            for obj_id in frame_masks.keys():
+                if obj_id not in obj_tracking_stats:
+                    obj_tracking_stats[obj_id] = {"first": frame_idx, "last": frame_idx, "count": 0}
+                obj_tracking_stats[obj_id]["last"] = frame_idx
+                obj_tracking_stats[obj_id]["count"] += 1
+        
+        progress_callback(f"\n对象追踪统计:")
+        for obj_id, stats in sorted(obj_tracking_stats.items()):
+            progress_callback(f"  对象 {obj_id}: 第{stats['first']}-{stats['last']}帧 (共{stats['count']}帧)")
     
-    return segment_masks
+    # 6. 保存结果
+    try:
+        save_results(
+            all_masks,
+            args.video_path,
+            args.video_output_path,
+            args.mask_dir,
+            args.save_to_video,
+            progress_callback
+        )
+    except Exception as e:
+        if progress_callback:
+            progress_callback(f"\n✗ 保存失败: {e}")
+        raise
+    
+    if progress_callback:
+        progress_callback("\n✅ Refinement模式处理完成！")
 
 
 def save_results(all_masks, video_path, output_path, mask_dir, save_to_video, progress_callback=None):
@@ -237,26 +344,52 @@ def save_results(all_masks, video_path, output_path, mask_dir, save_to_video, pr
         
         frame_idx += 1
         
-        # 进度报告
+        # 进度报告（保存阶段占70-100%的进度）
         if progress_callback and frame_idx % 50 == 0:
-            progress = int(frame_idx / total_frames * 100)
-            progress_callback(f"保存进度: {progress}% ({frame_idx}/{total_frames}帧)")
+            progress = 70 + int(frame_idx / total_frames * 30)
+            progress_callback(f"保存进度: {frame_idx}/{total_frames}帧", progress)
     
     cap.release()
     if video_writer:
         video_writer.release()
     
     if progress_callback:
-        progress_callback(f"✓ 保存完成!")
+        progress_callback(f"✓ 保存完成!", 100)  # 保存完成算100%
         if save_to_video:
             progress_callback(f"  视频: {output_path}")
         if mask_dir:
             progress_callback(f"  掩码: {mask_dir} ({frame_idx}张)")
 
 
+def convert_legacy_annotations_to_refinement_format(multi_frame_annotations):
+    """
+    将旧格式的标注数据转换为新的refinement格式
+    
+    Args:
+        multi_frame_annotations (dict): 旧格式 {frame_idx: [[x1,y1,x2,y2,obj_id], ...]}
+    
+    Returns:
+        dict: 新格式 {frame_idx: {obj_id: {"box": [x1,y1,x2,y2], "points": [], "labels": []}}}
+    """
+    refinement_annotations = {}
+    
+    for frame_idx, bbox_list in multi_frame_annotations.items():
+        frame_data = {}
+        for bbox in bbox_list:
+            x1, y1, x2, y2, obj_id = bbox
+            frame_data[obj_id] = {
+                "box": [x1, y1, x2, y2],
+                "points": [],  # 暂时没有点击
+                "labels": []
+            }
+        refinement_annotations[frame_idx] = frame_data
+    
+    return refinement_annotations
+
+
 def process_video_multiframe(args, multi_frame_annotations):
     """
-    多帧SAM2提示处理主函数
+    多帧SAM2提示处理主函数 - 现在使用refinement模式
     
     Args:
         args: 参数对象，包含以下属性:
@@ -268,147 +401,38 @@ def process_video_multiframe(args, multi_frame_annotations):
             - save_to_video (bool): 是否保存视频
             - progress_callback (callable, optional): 进度回调函数
         multi_frame_annotations (dict): 多帧标注数据
-            格式: {frame_idx: [[x1,y1,x2,y2,obj_id], ...]}
+            旧格式: {frame_idx: [[x1,y1,x2,y2,obj_id], ...]}
+            新格式: {frame_idx: {obj_id: {"box": [...], "points": [...], "labels": [...]}}}
     
-    Workflow:
-        1. 初始化SAM2模型和inference state
-        2. 分析标注帧，计算处理段
-        3. 逐段处理：在每个段的起始帧添加提示，然后前向传播
-        4. 保存结果（视频和掩码）
-    
-    Examples:
-        >>> args = Args()
-        >>> args.video_path = "video.mp4"
-        >>> annotations = {0: [[10,20,100,100,0]], 50: [[15,25,105,105,0]]}
-        >>> process_video_multiframe(args, annotations)
+    Notes:
+        - 现在使用refinement模式处理
+        - 自动检测并转换旧格式数据
+        - 支持混合提示类型
     """
     progress_callback = getattr(args, 'progress_callback', None)
     
-    # 1. 初始化SAM2
-    if progress_callback:
-        progress_callback("==== Phase 2: 多帧SAM2提示处理 ====")
-        progress_callback("正在初始化SAM2模型...")
+    # 检测数据格式
+    needs_conversion = False
+    if multi_frame_annotations:
+        # 检查第一个帧的数据格式
+        first_frame = next(iter(multi_frame_annotations))
+        first_data = multi_frame_annotations[first_frame]
+        
+        # 如果是list，说明是旧格式
+        if isinstance(first_data, list):
+            needs_conversion = True
     
-    try:
-        # 延迟导入SAM2
-        from sam2.build_sam import build_sam2_video_predictor
-        
-        model_cfg = determine_model_cfg(args.model_path)
-        predictor = build_sam2_video_predictor(model_cfg, args.model_path, device=args.device)
-        
+    # 转换数据格式（如果需要）
+    if needs_conversion:
         if progress_callback:
-            progress_callback(f"✓ 模型加载成功: {Path(args.model_path).name}")
-    except Exception as e:
-        if progress_callback:
-            progress_callback(f"✗ 模型加载失败: {e}")
-        raise
+            progress_callback("检测到旧格式标注数据，正在转换...")
+        annotations_data = convert_legacy_annotations_to_refinement_format(multi_frame_annotations)
+    else:
+        # 已经是新格式
+        annotations_data = multi_frame_annotations
     
-    # 2. 初始化inference state
-    if progress_callback:
-        progress_callback("正在加载视频...")
-    
-    try:
-        inference_state = predictor.init_state(video_path=args.video_path)
-        
-        if progress_callback:
-            progress_callback(f"✓ 视频加载成功: {Path(args.video_path).name}")
-    except Exception as e:
-        if progress_callback:
-            progress_callback(f"✗ 视频加载失败: {e}")
-        raise
-    
-    # 3. 获取视频信息
-    cap = cv2.VideoCapture(args.video_path)
-    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    fps = cap.get(cv2.CAP_PROP_FPS)
-    cap.release()
-    
-    if progress_callback:
-        progress_callback(f"视频信息: {total_frames}帧, {fps:.2f} FPS")
-    
-    # 4. 分析标注帧和处理段
-    annotated_frames = sorted(multi_frame_annotations.keys())
-    segments = analyze_frame_segments(annotated_frames, total_frames)
-    
-    if progress_callback:
-        progress_callback(f"\n==== 标注分析 ====")
-        progress_callback(f"标注帧数: {len(annotated_frames)}")
-        progress_callback(f"标注帧: {annotated_frames}")
-        progress_callback(f"处理段数: {len(segments)}")
-        for i, (start, end) in enumerate(segments):
-            progress_callback(f"  段{i+1}: 第{start}-{end}帧 ({end-start+1}帧)")
-    
-    # 5. 逐段处理
-    all_masks = {}
-    
-    if progress_callback:
-        progress_callback(f"\n==== 开始分段处理 ====")
-    
-    for seg_idx, (seg_start, seg_end) in enumerate(segments):
-        if progress_callback:
-            progress_callback(f"\n--- 段 {seg_idx+1}/{len(segments)} ---")
-        
-        # === Phase 2修正: 每个段重新初始化inference_state ===
-        # 这是必需的，因为SAM2的inference_state在每个段之间不兼容
-        if seg_idx > 0:
-            if progress_callback:
-                progress_callback(f"  重新初始化inference_state（段间隔离）")
-            
-            try:
-                inference_state = predictor.init_state(video_path=args.video_path)
-            except Exception as e:
-                if progress_callback:
-                    progress_callback(f"  ✗ inference_state初始化失败: {e}")
-                raise
-        
-        # 获取该段起始帧的标注
-        frame_annotations = multi_frame_annotations[seg_start]
-        
-        if progress_callback:
-            obj_ids = [bbox[4] for bbox in frame_annotations]
-            progress_callback(f"  起始帧: 第{seg_start}帧")
-            progress_callback(f"  对象数: {len(frame_annotations)}")
-            progress_callback(f"  对象ID: {obj_ids}")
-        
-        # 处理该段
-        try:
-            segment_masks = process_segment(
-                predictor, 
-                inference_state,
-                seg_start, 
-                seg_end,
-                frame_annotations,
-                progress_callback
-            )
-            
-            # 合并到总结果
-            all_masks.update(segment_masks)
-            
-            if progress_callback:
-                progress_callback(f"  ✓ 段 {seg_idx+1} 完成")
-        
-        except Exception as e:
-            if progress_callback:
-                progress_callback(f"  ✗ 段 {seg_idx+1} 处理失败: {e}")
-            raise
-    
-    # 6. 保存结果
-    try:
-        save_results(
-            all_masks,
-            args.video_path,
-            args.video_output_path,
-            getattr(args, 'mask_dir', None),
-            getattr(args, 'save_to_video', True),
-            progress_callback
-        )
-    except Exception as e:
-        if progress_callback:
-            progress_callback(f"✗ 保存结果失败: {e}")
-        raise
-    
-    if progress_callback:
-        progress_callback("\n==== Phase 2 多帧处理完成！ ====")
+    # 调用新的refinement处理函数
+    process_video_with_refinement(args, annotations_data)
 
 
 # 向后兼容的入口函数

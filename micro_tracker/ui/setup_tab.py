@@ -7,6 +7,7 @@ from PyQt5.QtCore import Qt, QTimer, QRegExp
 
 import os
 import torch
+from pathlib import Path
 
 from micro_tracker.ui.base_tab import BaseTab
 from micro_tracker.components.video_widgets import VideoLabel
@@ -58,14 +59,6 @@ class SetupTab(BaseTab):
         # 添加参数设置区域
         param_group = self.create_parameter_settings_group()
         left_layout.addWidget(param_group)
-        
-        # === Phase 2: 添加标注管理器 ===
-        annotation_manager_group = QGroupBox("标注管理")
-        annotation_manager_layout = QVBoxLayout()
-        self.annotation_manager = AnnotationManagerWidget(self.main_window)
-        annotation_manager_layout.addWidget(self.annotation_manager)
-        annotation_manager_group.setLayout(annotation_manager_layout)
-        left_layout.addWidget(annotation_manager_group)
         
         # 创建一个垂直布局的伸缩器，使后面的处理进度区域占据所有剩余空间
         left_bottom_container = QWidget()
@@ -123,19 +116,58 @@ class SetupTab(BaseTab):
         video_layout.addWidget(video_browse_btn)
         file_layout.addRow("输入视频:", video_layout)
         
-        # 模型文件选择
+        # 模型文件选择（下拉选择）
         model_layout = QHBoxLayout()
         model_layout.setSpacing(8)
-        self.main_window.model_path_edit = QLineEdit(self.main_window.model_path)
-        self.main_window.model_path_edit.setReadOnly(True)
-        self.main_window.model_path_edit.setMinimumHeight(24)  # 设置输入框高度
+        self.main_window.model_combo = QComboBox()
+        self.main_window.model_combo.setMinimumHeight(24)
+        self.main_window.model_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        
+        # 自动扫描并添加模型
+        self.populate_model_list()
+        
+        # 连接信号
+        self.main_window.model_combo.currentIndexChanged.connect(self.on_model_selected)
+        
+        # 设置下拉框样式
+        self.main_window.model_combo.setStyleSheet("""
+            QComboBox {
+                border: 1px solid #e0e0e0;
+                border-radius: 4px;
+                padding: 2px 6px;
+                padding-right: 20px;
+                background-color: white;
+                min-height: 20px;
+            }
+            QComboBox::drop-down {
+                subcontrol-origin: padding;
+                subcontrol-position: center right;
+                width: 20px;
+                border-left: none;
+            }
+            QComboBox::down-arrow {
+                width: 12px;
+                height: 12px;
+                image: url(icons/dropdown.png);
+                margin-right: 5px;
+            }
+            QComboBox QAbstractItemView {
+                border: 1px solid #e0e0e0;
+                selection-background-color: #bbdefb;
+                selection-color: #000000;
+                border-radius: 0 0 4px 4px;
+            }
+        """)
+        
         model_browse_btn = QPushButton("浏览")
         model_browse_btn.setIcon(QIcon.fromTheme("document-open"))
         model_browse_btn.setMinimumWidth(60)
         model_browse_btn.setMaximumWidth(60)
-        model_browse_btn.setMinimumHeight(24)  # 设置按钮高度与输入框一致
+        model_browse_btn.setMinimumHeight(24)
+        model_browse_btn.setToolTip("选择自定义模型文件")
         model_browse_btn.clicked.connect(self.main_window.browse_model)
-        model_layout.addWidget(self.main_window.model_path_edit)
+        
+        model_layout.addWidget(self.main_window.model_combo)
         model_layout.addWidget(model_browse_btn)
         file_layout.addRow("SAM2 模型:", model_layout)
         
@@ -282,7 +314,7 @@ class SetupTab(BaseTab):
         self.main_window.progress_bar.setRange(0, 100)
         self.main_window.progress_bar.setValue(0)
         self.main_window.progress_bar.setTextVisible(True)
-        self.main_window.progress_bar.setFormat("%p% (%v/%m)")
+        self.main_window.progress_bar.setFormat("%p%")  # 只显示百分比
         self.main_window.progress_bar.setStyleSheet("""
             QProgressBar {
                 border: 1px solid #e0e0e0;
@@ -359,26 +391,7 @@ class SetupTab(BaseTab):
         self.main_window.frame_info_label.setMinimumWidth(100)
         self.main_window.frame_info_label.setStyleSheet("font-weight: bold; color: #455a64;")
         
-        clear_bbox_btn = QPushButton("清除边界框")
-        clear_bbox_btn.setIcon(QIcon.fromTheme("edit-delete"))
-        clear_bbox_btn.setMinimumWidth(80)
-        clear_bbox_btn.setMaximumWidth(100)
-        clear_bbox_btn.setStyleSheet("background-color: #f44336;")
-        clear_bbox_btn.clicked.connect(self.main_window.video_label.clear_bboxes)
-        
-        control_layout.addWidget(self.main_window.play_pause_btn)
-        control_layout.addWidget(self.main_window.frame_slider)
-        control_layout.addWidget(self.main_window.frame_info_label)
-        control_layout.addWidget(clear_bbox_btn)
-        
-        preview_layout.addLayout(control_layout)
-        
-        # === Phase 2: 标注状态指示器（简化）===
-        annotation_status_layout = QHBoxLayout()
-        annotation_status_layout.setContentsMargins(0, 10, 0, 0)
-        annotation_status_layout.setSpacing(10)
-        
-        # 已标注帧数统计（移除模式指示器，因为总是多帧模式）
+        # 已标注帧数统计（移到滑块右侧）
         self.main_window.annotated_frames_label = QLabel("已标注: 0帧 / 0个对象")
         self.main_window.annotated_frames_label.setStyleSheet("""
             background-color: #E8F5E9;
@@ -389,39 +402,61 @@ class SetupTab(BaseTab):
             font-weight: bold;
             font-size: 9pt;
         """)
-        annotation_status_layout.addWidget(self.main_window.annotated_frames_label)
         
-        annotation_status_layout.addStretch(1)
-        preview_layout.addLayout(annotation_status_layout)
+        control_layout.addWidget(self.main_window.play_pause_btn)
+        control_layout.addWidget(self.main_window.frame_slider)
+        control_layout.addWidget(self.main_window.frame_info_label)
+        control_layout.addWidget(self.main_window.annotated_frames_label)
         
-        # === Phase 2: 标注模式选择器 ===
+        preview_layout.addLayout(control_layout)
+        
+        # === 标注模式与提示类型的左右布局 ===
+        mode_prompt_layout = QHBoxLayout()
+        
+        # 左侧：标注模式
         annotation_mode_group = QGroupBox("标注模式")
+        annotation_mode_group.setStyleSheet("""
+            QGroupBox {
+                font-weight: bold;
+                font-size: 9pt;
+                margin-top: 6px;
+                padding-top: 12px;
+                border: 1px solid #c0c0c0;
+                border-radius: 5px;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 5px 0 5px;
+            }
+        """)
         annotation_mode_layout = QVBoxLayout()
-        annotation_mode_layout.setSpacing(8)
+        annotation_mode_layout.setSpacing(5)
+        annotation_mode_layout.setContentsMargins(8, 5, 8, 5)
         
-        # 模式选择按钮
+        # 模式选择按钮（左右排列）
         mode_selection_layout = QHBoxLayout()
         
-        self.new_object_radio = QRadioButton("🆕 新对象")
+        self.new_object_radio = QRadioButton("新对象")
         self.new_object_radio.setChecked(True)
         self.new_object_radio.setToolTip("为新出现的对象添加标注")
         self.new_object_radio.setStyleSheet("""
             QRadioButton {
                 font-size: 9pt;
-                padding: 4px;
+                padding: 2px;
             }
             QRadioButton::indicator {
-                width: 16px;
-                height: 16px;
+                width: 14px;
+                height: 14px;
             }
         """)
         
-        self.refine_object_radio = QRadioButton("✏️ 修正对象")
+        self.refine_object_radio = QRadioButton("修正对象")
         self.refine_object_radio.setToolTip("为已存在的对象添加新帧标注")
         self.refine_object_radio.setStyleSheet("""
             QRadioButton {
                 font-size: 9pt;
-                padding: 4px;
+                padding: 2px;
             }
         """)
         
@@ -431,20 +466,24 @@ class SetupTab(BaseTab):
         
         mode_selection_layout.addWidget(self.new_object_radio)
         mode_selection_layout.addWidget(self.refine_object_radio)
+        mode_selection_layout.addStretch()
         annotation_mode_layout.addLayout(mode_selection_layout)
         
-        # 对象选择下拉框
+        # 对象选择下拉框（水平排列）
         object_selector_layout = QHBoxLayout()
+        object_selector_layout.setSpacing(8)
+        
         object_selector_label = QLabel("选择对象:")
         object_selector_label.setStyleSheet("font-size: 9pt;")
         
         self.main_window.object_selector_combo = QComboBox()
         self.main_window.object_selector_combo.setEnabled(False)
-        self.main_window.object_selector_combo.setMinimumWidth(200)
+        self.main_window.object_selector_combo.setMinimumWidth(240)
+        self.main_window.object_selector_combo.setMaximumHeight(28)
         self.main_window.object_selector_combo.setStyleSheet("""
             QComboBox {
                 font-size: 9pt;
-                padding: 4px;
+                padding: 2px 4px;
             }
         """)
         
@@ -454,33 +493,84 @@ class SetupTab(BaseTab):
         annotation_mode_layout.addLayout(object_selector_layout)
         
         annotation_mode_group.setLayout(annotation_mode_layout)
-        preview_layout.addWidget(annotation_mode_group)
+        mode_prompt_layout.addWidget(annotation_mode_group)
+        
+        # 右侧：提示类型
+        prompt_type_group = QGroupBox("提示类型")
+        prompt_type_group.setStyleSheet("""  
+            QGroupBox {
+                font-weight: bold;
+                font-size: 9pt;
+                margin-top: 6px;
+                padding-top: 12px;
+                border: 1px solid #c0c0c0;
+                border-radius: 5px;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 5px 0 5px;
+            }
+        """)
+        
+        prompt_type_layout = QVBoxLayout()
+        prompt_type_layout.setSpacing(4)
+        prompt_type_layout.setContentsMargins(8, 5, 8, 5)
+        
+        # 主要提示类型（左右排列）
+        prompt_mode_layout = QHBoxLayout()
+        
+        self.box_mode_radio = QRadioButton("边界框模式")
+        self.box_mode_radio.setChecked(True)
+        self.box_mode_radio.setToolTip("使用鼠标拖拽绘制边界框")
+        self.box_mode_radio.setStyleSheet("""
+            QRadioButton {
+                font-size: 9pt;
+                padding: 2px;
+            }
+        """)
+        
+        self.point_mode_radio = QRadioButton("点击模式")
+        self.point_mode_radio.setToolTip("左键-添加区域（正向点击），右键-移除区域（负向点击）")
+        self.point_mode_radio.setStyleSheet("""
+            QRadioButton {
+                font-size: 9pt;
+                padding: 2px;
+            }
+        """)
+        
+        self.prompt_type_button_group = QButtonGroup()
+        self.prompt_type_button_group.addButton(self.box_mode_radio)
+        self.prompt_type_button_group.addButton(self.point_mode_radio)
+        
+        prompt_mode_layout.addWidget(self.box_mode_radio)
+        prompt_mode_layout.addWidget(self.point_mode_radio)
+        prompt_mode_layout.addStretch()
+        prompt_type_layout.addLayout(prompt_mode_layout)
+        
+        # 说明文字
+        hint_label = QLabel("点击模式: 左键添加区域，右键移除区域")
+        hint_label.setStyleSheet("font-size: 8pt; color: #666; padding-left: 5px;")
+        prompt_type_layout.addWidget(hint_label)
+        
+        prompt_type_group.setLayout(prompt_type_layout)
+        mode_prompt_layout.addWidget(prompt_type_group)
+        
+        preview_layout.addLayout(mode_prompt_layout)
         
         # 连接信号
         self.new_object_radio.toggled.connect(self.on_annotation_mode_changed)
         self.refine_object_radio.toggled.connect(self.on_annotation_mode_changed)
         self.main_window.object_selector_combo.currentIndexChanged.connect(self.on_object_selected)
         
-        # 操作说明
-        help_text = QLabel(
-            "操作说明: \n"
-            "1. 选择标注模式（新对象/修正对象）\n"
-            "2. 使用滑块或快捷键（F/D）浏览视频帧\n"
-            "3. 在任意帧上点击并拖动鼠标绘制边界框\n"
-            "4. 键盘: 空格-播放/暂停, F-下一帧, D-上一帧, Del-删除边界框\n"
-        )
-        help_text.setAlignment(Qt.AlignCenter)
-        help_text.setStyleSheet("""
-            background-color: #e8f5e9; 
-            padding: 10px; 
-            border-radius: 5px; 
-            border: 1px solid #a5d6a7;
-            color: #2e7d32;
-            font-weight: bold;
-            font-size: 9.5pt;
-        """)
-        help_text.setMinimumHeight(90)  # 设置最小高度
-        preview_layout.addWidget(help_text)
+        # 连接提示类型信号
+        self.box_mode_radio.toggled.connect(self.on_prompt_type_changed)
+        self.point_mode_radio.toggled.connect(self.on_prompt_type_changed)
+        
+        # 标注管理器移到这里
+        from micro_tracker.ui.annotation_manager import AnnotationManagerWidget
+        self.main_window.annotation_manager = AnnotationManagerWidget(self.main_window)
+        preview_layout.addWidget(self.main_window.annotation_manager)
         
         preview_group.setLayout(preview_layout)
         right_layout.addWidget(preview_group)
@@ -488,18 +578,22 @@ class SetupTab(BaseTab):
         return right_panel
     
     # === Phase 2: 标注模式切换回调方法 ===
-    def on_annotation_mode_changed(self):
+    def on_annotation_mode_changed(self, checked):
         """标注模式切换处理"""
+        # 只处理按钮被选中的情况，忽略取消选中的信号
+        if not checked:
+            return
+            
         if self.new_object_radio.isChecked():
             # 新对象模式
             self.main_window.object_selector_combo.setEnabled(False)
             self.main_window.video_label.overlay_layer.set_annotation_mode("new_object")
-            self.main_window.log_message("📝 标注模式: 新对象", "info")
+            self.main_window.log_message("标注模式: 新对象", "info")
         else:
             # 修正模式
             self.main_window.object_selector_combo.setEnabled(True)
             self.update_object_selector()
-            self.main_window.log_message("✏️ 标注模式: 修正对象", "warning")
+            self.main_window.log_message("标注模式: 修正对象", "warning")
     
     def update_object_selector(self):
         """更新对象选择下拉框"""
@@ -547,6 +641,93 @@ class SetupTab(BaseTab):
                 info = registry[obj_id]
                 frames_str = ", ".join(map(str, info["frames"]))
                 self.main_window.log_message(
-                    f"✏️ 选中对象 {obj_id}，已在帧 [{frames_str}] 标注", 
+                    f"选中对象 {obj_id}，已在帧 [{frames_str}] 标注", 
                     "highlight"
-                ) 
+                )
+    
+    def on_prompt_type_changed(self, checked):
+        """提示类型切换处理"""
+        # 只处理按钮被选中的情况，忽略取消选中的信号
+        if not checked:
+            return
+            
+        if not hasattr(self.main_window, 'video_label') or not self.main_window.video_label:
+            return
+            
+        if self.box_mode_radio.isChecked():
+            # 边界框模式
+            self.main_window.video_label.overlay_layer.prompt_mode = "box"
+            self.main_window.log_message("提示类型: 边界框模式", "info")
+        else:
+            # 点击模式（左键=正向，右键=负向）
+            self.main_window.video_label.overlay_layer.prompt_mode = "point"
+            self.main_window.log_message("提示类型: 点击模式（左键添加，右键移除）", "info")
+    
+    def populate_model_list(self):
+        """自动扫描并填充模型列表"""
+        combo = self.main_window.model_combo
+        combo.clear()
+        
+        # 定义模型目录
+        model_dir = Path("models/sam2/checkpoints")
+        
+        # 检查目录是否存在
+        if not model_dir.exists():
+            combo.addItem("❌ 模型目录不存在", None)
+            self.main_window.log_message(f"警告: 模型目录不存在: {model_dir}", "warning")
+            return
+        
+        # 扫描.pt文件
+        model_files = sorted(model_dir.glob("*.pt"))
+        
+        if not model_files:
+            combo.addItem("❌ 未找到模型文件", None)
+            self.main_window.log_message(f"警告: 在 {model_dir} 中未找到.pt模型文件", "warning")
+            return
+        
+        # 添加找到的模型
+        model_info = {
+            "tiny": ("🟢 Tiny - 最快速度，适合实时预览", "sam2.1_hiera_tiny.pt"),
+            "small": ("🟡 Small - 平衡速度与精度", "sam2.1_hiera_small.pt"),
+            "base_plus": ("🟠 Base+ - 高精度（推荐）", "sam2.1_hiera_base_plus.pt"),
+            "large": ("🔴 Large - 最高精度，较慢", "sam2.1_hiera_large.pt"),
+        }
+        
+        default_index = 0
+        for i, model_file in enumerate(model_files):
+            file_name = model_file.name
+            
+            # 查找友好名称
+            display_name = file_name
+            for key, (friendly_name, pattern) in model_info.items():
+                if pattern in file_name:
+                    display_name = friendly_name
+                    break
+            
+            # 添加到下拉框
+            combo.addItem(display_name, str(model_file))
+            
+            # 设置默认选项（tiny）
+            if "tiny" in file_name.lower():
+                default_index = i
+        
+        # 设置默认选择
+        combo.setCurrentIndex(default_index)
+        
+        self.main_window.log_message(f"✓ 发现 {len(model_files)} 个SAM2模型", "info")
+    
+    def on_model_selected(self, index):
+        """模型选择变化处理"""
+        combo = self.main_window.model_combo
+        
+        if index < 0 or combo.count() == 0:
+            return
+        
+        model_path = combo.currentData()
+        
+        if model_path and model_path != "None":
+            self.main_window.model_path = model_path
+            self.main_window.log_message(f"选择模型: {Path(model_path).name}", "info")
+            self.main_window.check_start_enabled()
+        else:
+            self.main_window.log_message("警告: 无效的模型路径", "warning") 

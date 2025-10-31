@@ -33,6 +33,14 @@ class OverlayLayer(QGraphicsItem):
         self.selected_object_id_for_refine = None  # 修正模式下选中的对象ID
         self.next_available_id = 0  # 下一个可用ID
         
+        # === Refinement功能: 新的统一标注结构 ===
+        self.annotations_per_frame = {}  # {frame_idx: {obj_id: {"box": [x1,y1,x2,y2], "points": [(x,y)], "labels": [0/1], "mask": np.array}}}
+        self.prompt_mode = "box"  # "box", "positive_point", "negative_point"
+        self.temp_points = []  # [(x, y)]临时点击存储
+        self.temp_labels = []  # [0/1]点击标签
+        self.temp_points_frame_idx = None  # 临时点击所属的帧索引
+        self.current_editing_obj_id = None  # 当前编辑的对象ID
+        
         # 固定颜色调色板（Phase 2）
         self.color_palette = [
             (255, 0, 0),     # 红
@@ -58,6 +66,11 @@ class OverlayLayer(QGraphicsItem):
         self.frame_size = (640, 480)  # 帧大小
         self.drawing = False  # 是否正在绘制
         self.current_bbox = [0, 0, 0, 0, -1]  # 当前正在绘制的边界框
+        
+        # === 实时预览支持 ===
+        self.preview_masks = {}  # {obj_id: np.ndarray} 预览mask数据
+        self.preview_enabled = True  # 默认启用预览功能
+        
         self.setAcceptHoverEvents(True)
     
     def boundingRect(self):
@@ -71,6 +84,8 @@ class OverlayLayer(QGraphicsItem):
         self._draw_tracks(painter)
         self._draw_object_features(painter)
         self._draw_id_labels(painter)
+        self._draw_click_markers(painter)  # 绘制点击标记
+        self._draw_preview_masks(painter)  # 新增：绘制预览mask
         if self.drawing:
             self._draw_current_bbox(painter)
     
@@ -183,6 +198,96 @@ class OverlayLayer(QGraphicsItem):
             painter.setPen(QColor(color[0], color[1], color[2]))
             painter.drawText(text_x, text_y, text)
     
+    def _draw_click_markers(self, painter):
+        """绘制点击标记"""
+        # 绘制已保存的点击
+        if self.current_frame_idx in self.annotations_per_frame:
+            frame_data = self.annotations_per_frame[self.current_frame_idx]
+            for obj_id, prompts in frame_data.items():
+                if "points" in prompts and prompts["points"]:
+                    for i, (x, y) in enumerate(prompts["points"]):
+                        label = prompts["labels"][i] if "labels" in prompts and i < len(prompts["labels"]) else 1
+                        # 绘制不同颜色的点：绿色=正向，红色=负向
+                        color = QColor(0, 255, 0) if label == 1 else QColor(255, 0, 0)
+                        painter.setPen(QPen(color, 3))
+                        painter.setBrush(QColor(color.red(), color.green(), color.blue(), 100))
+                        # 绘制圆形标记（修复：移除错误的resolution_factor缩放）
+                        painter.drawEllipse(int(x - 5), int(y - 5), 10, 10)
+                        # 绘制中心点
+                        painter.setPen(QPen(color, 5))
+                        painter.drawPoint(int(x), int(y))
+        
+        # 绘制临时点击（还未保存的）- 只在所属帧显示
+        if self.temp_points and self.temp_points_frame_idx == self.current_frame_idx:
+            for i, (x, y) in enumerate(self.temp_points):
+                label = self.temp_labels[i] if i < len(self.temp_labels) else 1
+                color = QColor(0, 255, 0, 150) if label == 1 else QColor(255, 0, 0, 150)
+                painter.setPen(QPen(color, 2, Qt.DashLine))
+                painter.setBrush(QColor(color.red(), color.green(), color.blue(), 50))
+                # 修复：移除错误的resolution_factor缩放
+                painter.drawEllipse(int(x - 7), int(y - 7), 14, 14)
+    
+    def _draw_preview_masks(self, painter):
+        """
+        绘制实时预览的masks（优化版本，使用numpy批量操作）
+        
+        Notes:
+            - 只在preview_enabled=True时绘制
+            - mask以半透明方式叠加在视频帧上
+            - 使用对象固定颜色（来自color_palette）
+            - 使用numpy批量操作提升绘制性能
+        
+        Performance:
+            使用numpy批量操作代替逐像素循环，提升绘制速度
+        """
+        if not self.preview_enabled or not self.preview_masks:
+            return
+        
+        for obj_id, mask in self.preview_masks.items():
+            if mask is None:
+                continue
+            
+            try:
+                # 调整mask尺寸
+                target_size = (self.frame_size[0], self.frame_size[1])
+                if mask.shape[:2] != (self.frame_size[1], self.frame_size[0]):
+                    mask_resized = cv2.resize(
+                        mask.astype(np.uint8), 
+                        target_size,
+                        interpolation=cv2.INTER_NEAREST
+                    )
+                else:
+                    mask_resized = mask.astype(np.uint8)
+                
+                # 创建彩色mask图像（使用numpy批量操作）
+                color = self.get_object_color(obj_id)
+                mask_colored = np.zeros((mask_resized.shape[0], mask_resized.shape[1], 4), dtype=np.uint8)
+                
+                # 只在mask区域填充颜色（80透明度）
+                mask_indices = mask_resized > 0
+                mask_colored[mask_indices] = [color[2], color[1], color[0], 80]  # BGRA格式
+                
+                # 转换为QImage
+                from PyQt5.QtGui import QImage
+                height, width = mask_colored.shape[:2]
+                bytes_per_line = 4 * width
+                q_image = QImage(
+                    mask_colored.data, 
+                    width, 
+                    height, 
+                    bytes_per_line, 
+                    QImage.Format_ARGB32
+                )
+                
+                # 绘制
+                painter.drawImage(0, 0, q_image)
+            
+            except Exception as e:
+                print(f"绘制预览mask失败 (obj_id={obj_id}): {e}")
+                import traceback
+                traceback.print_exc()
+                continue
+    
     def update_frame_size(self, width, height):
         self.frame_size = (width, height)
         self.prepareGeometryChange()
@@ -208,6 +313,7 @@ class OverlayLayer(QGraphicsItem):
         Notes:
             - 切换帧时会清除当前选中的边界框
             - 会自动从 bboxes_per_frame 字典同步到 bboxes 列表
+            - 会清空不属于当前帧的临时点击（修复点击标注跨帧显示问题）
             - 触发重绘更新UI显示
             - 即使切换到相同帧索引也会同步（用于强制刷新）
         
@@ -220,9 +326,15 @@ class OverlayLayer(QGraphicsItem):
             old_frame_idx = self.current_frame_idx
             self.current_frame_idx = frame_idx
             
-            # 只有在帧真正切换时才清除选择
+            # 只有在帧真正切换时才清除选择和临时点击
             if old_frame_idx != frame_idx:
                 self.selected_bbox = -1
+                # 清空不属于当前帧的临时点击
+                if self.temp_points_frame_idx is not None and self.temp_points_frame_idx != frame_idx:
+                    self.temp_points = []
+                    self.temp_labels = []
+                    self.temp_points_frame_idx = None
+                    self.current_editing_obj_id = None
             
             self._sync_bboxes_from_current_frame()
             self.update()
@@ -310,6 +422,66 @@ class OverlayLayer(QGraphicsItem):
             # 向后兼容：单帧模式返回第0帧
             return {0: self.bboxes.copy()} if len(self.bboxes) > 0 else {}
     
+    def get_refinement_annotations(self):
+        """
+        获取refinement格式的标注数据
+        
+        Returns:
+            dict: {frame_idx: {obj_id: {"box": [x1,y1,x2,y2], "points": [(x,y)], "labels": [0/1]}}}
+        """
+        refinement_data = {}
+        
+        # 先合并bbox数据和点击数据
+        # 1. 从旧格式的bbox数据开始
+        bbox_annotations = self.get_all_annotations()
+        
+        for frame_idx, bbox_list in bbox_annotations.items():
+            if frame_idx not in refinement_data:
+                refinement_data[frame_idx] = {}
+                
+            for bbox in bbox_list:
+                x1, y1, x2, y2, obj_id = bbox
+                refinement_data[frame_idx][obj_id] = {
+                    "box": [x1, y1, x2, y2],
+                    "points": [],
+                    "labels": []
+                }
+        
+        # 2. 合并annotations_per_frame中的点击数据
+        for frame_idx, frame_data in self.annotations_per_frame.items():
+            if frame_idx not in refinement_data:
+                refinement_data[frame_idx] = {}
+                
+            for obj_id, prompts in frame_data.items():
+                if obj_id in refinement_data.get(frame_idx, {}):
+                    # 更新已有对象的点击数据
+                    if "points" in prompts:
+                        refinement_data[frame_idx][obj_id]["points"] = prompts["points"]
+                    if "labels" in prompts:
+                        refinement_data[frame_idx][obj_id]["labels"] = prompts["labels"]
+                else:
+                    # 新对象（只有点击没有box）
+                    refinement_data[frame_idx][obj_id] = prompts
+        
+        # 3. 添加临时点击（如果有）
+        if self.temp_points and self.current_editing_obj_id is not None:
+            frame_idx = self.current_frame_idx
+            obj_id = self.current_editing_obj_id
+            
+            if frame_idx not in refinement_data:
+                refinement_data[frame_idx] = {}
+            if obj_id not in refinement_data[frame_idx]:
+                refinement_data[frame_idx][obj_id] = {"box": None, "points": [], "labels": []}
+                
+            # 添加临时点击到已有点击列表
+            existing_points = refinement_data[frame_idx][obj_id].get("points", [])
+            existing_labels = refinement_data[frame_idx][obj_id].get("labels", [])
+            
+            refinement_data[frame_idx][obj_id]["points"] = existing_points + self.temp_points
+            refinement_data[frame_idx][obj_id]["labels"] = existing_labels + self.temp_labels
+        
+        return refinement_data
+    
     # === Phase 2: 对象ID管理方法 ===
     def register_object(self, obj_id, frame_idx):
         """
@@ -369,6 +541,62 @@ class OverlayLayer(QGraphicsItem):
             # 未注册对象：临时分配颜色
             color_idx = obj_id % len(self.color_palette)
             return self.color_palette[color_idx]
+    
+    def save_temp_clicks(self):
+        """保存临时点击到annotations_per_frame"""
+        if not self.temp_points or self.current_editing_obj_id is None:
+            return False
+        
+        # 验证临时点击属于当前帧
+        if self.temp_points_frame_idx is not None and self.temp_points_frame_idx != self.current_frame_idx:
+            print(f"警告: 临时点击属于第{self.temp_points_frame_idx}帧，但当前在第{self.current_frame_idx}帧")
+            return False
+            
+        frame_idx = self.current_frame_idx
+        obj_id = self.current_editing_obj_id
+        
+        # 确保数据结构存在
+        if frame_idx not in self.annotations_per_frame:
+            self.annotations_per_frame[frame_idx] = {}
+        if obj_id not in self.annotations_per_frame[frame_idx]:
+            self.annotations_per_frame[frame_idx][obj_id] = {
+                "box": None,
+                "points": [],
+                "labels": []
+            }
+        
+        # 获取该对象在当前帧的bbox（如果有）
+        for bbox in self.bboxes:
+            if bbox[4] == obj_id:
+                self.annotations_per_frame[frame_idx][obj_id]["box"] = [bbox[0], bbox[1], bbox[2], bbox[3]]
+                break
+        
+        # 添加点击到现有列表
+        existing_points = self.annotations_per_frame[frame_idx][obj_id].get("points", [])
+        existing_labels = self.annotations_per_frame[frame_idx][obj_id].get("labels", [])
+        
+        self.annotations_per_frame[frame_idx][obj_id]["points"] = existing_points + self.temp_points
+        self.annotations_per_frame[frame_idx][obj_id]["labels"] = existing_labels + self.temp_labels
+        
+        # 清空临时列表
+        num_saved = len(self.temp_points)
+        self.temp_points = []
+        self.temp_labels = []
+        self.temp_points_frame_idx = None
+        self.current_editing_obj_id = None
+        
+        # 更新显示
+        self.update()
+        
+        return num_saved
+    
+    def clear_temp_clicks(self):
+        """清除临时点击"""
+        self.temp_points = []
+        self.temp_labels = []
+        self.temp_points_frame_idx = None
+        self.current_editing_obj_id = None
+        self.update()
     
     def start_drawing(self, x, y, next_id=None):
         """开始绘制边界框"""
@@ -451,10 +679,23 @@ class OverlayLayer(QGraphicsItem):
             if len(frames) == 0:
                 self.unregister_object(deleted_id)
         
+        # 删除该对象在当前帧的点击标注（修复：之前遗漏）
+        if self.current_frame_idx in self.annotations_per_frame:
+            if deleted_id in self.annotations_per_frame[self.current_frame_idx]:
+                del self.annotations_per_frame[self.current_frame_idx][deleted_id]
+                # 如果该帧没有任何点击标注了，删除该帧
+                if not self.annotations_per_frame[self.current_frame_idx]:
+                    del self.annotations_per_frame[self.current_frame_idx]
+        
         if deleted_id in self.tracks:
             del self.tracks[deleted_id]
         if deleted_id in self.object_features:
             del self.object_features[deleted_id]
+        
+        # === 清除该对象的预览mask ===
+        if deleted_id in self.preview_masks:
+            del self.preview_masks[deleted_id]
+        
         self.selected_bbox = -1
         self.update()
         return deleted_id
@@ -466,9 +707,24 @@ class OverlayLayer(QGraphicsItem):
         # === Phase 1 MVP: 同步到多帧字典 ===
         self._sync_bboxes_to_current_frame()
         
+        # 清空当前帧的点击标注（修复：之前遗漏）
+        if self.current_frame_idx in self.annotations_per_frame:
+            del self.annotations_per_frame[self.current_frame_idx]
+        
+        # 清空当前帧的临时点击
+        if self.temp_points_frame_idx == self.current_frame_idx:
+            self.temp_points = []
+            self.temp_labels = []
+            self.temp_points_frame_idx = None
+            self.current_editing_obj_id = None
+        
         self.selected_bbox = -1
         self.tracks = {}
         self.object_features = {}
+        
+        # === 清除所有预览masks ===
+        self.preview_masks.clear()
+        
         self.update()
         return count
     
@@ -482,6 +738,35 @@ class OverlayLayer(QGraphicsItem):
         if obj_id not in self.tracks:
             self.tracks[obj_id] = []
         self.tracks[obj_id].append(point)
+        self.update()
+    
+    # === 实时预览控制方法 ===
+    def set_preview_mask(self, obj_id, mask):
+        """
+        设置预览mask
+        
+        Args:
+            obj_id (int): 对象ID
+            mask (np.ndarray): 二值mask数组
+        """
+        self.preview_masks[obj_id] = mask
+        self.update()
+    
+    def clear_preview_masks(self):
+        """清除所有预览masks"""
+        self.preview_masks.clear()
+        self.update()
+    
+    def set_preview_enabled(self, enabled):
+        """
+        启用/禁用预览功能
+        
+        Args:
+            enabled (bool): True启用，False禁用
+        """
+        self.preview_enabled = enabled
+        if not enabled:
+            self.clear_preview_masks()
         self.update()
 
 class MultiLayerVideoView(QGraphicsView):
@@ -538,6 +823,19 @@ class MultiLayerVideoView(QGraphicsView):
         self.setFocus()
         scene_pos = self.mapToScene(event.pos())
         x, y = scene_pos.x(), scene_pos.y()
+        
+        # 检查当前提示模式
+        if self.overlay_layer.prompt_mode == "point":
+            # 点击模式：根据鼠标键判断正负
+            if event.button() == Qt.LeftButton:
+                # 左键=正向点击
+                self._handle_point_click(x, y, 1)
+            elif event.button() == Qt.RightButton:
+                # 右键=负向点击
+                self._handle_point_click(x, y, 0)
+            return
+        
+        # 边界框模式（原有逻辑）
         selected_bbox = self.overlay_layer.select_bbox(x, y)
         if selected_bbox >= 0:
             self.bbox_selected.emit(selected_bbox)
@@ -566,6 +864,42 @@ class MultiLayerVideoView(QGraphicsView):
             self.bbox_added.emit(new_bbox)
             self.overlay_layer.update()
             self.scene.update()
+    
+    def _handle_point_click(self, x, y, label):
+        """处理点击提示"""
+        # 获取当前选中或最后一个对象的ID
+        if self.overlay_layer.annotation_mode == "refine_object" and self.overlay_layer.selected_object_id_for_refine is not None:
+            obj_id = self.overlay_layer.selected_object_id_for_refine
+        elif len(self.overlay_layer.bboxes) > 0:
+            # 如果有选中的bbox，使用它；否则使用最后一个bbox
+            if self.overlay_layer.selected_bbox >= 0:
+                obj_id = self.overlay_layer.bboxes[self.overlay_layer.selected_bbox][4]
+            else:
+                obj_id = self.overlay_layer.bboxes[-1][4]
+        else:
+            # 没有任何对象，无法添加点击
+            if self.window():
+                self.window().log_message("❗ 请先绘制一个边界框再添加点击提示", "warning")
+            return
+        
+        # 保存点击到临时列表
+        self.overlay_layer.temp_points.append((x, y))
+        self.overlay_layer.temp_labels.append(label)
+        self.overlay_layer.temp_points_frame_idx = self.overlay_layer.current_frame_idx  # 记录帧索引
+        self.overlay_layer.current_editing_obj_id = obj_id
+        
+        # 更新显示
+        self.overlay_layer.update()
+        
+        # 日志
+        if self.window():
+            click_type = "正向" if label == 1 else "负向"
+            icon = "➕" if label == 1 else "➖"
+            self.window().log_message(f"{icon} 添加{click_type}点击: ({int(x)}, {int(y)}) 到对象 {obj_id}", "info")
+        
+        # === 触发实时预览 ===
+        if self.overlay_layer.preview_enabled and self.window():
+            self.window()._generate_preview_for_object(obj_id)
             
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Delete:
@@ -574,6 +908,25 @@ class MultiLayerVideoView(QGraphicsView):
                 self.bbox_deleted.emit(deleted_id)
                 event.accept()
                 return
+        elif event.key() == Qt.Key_A:
+            # 应用临时点击
+            obj_id = self.overlay_layer.current_editing_obj_id  # 保存obj_id
+            num_saved = self.overlay_layer.save_temp_clicks()
+            if num_saved > 0:
+                if self.window():
+                    self.window().log_message(f"✅ 已保存 {num_saved} 个点击提示", "success")
+                    # === 更新预览 ===
+                    if self.overlay_layer.preview_enabled and obj_id is not None:
+                        self.window()._generate_preview_for_object(obj_id)
+            event.accept()
+            return
+        elif event.key() == Qt.Key_C and event.modifiers() == Qt.ControlModifier:
+            # Ctrl+C: 清除临时点击
+            self.overlay_layer.clear_temp_clicks()
+            if self.window():
+                self.window().log_message("🗑️ 清除所有临时点击", "warning")
+            event.accept()
+            return
         elif event.key() in (Qt.Key_Space, Qt.Key_F, Qt.Key_D):
             if self.window() and isinstance(self.window(), QMainWindow): # Check if self.window() is valid
                 self.window().keyPressEvent(event)
@@ -594,6 +947,15 @@ class MultiLayerVideoView(QGraphicsView):
             dict: {frame_idx: [[x1, y1, x2, y2, obj_id], ...]}
         """
         return self.overlay_layer.get_all_annotations()
+    
+    def get_refinement_annotations(self):
+        """
+        获取refinement格式的标注数据
+        
+        Returns:
+            dict: {frame_idx: {obj_id: {"box": [x1,y1,x2,y2], "points": [(x,y)], "labels": [0/1]}}}
+        """
+        return self.overlay_layer.get_refinement_annotations()
     
     def set_current_frame_index(self, frame_idx):
         """

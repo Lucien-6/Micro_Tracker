@@ -85,9 +85,10 @@ Micro_Tracker is a powerful microscopy video analysis tool based on the SAM2 mod
 
 ## ✨ Features
 
-- **🎯 Object Segmentation and Tracking**: Utilize SAM2 (Segment Anything Model 2) and SAMRUAI for high-precision object segmentation and tracking.
+- **🎯 Object Segmentation and Tracking**: Utilize SAM2 (Segment Anything Model 2) and SAMRUAI for high-precision object segmentation and tracking. Fully compliant with SAM2 official API best practices.
 - **🎯 Multi-Frame Annotation**: Support multi-frame intelligent annotation with two modes - new object mode and refine object mode. Add annotations at key frames (deformation, occlusion) to significantly improve tracking quality.
 - **👁️ Real-Time Preview**: Automatically generate mask preview using SAM2 after adding annotations, helping verify annotation quality instantly.
+- **🔧 SAM2 API Alignment**: Mixed prompt handling (box + points) follows SAM2 official implementation, ensuring optimal refinement quality and temporal consistency.
 - **📋 Annotation Management**: Comprehensive annotation management panel with frame list, quick jump, delete, and import/export functionality (JSON format).
 - **🎬 Video Analysis**: Process microscopy videos and generate output videos with markers and trajectories.
 - **📊 Data Extraction**: Extract key parameters such as position, size, and shape of target objects.
@@ -337,9 +338,10 @@ Micro_Tracker 是一个功能强大的基于 SAM2 模型的显微镜视频分析
 
 ## ✨ 功能特点
 
-- **🎯 目标分割跟踪**：利用 SAM2（Segment Anything Model 2）和 SAMRUAI 实现高精度的目标分割和跟踪。
+- **🎯 目标分割跟踪**：利用 SAM2（Segment Anything Model 2）和 SAMRUAI 实现高精度的目标分割和跟踪。完全符合SAM2官方API最佳实践。
 - **🎯 多帧智能标注**：支持在视频任意帧添加标注，提供"新对象"和"修正对象"两种模式。在关键帧（形变、遮挡）添加标注可显著提升追踪质量。
 - **👁️ 实时预览功能**：添加标注后自动使用SAM2生成mask预览，实时验证标注质量。
+- **🔧 SAM2 API对齐**：混合提示处理（box + points）遵循SAM2官方实现方式，确保最优的refinement质量和时序一致性。
 - **📋 标注管理功能**：完善的标注管理面板，支持帧列表查看、快速跳转、删除和导入/导出（JSON格式）。
 - **🎬 视频分析**：处理显微镜视频并生成带有标记和轨迹的输出视频。
 - **📊 数据提取**：提取目标物体的位置、大小、形状等关键参数。

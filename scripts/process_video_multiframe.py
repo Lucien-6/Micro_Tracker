@@ -47,7 +47,16 @@ def process_video_with_refinement(args, annotations_data):
     Notes:
         - 支持混合提示类型（box + points）
         - 使用单一inference_state保持temporal consistency
-        - clear_old_points=False以累积所有提示
+    
+    Prompt Handling Strategy (符合SAM2官方规范):
+        - Box和Points在同一次API调用中传入（如果都存在）
+        - SAM2内部会自动将box转换为2个特殊点（标签2和3，代表左上角和右下角）
+        - 然后与用户points拼接，形成统一的点集传入Transformer Encoder
+        - 这确保了所有提示在模型中的完整语义关联，提升refinement质量
+        - 始终使用clear_old_points=True（符合SAM2 API约定）
+        
+        参考：models/sam2/video_predictor_example.ipynb, Cell 46
+                models/sam2/sam2/sam2_video_predictor.py, L294-318
     """
     progress_callback = getattr(args, 'progress_callback', None)
     
@@ -137,46 +146,46 @@ def process_video_with_refinement(args, annotations_data):
                         num_neg = sum(1 for l in labels if l == 0)
                         progress_callback(f"  - 对象 {obj_id}: 添加 {num_pos} 个正向点击, {num_neg} 个负向点击")
                 
-                # 添加提示到SAM2
-                # 策略：先添加box（如果有），再添加points（如果有）
+                # === 添加提示到SAM2（符合官方API规范）===
+                # 策略：一次性调用添加所有提示（box和points会在SAM2内部自动合并）
+                # 参考：models/sam2/video_predictor_example.ipynb, Cell 46
+                
+                # 构建提示参数字典
+                prompt_kwargs = {
+                    "inference_state": inference_state,
+                    "frame_idx": frame_idx,
+                    "obj_id": obj_id,
+                    "clear_old_points": True  # 始终清除旧点（符合SAM2 API约定）
+                }
+                
+                # 添加box（如果存在）
                 if box is not None:
-                    # 先添加box，必须清除旧点
-                    _, out_obj_ids, out_mask_logits = predictor.add_new_points_or_box(
-                        inference_state=inference_state,
-                        frame_idx=frame_idx,
-                        obj_id=obj_id,
-                        box=box,
-                        clear_old_points=True  # box必须清除
-                    )
-                    
-                    # 如果还有points，再单独添加
-                    if points is not None and len(points) > 0:
-                        _, out_obj_ids, out_mask_logits = predictor.add_new_points_or_box(
-                            inference_state=inference_state,
-                            frame_idx=frame_idx,
-                            obj_id=obj_id,
-                            points=points,
-                            labels=labels,
-                            clear_old_points=False  # 第二次不清除，累积
-                        )
-                elif points is not None and len(points) > 0:
-                    # 只有points，没有box
-                    _, out_obj_ids, out_mask_logits = predictor.add_new_points_or_box(
-                        inference_state=inference_state,
-                        frame_idx=frame_idx,
-                        obj_id=obj_id,
-                        points=points,
-                        labels=labels,
-                        clear_old_points=True  # 第一次添加需要清除
-                    )
-                else:
-                    # 既没有box也没有points，跳过
+                    prompt_kwargs["box"] = box
+                
+                # 添加points和labels（如果存在）
+                if points is not None and len(points) > 0:
+                    prompt_kwargs["points"] = points
+                    prompt_kwargs["labels"] = labels
+                
+                # 验证：至少有一个提示类型
+                if "box" not in prompt_kwargs and "points" not in prompt_kwargs:
                     if progress_callback:
-                        progress_callback(f"    ⚠️ 对象 {obj_id} 没有任何提示")
+                        progress_callback(f"    ⚠️ 对象 {obj_id} 没有任何提示，跳过")
                     continue
                 
+                # 一次性调用SAM2 API（box和points会在内部自动合并）
+                _, out_obj_ids, out_mask_logits = predictor.add_new_points_or_box(**prompt_kwargs)
+                
                 if progress_callback:
-                    progress_callback(f"    ✓ 成功添加对象 {obj_id} 的提示")
+                    # 生成详细的提示信息
+                    prompt_types = []
+                    if "box" in prompt_kwargs:
+                        prompt_types.append("box")
+                    if "points" in prompt_kwargs:
+                        num_pos = sum(1 for l in labels if l == 1)
+                        num_neg = sum(1 for l in labels if l == 0)
+                        prompt_types.append(f"{num_pos}正向点+{num_neg}负向点")
+                    progress_callback(f"    ✓ 成功添加对象 {obj_id} 的提示 ({', '.join(prompt_types)})")
             
             except Exception as e:
                 if progress_callback:
@@ -281,8 +290,14 @@ def save_results(all_masks, video_path, output_path, mask_dir, save_to_video, pr
     # 视频写入器
     video_writer = None
     if save_to_video:
+        # 使用 mp4v 编解码器（Windows 兼容性最佳）
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         video_writer = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
+        
+        # 验证视频写入器是否成功初始化
+        if not video_writer.isOpened():
+            raise RuntimeError(f"无法初始化视频写入器: {output_path}")
+        
         if progress_callback:
             progress_callback(f"创建输出视频: {output_path}")
     

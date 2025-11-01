@@ -4,6 +4,55 @@
 
 ---
 
+## [v2.0.1] - 2025-11-01
+
+### 🐛 重要修复 (Critical Fix)
+
+#### 修复SAM2混合提示处理方式，符合官方API规范
+
+**问题描述：**
+当同时使用边界框(box)和点击(points)进行refinement时，之前的实现分两次调用`add_new_points_or_box` API，不符合SAM2官方推荐方式，可能导致：
+- 精细化refinement效果打折扣
+- 跨帧一致性问题
+- 复杂形状和遮挡场景下的分割质量下降
+
+**修复内容：**
+- **核心修改**：`scripts/process_video_multiframe.py` (第140-179行)
+  - 将分两次调用改为**一次性调用**`add_new_points_or_box`
+  - Box和points在同一个API调用中传入（如果都存在）
+  - 始终使用`clear_old_points=True`（符合SAM2 API约定）
+  - Box会在SAM2内部自动转换为2个特殊点(标签2和3)，然后与用户点击拼接
+  
+- **技术细节**：
+  - SAM2的Transformer Encoder现在能在同一个attention层中处理所有提示
+  - Box和points形成完整的语义单元，而非两次独立的"修正"
+  - 提升了refinement质量和temporal consistency
+  
+- **文档更新**：
+  - 更新函数docstring，添加"Prompt Handling Strategy"说明
+  - 明确标注符合SAM2官方规范的实现方式
+  - 添加参考：`models/sam2/video_predictor_example.ipynb` (Cell 46)
+
+**测试验证：**
+- ✅ API调用逻辑验证测试通过（5个测试用例）
+- ✅ 混合提示（box + points）现在在一次调用中传入
+- ✅ 所有情况都使用`clear_old_points=True`
+
+**兼容性：**
+- ✅ 向后兼容：现有标注JSON文件无需修改
+- ✅ 数据结构不变：UI和标注管理不受影响
+- ✅ 实时预览功能已正确实现，无需修改
+
+**影响范围：**
+- 主要影响：视频处理的refinement质量（提升）
+- 不影响：UI界面、标注数据格式、导入导出功能
+
+**参考资料：**
+- SAM2官方教程：`models/sam2/video_predictor_example.ipynb`
+- SAM2源码：`models/sam2/sam2/sam2_video_predictor.py` (L294-318)
+
+---
+
 ## [v2.0] - 2025-10-31
 
 ### 🎉 正式发布 (Major Release)

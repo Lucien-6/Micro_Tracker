@@ -329,8 +329,48 @@ class OverlayLayer(QGraphicsItem):
             # 只有在帧真正切换时才清除选择和临时点击
             if old_frame_idx != frame_idx:
                 self.selected_bbox = -1
-                # 清空不属于当前帧的临时点击
+                
+                # === 改进：清空临时点击前先提示用户 ===
                 if self.temp_points_frame_idx is not None and self.temp_points_frame_idx != frame_idx:
+                    # 检查是否有临时点击需要保存
+                    if len(self.temp_points) > 0:
+                        # 尝试获取主窗口并显示提示
+                        from PyQt5.QtWidgets import QApplication, QMessageBox
+                        app = QApplication.instance()
+                        should_clear = True  # 默认清除
+                        
+                        if app:
+                            for widget in app.topLevelWidgets():
+                                if hasattr(widget, 'log_message'):
+                                    # 显示警告日志
+                                    widget.log_message(
+                                        f"⚠️ 检测到第 {self.temp_points_frame_idx} 帧有 {len(self.temp_points)} 个未保存的临时点击", 
+                                        "warning"
+                                    )
+                                    
+                                    # 弹出确认对话框
+                                    reply = QMessageBox.question(
+                                        widget,
+                                        "未保存的临时点击",
+                                        f"第 {self.temp_points_frame_idx} 帧有 {len(self.temp_points)} 个临时点击尚未保存。\n\n"
+                                        f"切换到第 {frame_idx} 帧后，这些临时点击将被丢弃。\n\n"
+                                        f"是否继续切换？\n\n"
+                                        f"提示：您可以先返回第 {self.temp_points_frame_idx} 帧，按 A 键保存点击。",
+                                        QMessageBox.Yes | QMessageBox.No,
+                                        QMessageBox.No
+                                    )
+                                    
+                                    if reply == QMessageBox.No:
+                                        # 用户选择不切换，恢复到原来的帧
+                                        self.current_frame_idx = old_frame_idx
+                                        return
+                                    else:
+                                        # 用户确认丢弃
+                                        widget.log_message(f"🗑️ 已丢弃第 {self.temp_points_frame_idx} 帧的临时点击", "warning")
+                                    
+                                    break
+                    
+                    # 清空临时点击
                     self.temp_points = []
                     self.temp_labels = []
                     self.temp_points_frame_idx = None
@@ -549,7 +589,24 @@ class OverlayLayer(QGraphicsItem):
         
         # 验证临时点击属于当前帧
         if self.temp_points_frame_idx is not None and self.temp_points_frame_idx != self.current_frame_idx:
-            print(f"警告: 临时点击属于第{self.temp_points_frame_idx}帧，但当前在第{self.current_frame_idx}帧")
+            error_msg = f"无法保存：临时点击属于第 {self.temp_points_frame_idx} 帧，但当前在第 {self.current_frame_idx} 帧"
+            print(f"警告: {error_msg}")
+            
+            # === 新增：通过主窗口显示错误信息 ===
+            # 尝试获取主窗口实例
+            from PyQt5.QtWidgets import QApplication, QMessageBox
+            app = QApplication.instance()
+            if app:
+                for widget in app.topLevelWidgets():
+                    if hasattr(widget, 'log_message'):
+                        widget.log_message(f"❌ {error_msg}", "error")
+                        QMessageBox.warning(
+                            widget, 
+                            "保存失败", 
+                            f"{error_msg}\n\n请先切换到第 {self.temp_points_frame_idx} 帧，再按 A 键保存点击。"
+                        )
+                        break
+            
             return False
             
         frame_idx = self.current_frame_idx
@@ -835,7 +892,17 @@ class MultiLayerVideoView(QGraphicsView):
                 self._handle_point_click(x, y, 0)
             return
         
-        # 边界框模式（原有逻辑）
+        # === Refinement模式下禁止绘制新的边界框（符合SAM2官方规范）===
+        if self.overlay_layer.annotation_mode == "refine_object":
+            # 修正模式下不允许绘制box，只能使用点击
+            if self.window():
+                self.window().log_message(
+                    "⚠️ 修正模式下不能绘制新的边界框，请使用点击提示（符合SAM2官方规范）", 
+                    "warning"
+                )
+            return
+        
+        # 边界框模式（原有逻辑 - 仅在新对象模式下可用）
         selected_bbox = self.overlay_layer.select_bbox(x, y)
         if selected_bbox >= 0:
             self.bbox_selected.emit(selected_bbox)
@@ -920,11 +987,31 @@ class MultiLayerVideoView(QGraphicsView):
                         self.window()._generate_preview_for_object(obj_id)
             event.accept()
             return
+        elif event.key() == Qt.Key_S and event.modifiers() == Qt.ControlModifier:
+            # Ctrl+S: 保存临时点击并切换到下一帧
+            if self.overlay_layer.temp_points:
+                obj_id = self.overlay_layer.current_editing_obj_id
+                num_saved = self.overlay_layer.save_temp_clicks()
+                if num_saved > 0 and self.window():
+                    self.window().log_message(f"✅ 已保存 {num_saved} 个点击提示", "success")
+                    # 更新预览
+                    if self.overlay_layer.preview_enabled and obj_id is not None:
+                        self.window()._generate_preview_for_object(obj_id)
+                    # 切换到下一帧
+                    if hasattr(self.window(), 'set_frame_index'):
+                        current_idx = self.overlay_layer.current_frame_idx
+                        self.window().set_frame_index(current_idx + 1)
+            event.accept()
+            return
         elif event.key() == Qt.Key_C and event.modifiers() == Qt.ControlModifier:
             # Ctrl+C: 清除临时点击
+            obj_id = self.overlay_layer.current_editing_obj_id  # 保存obj_id用于更新预览
             self.overlay_layer.clear_temp_clicks()
             if self.window():
                 self.window().log_message("🗑️ 清除所有临时点击", "warning")
+                # === 更新预览：清除临时点击后，重新生成基于已保存标注的预览 ===
+                if self.overlay_layer.preview_enabled and obj_id is not None:
+                    self.window()._generate_preview_for_object(obj_id)
             event.accept()
             return
         elif event.key() in (Qt.Key_Space, Qt.Key_F, Qt.Key_D):

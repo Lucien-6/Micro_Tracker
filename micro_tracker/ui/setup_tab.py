@@ -589,11 +589,28 @@ class SetupTab(BaseTab):
             self.main_window.object_selector_combo.setEnabled(False)
             self.main_window.video_label.overlay_layer.set_annotation_mode("new_object")
             self.main_window.log_message("标注模式: 新对象", "info")
+            
+            # 恢复box模式选项
+            if hasattr(self, 'box_mode_radio'):
+                self.box_mode_radio.setEnabled(True)
         else:
             # 修正模式
             self.main_window.object_selector_combo.setEnabled(True)
             self.update_object_selector()
-            self.main_window.log_message("标注模式: 修正对象", "warning")
+            
+            # === 符合SAM2官方规范：refinement时自动切换到点击模式 ===
+            if hasattr(self, 'point_mode_radio') and hasattr(self, 'box_mode_radio'):
+                # 自动切换到点击模式
+                if not self.point_mode_radio.isChecked():
+                    self.point_mode_radio.setChecked(True)
+                
+                # 禁用box模式（符合SAM2官方规范：refinement只用points）
+                self.box_mode_radio.setEnabled(False)
+            
+            self.main_window.log_message(
+                "标注模式: 修正对象 (已自动切换到点击模式，符合SAM2官方规范)", 
+                "warning"
+            )
     
     def update_object_selector(self):
         """更新对象选择下拉框"""

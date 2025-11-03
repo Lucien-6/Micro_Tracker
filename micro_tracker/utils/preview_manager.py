@@ -35,15 +35,28 @@ class PreviewThread(QThread):
         self.predictor = predictor
         self.image = image
         self.prompts = prompts
+        self._should_stop = False  # 优雅退出标志
+    
+    def stop(self):
+        """请求线程停止"""
+        self._should_stop = True
     
     def run(self):
         """执行异步预测"""
         try:
+            # 检查是否应该停止
+            if self._should_stop:
+                return
+            
             # 提取提示
             box = self.prompts.get("box")
             points = self.prompts.get("points")
             labels = self.prompts.get("labels")
             obj_id = self.prompts.get("obj_id", 0)
+            
+            # 再次检查是否应该停止（在耗时操作前）
+            if self._should_stop:
+                return
             
             # 调用预测
             masks, scores, logits = self.predictor.predict(
@@ -53,15 +66,20 @@ class PreviewThread(QThread):
                 multimask_output=False
             )
             
+            # 检查是否应该停止（预测完成后）
+            if self._should_stop:
+                return
+            
             # 取第一个mask
             mask = masks[0] if len(masks) > 0 else None
             if mask is not None:
                 self.preview_ready.emit(obj_id, mask)
         
         except Exception as e:
-            print(f"预览预测失败: {e}")
-            import traceback
-            traceback.print_exc()
+            if not self._should_stop:  # 只在非主动停止时打印错误
+                print(f"预览预测失败: {e}")
+                import traceback
+                traceback.print_exc()
 
 
 class MaskPreviewManager:
@@ -215,10 +233,15 @@ class MaskPreviewManager:
         if not self.preview_enabled or self.predictor is None:
             return
         
-        # 取消之前的预测
+        # 取消之前的预测（优雅方式）
         if self.preview_thread is not None and self.preview_thread.isRunning():
-            self.preview_thread.terminate()
-            self.preview_thread.wait()
+            self.preview_thread.stop()  # 请求停止
+            self.preview_thread.wait(500)  # 等待最多500ms
+            if self.preview_thread.isRunning():
+                # 如果还在运行，强制终止（最后的手段）
+                print("警告: 预览线程未能及时停止，强制终止")
+                self.preview_thread.terminate()
+                self.preview_thread.wait()
         
         # 创建新线程
         prompts_with_id = {**prompts, "obj_id": obj_id}
@@ -241,9 +264,14 @@ class MaskPreviewManager:
         """
         self.current_frame_cache = None
         self.current_frame_idx = -1
+        # 终止运行中的预测线程（优雅方式）
         if self.preview_thread is not None and self.preview_thread.isRunning():
-            self.preview_thread.terminate()
-            self.preview_thread.wait()
+            self.preview_thread.stop()  # 请求停止
+            self.preview_thread.wait(500)  # 等待最多500ms
+            if self.preview_thread.isRunning():
+                # 如果还在运行，强制终止
+                self.preview_thread.terminate()
+                self.preview_thread.wait()
     
     def toggle_preview(self, enabled):
         """

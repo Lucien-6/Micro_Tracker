@@ -427,13 +427,26 @@ class OverlayLayer(QGraphicsItem):
     
     def get_annotated_frame_indices(self):
         """
-        获取所有已标注的帧索引列表
+        获取所有已标注的帧索引列表（包括边界框和点标注）
         
         Returns:
             list: 排序后的帧索引列表
+        
+        Notes:
+            - 合并 bboxes_per_frame 和 annotations_per_frame 的所有帧
+            - 确保纯点标注的帧也被统计
         """
         if self.multi_frame_mode:
-            return sorted(self.bboxes_per_frame.keys())
+            # 合并两个数据源的帧索引
+            all_frames = set()
+            
+            # 添加有边界框标注的帧
+            all_frames.update(self.bboxes_per_frame.keys())
+            
+            # 添加有refinement标注的帧（包括纯点标注）
+            all_frames.update(self.annotations_per_frame.keys())
+            
+            return sorted(all_frames)
         else:
             return [0] if len(self.bboxes) > 0 else []
     

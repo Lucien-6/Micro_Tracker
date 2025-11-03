@@ -40,7 +40,15 @@ def process_video_in_chunks(args, initial_bbox_list: list[list[float]], chunk_se
         mask_dir.mkdir(exist_ok=True, parents=True)
 
     if args.save_to_video:
-        writer = imageio.get_writer(args.video_output_path, fps=fps, format='FFMPEG')
+        # 使用H.264编码器
+        writer = imageio.get_writer(
+            args.video_output_path, 
+            fps=fps, 
+            format='FFMPEG',
+            codec='libx264',
+            pixelformat='yuv420p',
+            output_params=['-preset', 'medium', '-crf', '23']
+        )
 
     # 确定每块的大小（优先使用帧数，否则使用时间）
     if chunk_frames is not None:
@@ -180,7 +188,15 @@ def main(args, bbox_list:list[list[float]]):
     total_frames = len(loaded_frames)
 
     if args.save_to_video:
-        writer = imageio.get_writer(args.video_output_path, fps=30, format='FFMPEG')
+        # 使用H.264编码器
+        writer = imageio.get_writer(
+            args.video_output_path, 
+            fps=30, 
+            format='FFMPEG',
+            codec='libx264',
+            pixelformat='yuv420p',
+            output_params=['-preset', 'medium', '-crf', '23']
+        )
 
     mask_dir = args.mask_dir
     if args.mask_dir is not None:

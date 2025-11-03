@@ -1,21 +1,71 @@
-# 现有依赖保持不变
-   numpy>=1.20.0
-   opencv-python>=4.6.0
-   PyQt5>=5.15.0
-   scipy>=1.8.0
-   matplotlib>=3.5.0
-   Pillow>=9.0.0
-   imageio>=2.19.0
-   imageio-ffmpeg>=0.4.7
-   pathlib>=1.0.1
-   tqdm>=4.64.0
-   scikit-image>=0.19.0
-   pandas>=1.4.0
-   openpyxl>=3.0.0
-   
-   # SAM2所需的额外依赖
-   loguru>=0.6.0
-   hydra-core>=1.3.2
-   omegaconf>=2.3.0
-   torch>=2.0.0
-   torchvision>=0.15.0
+# =====================================
+# Micro_Tracker Dependencies
+# =====================================
+# 显微视频目标分割和追踪工具依赖列表
+# Author: Lucien
+# Date: 2025-11-03
+# =====================================
+
+# --------------------------------------
+# Core Scientific Computing & Deep Learning
+# --------------------------------------
+numpy>=1.20.0
+torch>=2.0.0
+torchvision>=0.15.0
+scipy>=1.8.0
+
+# --------------------------------------
+# GUI Framework
+# --------------------------------------
+PyQt5>=5.15.0
+matplotlib>=3.5.0
+
+# --------------------------------------
+# Data Processing & Analysis
+# --------------------------------------
+pandas>=1.4.0
+openpyxl>=3.0.0
+scikit-image>=0.19.0
+
+# --------------------------------------
+# Image & Video Processing
+# --------------------------------------
+opencv-python>=4.6.0
+Pillow>=9.0.0
+imageio>=2.19.0
+imageio-ffmpeg>=0.4.7
+
+# --------------------------------------
+# Utility & Logging
+# --------------------------------------
+tqdm>=4.64.0
+loguru>=0.6.0
+
+# --------------------------------------
+# SAM2 Specific Dependencies
+# --------------------------------------
+hydra-core>=1.3.2
+omegaconf>=2.3.0
+iopath>=0.1.10
+
+# =====================================
+# Installation Notes
+# =====================================
+# 1. PyTorch Installation:
+#    Please install PyTorch and Torchvision according to your CUDA version.
+#    Visit https://pytorch.org/ to select the appropriate version.
+#    
+#    Example for CUDA 11.8:
+#    pip install torch>=2.0.0 torchvision>=0.15.0 --index-url https://download.pytorch.org/whl/cu118
+#
+# 2. SAM2 Installation (Required):
+#    After installing dependencies, install SAM2:
+#    cd models/sam2
+#    pip install -e .
+#    pip install -e ".[notebooks]"
+#
+# 3. Python Version:
+#    Requires Python 3.10 or higher
+#
+# 4. GPU Support:
+#    NVIDIA GPU with CUDA 11.7+ recommended for optimal performance

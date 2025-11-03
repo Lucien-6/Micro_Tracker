@@ -86,11 +86,14 @@ Micro_Tracker is a powerful microscopy video analysis tool based on the SAM2 mod
 ## ✨ Features
 
 - **🎯 Object Segmentation and Tracking**: Utilize SAM2 (Segment Anything Model 2) and SAMRUAI for high-precision object segmentation and tracking. Fully compliant with SAM2 official API best practices.
-- **🎯 Multi-Frame Annotation**: Support multi-frame intelligent annotation with two modes - new object mode and refine object mode. Add annotations at key frames (deformation, occlusion) to significantly improve tracking quality. UI automatically enforces SAM2 best practices (refinement uses point prompts only).
+- **🎯 Multi-Frame Annotation**: Support multi-frame intelligent annotation with two modes - new object mode and refine object mode. Add annotations at key frames (deformation, occlusion) to significantly improve tracking quality.
 - **👁️ Real-Time Preview**: Automatically generate mask preview using SAM2 after adding annotations, helping verify annotation quality instantly.
-- **🔧 SAM2 API Alignment**: Mixed prompt handling (box + points) follows SAM2 official implementation, ensuring optimal refinement quality and temporal consistency.
+- **🔧 SAM2 API Alignment**: 
+  - Mixed prompt handling (box + points) follows SAM2 official implementation with single API call
+  - Refinement mode enforces point prompts only (UI auto-constraints per SAM2 best practices)
+  - Ensures optimal refinement quality and temporal consistency
 - **📋 Annotation Management**: Comprehensive annotation management panel with frame list, quick jump, delete, and import/export functionality (JSON format).
-- **🎬 Video Analysis**: Process microscopy videos and generate output videos with markers and trajectories.
+- **🎬 Video Analysis**: Process microscopy videos and generate output videos with markers and trajectories using segmented forward propagation strategy.
 - **📊 Data Extraction**: Extract key parameters such as position, size, and shape of target objects.
 - **🎭 Mask Export**: Save segmentation results as mask images for subsequent analysis.
 - **🔎 Filtering Function**: Filter target objects based on criteria like size, position, and speed.
@@ -98,9 +101,17 @@ Micro_Tracker is a powerful microscopy video analysis tool based on the SAM2 mod
 
 ## 💻 System Requirements
 
-- Operating System: Windows 10/11 or Linux
-- Python Version: 3.10+
-- Hardware: NVIDIA GPU (at least 4GB VRAM) and CUDA 11.7+ (recommended)
+- **Operating System**: Windows 10/11 or Linux
+- **Python Version**: 3.10+
+- **Hardware**: NVIDIA GPU (at least 4GB VRAM) and CUDA 11.7+ (recommended)
+- **Key Dependencies**:
+  - PyQt5 >= 5.15.0
+  - OpenCV >= 4.6.0
+  - NumPy >= 1.20.0
+  - PyTorch >= 2.0.0
+  - Torchvision >= 0.15.0
+  - Pandas >= 1.4.0
+  - See `requirements.txt` for complete list
 
 ## 🚀 Installation Guide
 
@@ -132,7 +143,10 @@ source microtracker_env/bin/activate
 pip install -r requirements.txt
 ```
 
-**Note**: Please download and install PyTorch and Torchvision corresponding to your device's actual CUDA version. You can visit the [PyTorch official website](https://pytorch.org/) for more information.
+**Important Notes**:
+- **PyTorch & CUDA**: Please download and install PyTorch and Torchvision corresponding to your device's actual CUDA version. Visit the [PyTorch official website](https://pytorch.org/) to select the appropriate version.
+- **Minimum Versions**: Ensure PyTorch >= 2.0.0 and Torchvision >= 0.15.0 for SAM2 compatibility.
+- **GPU Support**: For GPU acceleration, make sure to install the CUDA-enabled version of PyTorch.
 
 ### 4. Install SAM2
 
@@ -182,7 +196,8 @@ python -m main
    - Select "✏️ Refine Object" mode
    - Choose the object ID to refine from dropdown
    - Browse to key frames (deformation, occlusion, etc.)
-   - Draw new bounding box for the same object (using same ID and color)
+   - **Use point clicks** to refine the object (click on target areas)
+   - Note: Box drawing is disabled in refine mode per SAM2 best practices
    - The object being refined will be highlighted with golden dashed line
    
    **Best Practices**:
@@ -339,11 +354,14 @@ Micro_Tracker 是一个功能强大的基于 SAM2 模型的显微镜视频分析
 ## ✨ 功能特点
 
 - **🎯 目标分割跟踪**：利用 SAM2（Segment Anything Model 2）和 SAMRUAI 实现高精度的目标分割和跟踪。完全符合SAM2官方API最佳实践。
-- **🎯 多帧智能标注**：支持在视频任意帧添加标注，提供"新对象"和"修正对象"两种模式。在关键帧（形变、遮挡）添加标注可显著提升追踪质量。UI自动强制执行SAM2最佳实践（修正模式仅使用点击提示）。
+- **🎯 多帧智能标注**：支持在视频任意帧添加标注，提供"新对象"和"修正对象"两种模式。在关键帧（形变、遮挡）添加标注可显著提升追踪质量。
 - **👁️ 实时预览功能**：添加标注后自动使用SAM2生成mask预览，实时验证标注质量。
-- **🔧 SAM2 API对齐**：混合提示处理（box + points）遵循SAM2官方实现方式，确保最优的refinement质量和时序一致性。
+- **🔧 SAM2 API对齐**：
+  - 混合提示处理（box + points）遵循SAM2官方实现方式，单次API调用
+  - 修正模式强制使用点击提示（UI自动约束符合SAM2最佳实践）
+  - 确保最优的refinement质量和时序一致性
 - **📋 标注管理功能**：完善的标注管理面板，支持帧列表查看、快速跳转、删除和导入/导出（JSON格式）。
-- **🎬 视频分析**：处理显微镜视频并生成带有标记和轨迹的输出视频。
+- **🎬 视频分析**：处理显微镜视频并生成带有标记和轨迹的输出视频，采用分段前向传播策略。
 - **📊 数据提取**：提取目标物体的位置、大小、形状等关键参数。
 - **🎭 掩膜导出**：将分割结果保存为掩膜图像，便于后续分析。
 - **🔎 筛选功能**：根据尺寸、位置、速度等条件筛选目标物体。
@@ -351,9 +369,17 @@ Micro_Tracker 是一个功能强大的基于 SAM2 模型的显微镜视频分析
 
 ## 💻 系统要求
 
-- 操作系统：Windows 10/11 或 Linux
-- Python 版本：3.10+
-- 硬件：NVIDIA GPU (至少 4GB 显存) 和 CUDA 11.7+ (推荐)
+- **操作系统**：Windows 10/11 或 Linux
+- **Python 版本**：3.10+
+- **硬件**：NVIDIA GPU (至少 4GB 显存) 和 CUDA 11.7+ (推荐)
+- **核心依赖**：
+  - PyQt5 >= 5.15.0
+  - OpenCV >= 4.6.0
+  - NumPy >= 1.20.0
+  - PyTorch >= 2.0.0
+  - Torchvision >= 0.15.0
+  - Pandas >= 1.4.0
+  - 完整列表请参见 `requirements.txt`
 
 ## 🚀 安装指南
 
@@ -385,7 +411,10 @@ source microtracker_env/bin/activate
 pip install -r requirements.txt
 ```
 
-**注意**：请根据您设备实际的 CUDA 版本下载并安装相应的 PyTorch 和 Torchvision。您可以访问 [PyTorch 官网](https://pytorch.org/) 获取更多信息。
+**重要说明**：
+- **PyTorch 与 CUDA**：请根据您设备实际的 CUDA 版本下载并安装相应的 PyTorch 和 Torchvision。访问 [PyTorch 官网](https://pytorch.org/) 选择合适的版本。
+- **最低版本要求**：确保 PyTorch >= 2.0.0 和 Torchvision >= 0.15.0 以保证 SAM2 兼容性。
+- **GPU 支持**：如需 GPU 加速，请确保安装支持 CUDA 的 PyTorch 版本。
 
 ### 4. 安装 SAM2
 
@@ -435,7 +464,8 @@ python -m main
     - 选择"✏️ 修正对象"模式
     - 从下拉框选择要修正的对象ID
     - 浏览到关键帧（对象形变、遮挡前后等）
-    - 绘制该对象的新边界框（使用相同ID和颜色）
+    - **使用点击提示**精细化修正对象（点击目标区域）
+    - 注意：修正模式下禁用边界框绘制（符合SAM2最佳实践）
     - 正在修正的对象会以金色虚线高亮显示
     
     **标注最佳实践**:

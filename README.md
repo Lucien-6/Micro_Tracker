@@ -229,10 +229,34 @@ python -m main
 
 ### Keyboard Shortcuts ⌨️
 
-- **Space Bar**: Play/Pause video
-- **D**: Next frame
-- **F**: Previous frame
-- **Del**: Delete currently selected box
+#### Video Control
+| Shortcut | Function |
+|----------|----------|
+| `Space` | Play/Pause video |
+| `F` | Next frame |
+| `D` | Previous frame |
+
+#### Annotation Editing
+| Shortcut | Function |
+|----------|----------|
+| `Del` | Delete selected bounding box |
+| `A` | Save temporary clicks |
+| `Ctrl+C` | Clear temporary clicks |
+| `Ctrl+S` | Save clicks and go to next frame |
+
+#### Mode Switching
+| Shortcut | Function |
+|----------|----------|
+| `Ctrl+Q` | Toggle prompt type (Box/Point mode) |
+| `Ctrl+H` | Hide/Show prompt markers |
+
+#### Mouse Operations
+| Action | Function |
+|--------|----------|
+| Left drag | Draw bounding box (New Object mode) |
+| Left click | Add positive point (Point mode) |
+| Right click | Add negative point (Point mode) |
+| Click on box | Select bounding box |
 
 ## 📁 Project Structure
 
@@ -497,10 +521,34 @@ python -m main
 
 ### 快捷键 ⌨️
 
-- **空格键**: 播放/暂停视频
-- **D**: 下一帧
-- **F**: 上一帧
-- **Del**: 删除当前选中的框
+#### 视频控制
+| 快捷键 | 功能 |
+|--------|------|
+| `空格` | 播放/暂停视频 |
+| `F` | 下一帧 |
+| `D` | 上一帧 |
+
+#### 标注编辑
+| 快捷键 | 功能 |
+|--------|------|
+| `Del` | 删除当前选中的边界框 |
+| `A` | 保存临时点击 |
+| `Ctrl+C` | 清除临时点击 |
+| `Ctrl+S` | 保存临时点击并切换到下一帧 |
+
+#### 模式切换
+| 快捷键 | 功能 |
+|--------|------|
+| `Ctrl+Q` | 切换提示类型（边界框/点击模式） |
+| `Ctrl+H` | 隐藏/显示提示标记 |
+
+#### 鼠标操作
+| 操作 | 功能 |
+|------|------|
+| 左键拖拽 | 绘制边界框（新对象模式） |
+| 左键点击 | 添加正向点击（点击模式） |
+| 右键点击 | 添加负向点击（点击模式） |
+| 单击边界框 | 选中边界框 |
 
 ## 📁 项目结构
 

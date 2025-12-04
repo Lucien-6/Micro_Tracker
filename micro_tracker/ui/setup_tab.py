@@ -680,6 +680,33 @@ class SetupTab(BaseTab):
             self.main_window.video_label.overlay_layer.prompt_mode = "point"
             self.main_window.log_message("提示类型: 点击模式（左键添加，右键移除）", "info")
     
+    def toggle_prompt_type(self):
+        """
+        切换提示类型（Tab快捷键触发）
+        
+        Returns:
+            bool: 切换是否成功
+        
+        Notes:
+            - 修正模式下边界框被禁用，不允许切换
+            - 循环顺序：边界框 → 点击 → 边界框
+        """
+        # 检查边界框模式是否可用
+        if not self.box_mode_radio.isEnabled():
+            self.main_window.log_message(
+                "⚠️ 修正模式下只能使用点击模式（符合SAM2官方规范）", 
+                "warning"
+            )
+            return False
+        
+        # 切换模式
+        if self.box_mode_radio.isChecked():
+            self.point_mode_radio.setChecked(True)
+        else:
+            self.box_mode_radio.setChecked(True)
+        
+        return True
+    
     def populate_model_list(self):
         """自动扫描并填充模型列表"""
         combo = self.main_window.model_combo

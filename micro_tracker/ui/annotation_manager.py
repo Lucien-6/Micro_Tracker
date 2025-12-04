@@ -787,6 +787,8 @@ class AnnotationManagerWidget(QWidget):
             <li><kbd>空格</kbd> - 播放/暂停</li>
             <li><kbd>F</kbd> - 下一帧</li>
             <li><kbd>D</kbd> - 上一帧</li>
+            <li><kbd>Ctrl+Q</kbd> - 切换提示类型（边界框/点击模式）</li>
+            <li><kbd>Ctrl+H</kbd> - 隐藏/显示提示标记（便于绘制新提示）</li>
         </ul>
         
         <h3>标注编辑</h3>

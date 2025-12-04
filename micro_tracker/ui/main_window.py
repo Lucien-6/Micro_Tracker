@@ -587,6 +587,12 @@ class MainWindow(QMainWindow):
                 self.previous_frame(self.video_thread, self.frame_slider)
                 event.accept()
                 return
+            # Ctrl+Q键 - 切换提示类型
+            elif event.key() == Qt.Key_Q and event.modifiers() == Qt.ControlModifier:
+                if hasattr(self, 'setup_tab') and self.setup_tab:
+                    self.setup_tab.toggle_prompt_type()
+                event.accept()
+                return
         
         # 第二个标签页（结果预览）- 控制结果视频
         elif current_tab == 1 and self.result_video_thread and self.result_video_thread.isRunning():

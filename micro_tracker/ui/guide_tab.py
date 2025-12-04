@@ -53,8 +53,8 @@ class GuideTab(BaseTab):
             <h3 style="margin-top: 15px;">作者信息</h3>
             <p style="margin: 5px 0;">作者：LUCIEN</p>
             <p style="margin: 5px 0;">邮箱：lucien-6@qq.com</p>
-            <p style="margin: 5px 0;">版本：2.0</p>
-            <p style="margin: 5px 0;">发布日期：2025年10月31日</p>
+            <p style="margin: 5px 0;">版本：2.0.2</p>
+            <p style="margin: 5px 0;">发布日期：2025年12月4日</p>
             <p style="margin: 5px 0;">Copyright © 2025 LUCIEN. 保留所有权利。</p>
         </div>
         <p>Micro Tracker 是一个基于 SAM2 (Segment Anything Model 2) 的显微视频对象分割和跟踪工具。本工具采用最新的 SAM2 模型，支持多帧智能标注、实时预览和高级数据筛选功能，可以帮助您对显微视频中的多个对象进行高精度自动分割和跟踪，广泛适用于生物医学研究、材料科学、细胞追踪等显微视频分析场景。</p>
@@ -317,11 +317,45 @@ class GuideTab(BaseTab):
             <li><b>键盘快捷键 (聚焦视频控件时)：</b>
                 <ul>
                     <li>空格键：播放/暂停</li>
-                    <li>F 键 / 右方向键：下一帧</li>
-                    <li>D 键 / 左方向键：上一帧</li>
+                    <li>F 键：下一帧</li>
+                    <li>D 键：上一帧</li>
                 </ul>
             </li>
         </ul>
+        
+        <h3>键盘快捷键速查表：</h3>
+        <h4>视频控制</h4>
+        <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%; margin: 10px 0;">
+            <tr style="background-color: #E3F2FD;"><th style="width: 30%;">快捷键</th><th>功能</th></tr>
+            <tr><td><b>空格</b></td><td>播放/暂停视频</td></tr>
+            <tr><td><b>F</b></td><td>下一帧</td></tr>
+            <tr><td><b>D</b></td><td>上一帧</td></tr>
+        </table>
+        
+        <h4>标注编辑</h4>
+        <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%; margin: 10px 0;">
+            <tr style="background-color: #E8F5E9;"><th style="width: 30%;">快捷键</th><th>功能</th></tr>
+            <tr><td><b>Delete</b></td><td>删除选中的边界框</td></tr>
+            <tr><td><b>A</b></td><td>保存临时点击到标注</td></tr>
+            <tr><td><b>Ctrl+C</b></td><td>清除临时点击</td></tr>
+            <tr><td><b>Ctrl+S</b></td><td>保存临时点击并切换到下一帧</td></tr>
+        </table>
+        
+        <h4>模式切换</h4>
+        <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%; margin: 10px 0;">
+            <tr style="background-color: #FFF3E0;"><th style="width: 30%;">快捷键</th><th>功能</th></tr>
+            <tr><td><b>Ctrl+Q</b></td><td>切换提示类型（边界框/点击模式）</td></tr>
+            <tr><td><b>Ctrl+H</b></td><td>隐藏/显示提示标记（便于绘制新提示）</td></tr>
+        </table>
+        
+        <h4>鼠标操作</h4>
+        <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; width: 100%; margin: 10px 0;">
+            <tr style="background-color: #F3E5F5;"><th style="width: 30%;">操作</th><th>功能</th></tr>
+            <tr><td><b>左键拖拽</b></td><td>绘制边界框（新对象模式）</td></tr>
+            <tr><td><b>左键点击</b></td><td>添加正向点击 - 绿色标记（点击模式）</td></tr>
+            <tr><td><b>右键点击</b></td><td>添加负向点击 - 红色标记（点击模式）</td></tr>
+            <tr><td><b>单击边界框</b></td><td>选中边界框</td></tr>
+        </table>
         
         <div class="warning">
             <h4>重要提示：</h4>

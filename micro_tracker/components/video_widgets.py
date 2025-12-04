@@ -41,6 +41,9 @@ class OverlayLayer(QGraphicsItem):
         self.temp_points_frame_idx = None  # 临时点击所属的帧索引
         self.current_editing_obj_id = None  # 当前编辑的对象ID
         
+        # === 提示隐藏功能 ===
+        self.prompts_hidden = False  # 是否隐藏已有提示标记
+        
         # 固定颜色调色板（Phase 2）
         self.color_palette = [
             (255, 0, 0),     # 红
@@ -80,12 +83,19 @@ class OverlayLayer(QGraphicsItem):
         painter.setRenderHint(QPainter.Antialiasing, True)
         painter.setRenderHint(QPainter.TextAntialiasing, True)
         painter.setRenderHint(QPainter.SmoothPixmapTransform, True)
-        self._draw_bboxes(painter)
-        self._draw_tracks(painter)
-        self._draw_object_features(painter)
-        self._draw_id_labels(painter)
-        self._draw_click_markers(painter)  # 绘制点击标记
-        self._draw_preview_masks(painter)  # 新增：绘制预览mask
+        
+        # === 提示隐藏功能：隐藏状态下跳过绑制已有提示标记（不影响预览mask） ===
+        if not self.prompts_hidden:
+            self._draw_bboxes(painter)
+            self._draw_tracks(painter)
+            self._draw_object_features(painter)
+            self._draw_id_labels(painter)
+            self._draw_click_markers(painter)  # 绘制点击标记
+        
+        # 预览mask始终绘制（不受隐藏状态影响，仅在提示被删除时才清除）
+        self._draw_preview_masks(painter)
+        
+        # 始终绘制正在绘制的边界框（允许用户在隐藏模式下绘制新提示）
         if self.drawing:
             self._draw_current_bbox(painter)
     
@@ -209,12 +219,12 @@ class OverlayLayer(QGraphicsItem):
                         label = prompts["labels"][i] if "labels" in prompts and i < len(prompts["labels"]) else 1
                         # 绘制不同颜色的点：绿色=正向，红色=负向
                         color = QColor(0, 255, 0) if label == 1 else QColor(255, 0, 0)
-                        painter.setPen(QPen(color, 3))
-                        painter.setBrush(QColor(color.red(), color.green(), color.blue(), 100))
+                        painter.setPen(QPen(color, 1))
+                        painter.setBrush(Qt.NoBrush)
                         # 绘制圆形标记（修复：移除错误的resolution_factor缩放）
-                        painter.drawEllipse(int(x - 5), int(y - 5), 10, 10)
+                        painter.drawEllipse(int(x - 4), int(y - 4), 8, 8)
                         # 绘制中心点
-                        painter.setPen(QPen(color, 5))
+                        painter.setPen(QPen(color, 3))
                         painter.drawPoint(int(x), int(y))
         
         # 绘制临时点击（还未保存的）- 只在所属帧显示
@@ -222,10 +232,10 @@ class OverlayLayer(QGraphicsItem):
             for i, (x, y) in enumerate(self.temp_points):
                 label = self.temp_labels[i] if i < len(self.temp_labels) else 1
                 color = QColor(0, 255, 0, 150) if label == 1 else QColor(255, 0, 0, 150)
-                painter.setPen(QPen(color, 2, Qt.DashLine))
-                painter.setBrush(QColor(color.red(), color.green(), color.blue(), 50))
+                painter.setPen(QPen(color, 1, Qt.DotLine))
+                painter.setBrush(Qt.NoBrush)
                 # 修复：移除错误的resolution_factor缩放
-                painter.drawEllipse(int(x - 7), int(y - 7), 14, 14)
+                painter.drawEllipse(int(x - 4), int(y - 4), 8, 8)
     
     def _draw_preview_masks(self, painter):
         """
@@ -329,6 +339,9 @@ class OverlayLayer(QGraphicsItem):
             # 只有在帧真正切换时才清除选择和临时点击
             if old_frame_idx != frame_idx:
                 self.selected_bbox = -1
+                
+                # === 提示隐藏功能：切换帧时自动取消隐藏 ===
+                self.prompts_hidden = False
                 
                 # === 改进：清空临时点击前先提示用户 ===
                 if self.temp_points_frame_idx is not None and self.temp_points_frame_idx != frame_idx:
@@ -838,6 +851,31 @@ class OverlayLayer(QGraphicsItem):
         if not enabled:
             self.clear_preview_masks()
         self.update()
+    
+    def toggle_prompts_visibility(self):
+        """
+        切换提示标记的可见性（Ctrl+H快捷键触发）
+        
+        Returns:
+            tuple: (bool, str) - (切换是否成功, 状态消息)
+        
+        Notes:
+            - 存在临时点击时不允许隐藏，需先保存或删除
+            - 切换帧时会自动取消隐藏
+        """
+        # 检查是否有临时点击
+        if self.temp_points and len(self.temp_points) > 0:
+            return False, "存在未保存的临时点击，请先按 A 键保存或 Ctrl+C 删除"
+        
+        # 切换隐藏状态
+        self.prompts_hidden = not self.prompts_hidden
+        self.update()
+        
+        if self.prompts_hidden:
+            return True, "已隐藏提示标记（按 Ctrl+H 或切换帧恢复显示）"
+        else:
+            return True, "已显示提示标记"
+
 
 class MultiLayerVideoView(QGraphicsView):
     bbox_added = pyqtSignal(list)
@@ -1025,6 +1063,14 @@ class MultiLayerVideoView(QGraphicsView):
                 # === 更新预览：清除临时点击后，重新生成基于已保存标注的预览 ===
                 if self.overlay_layer.preview_enabled and obj_id is not None:
                     self.window()._generate_preview_for_object(obj_id)
+            event.accept()
+            return
+        elif event.key() == Qt.Key_H and event.modifiers() == Qt.ControlModifier:
+            # Ctrl+H: 切换提示标记可见性
+            success, message = self.overlay_layer.toggle_prompts_visibility()
+            if self.window():
+                msg_type = "info" if success else "warning"
+                self.window().log_message(f"{'👁️' if success else '⚠️'} {message}", msg_type)
             event.accept()
             return
         elif event.key() in (Qt.Key_Space, Qt.Key_F, Qt.Key_D):

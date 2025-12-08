@@ -232,7 +232,7 @@ class OverlayLayer(QGraphicsItem):
             for i, (x, y) in enumerate(self.temp_points):
                 label = self.temp_labels[i] if i < len(self.temp_labels) else 1
                 color = QColor(0, 255, 0, 150) if label == 1 else QColor(255, 0, 0, 150)
-                painter.setPen(QPen(color, 1, Qt.DotLine))
+                painter.setPen(QPen(color, 1, Qt.SolidLine))
                 painter.setBrush(Qt.NoBrush)
                 # 修复：移除错误的resolution_factor缩放
                 painter.drawEllipse(int(x - 4), int(y - 4), 8, 8)

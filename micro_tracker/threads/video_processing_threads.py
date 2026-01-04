@@ -8,10 +8,10 @@
 """
 
 # 从各个线程模块导入线程类
-from micro_tracker.threads.video_thread import VideoThread
+from micro_tracker.threads.video_thread import VideoThread, ImageSequenceThread
 from micro_tracker.threads.processing_thread import ProcessingThread
 from micro_tracker.threads.filter_mask_thread import FilterMaskThread
 from micro_tracker.threads.filter_video_thread import FilterVideoThread
 
 # 导出所有线程类
-__all__ = ['VideoThread', 'ProcessingThread', 'FilterMaskThread', 'FilterVideoThread'] 
+__all__ = ['VideoThread', 'ImageSequenceThread', 'ProcessingThread', 'FilterMaskThread', 'FilterVideoThread'] 

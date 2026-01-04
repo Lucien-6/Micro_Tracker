@@ -125,4 +125,115 @@ class VideoThread(QThread):
         # 重置时间戳，保证从暂停恢复播放时帧率正确
         if not self.paused:
             self.last_frame_time = QDateTime.currentMSecsSinceEpoch()
+        self.mutex.unlock()
+
+
+class ImageSequenceThread(QThread):
+    """
+    图像序列读取线程
+    
+    从图像文件列表中读取帧，支持播放/暂停/跳转功能。
+    用于预览图像序列输入。
+    """
+    frame_ready = pyqtSignal(np.ndarray)
+    frame_index_changed = pyqtSignal(int)
+    
+    def __init__(self, image_files, fps=10.0):
+        """
+        初始化图像序列线程
+        
+        Args:
+            image_files (list): 排序后的图像文件路径列表
+            fps (float): 播放帧率
+        """
+        super().__init__()
+        self.image_files = image_files
+        self.fps = fps
+        self.frame_time_ms = int(1000 / fps) if fps > 0 else 33
+        self.total_frames = len(image_files)
+        
+        self.running = True
+        self.paused = True  # 默认暂停
+        self.frame_index = 0
+        self.mutex = QMutex()
+        self.frame_changed = False
+        self.last_frame_time = 0
+    
+    def run(self):
+        """线程主循环"""
+        if not self.image_files:
+            print("Error: No image files provided")
+            return
+        
+        # 读取第一帧
+        first_frame = cv2.imread(self.image_files[0])
+        if first_frame is not None:
+            self.frame_ready.emit(first_frame)
+            self.frame_index_changed.emit(0)
+        
+        self.last_frame_time = QDateTime.currentMSecsSinceEpoch()
+        
+        while self.running:
+            current_time = QDateTime.currentMSecsSinceEpoch()
+            
+            self.mutex.lock()
+            paused = self.paused
+            current_index = self.frame_index
+            frame_changed = self.frame_changed
+            self.frame_changed = False
+            self.mutex.unlock()
+            
+            if not paused or frame_changed:
+                # 读取当前帧
+                if 0 <= current_index < self.total_frames:
+                    frame = cv2.imread(self.image_files[current_index])
+                    
+                    if frame is not None:
+                        self.frame_ready.emit(frame)
+                        self.frame_index_changed.emit(current_index)
+                        self.last_frame_time = current_time
+                        
+                        # 自动前进到下一帧
+                        if not paused and not frame_changed:
+                            self.mutex.lock()
+                            next_index = (current_index + 1) % self.total_frames
+                            self.frame_index = next_index
+                            self.mutex.unlock()
+                    else:
+                        # 读取失败
+                        self.mutex.lock()
+                        if not paused:
+                            self.frame_index = 0
+                            self.frame_changed = True
+                        self.mutex.unlock()
+            
+            # 计算等待时间
+            if not paused:
+                next_frame_time = self.last_frame_time + self.frame_time_ms
+                wait_time = next_frame_time - QDateTime.currentMSecsSinceEpoch()
+                if wait_time > 1:
+                    self.msleep(int(wait_time))
+                else:
+                    self.msleep(1)
+            else:
+                self.msleep(100)
+    
+    def stop(self):
+        """停止线程并等待其结束"""
+        self.running = False
+        self.wait()
+    
+    def set_frame_index(self, index):
+        """设置要显示的帧索引"""
+        self.mutex.lock()
+        self.frame_index = max(0, min(index, self.total_frames - 1))
+        self.frame_changed = True
+        self.mutex.unlock()
+    
+    def toggle_pause(self):
+        """切换暂停/播放状态"""
+        self.mutex.lock()
+        self.paused = not self.paused
+        if not self.paused:
+            self.last_frame_time = QDateTime.currentMSecsSinceEpoch()
         self.mutex.unlock() 

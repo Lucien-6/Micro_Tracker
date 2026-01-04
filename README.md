@@ -15,12 +15,12 @@
 </div>
 
 <p align="center">
+  <img src="https://img.shields.io/badge/Version-2.1.0-brightgreen.svg" alt="Version 2.1.0">
   <img src="https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white" alt="Python 3.10+">
   <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License: Apache 2.0">
   <img src="https://img.shields.io/badge/PyQt5-5.15%2B-green.svg" alt="PyQt5 5.15+">
   <img src="https://img.shields.io/badge/SAM2-Supported-orange.svg" alt="SAM2 Supported">
   <img src="https://img.shields.io/badge/CUDA-11.7%2B-green?logo=nvidia" alt="CUDA 11.7+">
-  <!-- More badges as needed -->
 </p>
 
 <div align="center">
@@ -86,9 +86,13 @@ Micro_Tracker is a powerful microscopy video analysis tool based on the SAM2 mod
 ## ✨ Features
 
 - **🎯 Object Segmentation and Tracking**: Utilize SAM2 (Segment Anything Model 2) and SAMRUAI for high-precision object segmentation and tracking. Fully compliant with SAM2 official API best practices.
+- **📂 Flexible Input Sources**: Support both video files and image sequences as input:
+  - **Video files**: Common formats like MP4, AVI, MOV
+  - **Image sequences**: JPEG, PNG, TIFF, BMP formats with intelligent filename sorting
+  - Auto-conversion for SAM2 compatibility (non-JPEG images automatically converted)
 - **🎯 Multi-Frame Annotation**: Support multi-frame intelligent annotation with two modes - new object mode and refine object mode. Add annotations at key frames (deformation, occlusion) to significantly improve tracking quality.
 - **👁️ Real-Time Preview**: Automatically generate mask preview using SAM2 after adding annotations, helping verify annotation quality instantly.
-- **🔧 SAM2 API Alignment**: 
+- **🔧 SAM2 API Alignment**:
   - Mixed prompt handling (box + points) follows SAM2 official implementation with single API call
   - Refinement mode enforces point prompts only (UI auto-constraints per SAM2 best practices)
   - Ensures optimal refinement quality and temporal consistency
@@ -144,6 +148,7 @@ pip install -r requirements.txt
 ```
 
 **Important Notes**:
+
 - **PyTorch & CUDA**: Please download and install PyTorch and Torchvision corresponding to your device's actual CUDA version. Visit the [PyTorch official website](https://pytorch.org/) to select the appropriate version.
 - **Minimum Versions**: Ensure PyTorch >= 2.0.0 and Torchvision >= 0.15.0 for SAM2 compatibility.
 - **GPU Support**: For GPU acceleration, make sure to install the CUDA-enabled version of PyTorch.
@@ -181,32 +186,44 @@ python -m main
 
 #### 1. Video Tracking 🎞️
 
-1. Click the "**Browse**" button to select microscopy video files and the SAM2 model.
-2. Set output directory and related parameters.
+1. **Select Input Source**:
+
+   - **Video File**: Select "Video File" radio button, then click "Browse" to select a video file (MP4, AVI, MOV, etc.)
+   - **Image Sequence**: Select "Image Sequence" radio button, then click "Browse" to select a folder containing image files
+     - Supported formats: JPEG, PNG, TIFF, BMP
+     - Images will be automatically sorted by filename (supports patterns like `001.jpg`, `frame_001.png`, etc.)
+     - Non-JPEG images will be automatically converted for SAM2 compatibility
+     - Default playback rate: 10 FPS (configurable)
+
+2. Select the SAM2 model and set output directory.
 3. **Multi-Frame Intelligent Annotation**:
-   
+
    **New Object Annotation**:
+
    - Select "🆕 New Object" mode
    - Browse to the frame where the object first appears (usually frame 0)
    - Hold left mouse button and drag to draw bounding box
    - System automatically assigns unique ID and fixed color
    - Real-time preview mask will be automatically generated and displayed
-   
+
    **Refine Object Annotation**:
+
    - Select "✏️ Refine Object" mode
    - Choose the object ID to refine from dropdown
    - Browse to key frames (deformation, occlusion, etc.)
    - **Use point clicks** to refine the object (click on target areas)
    - Note: Box drawing is disabled in refine mode per SAM2 best practices
    - The object being refined will be highlighted with golden dashed line
-   
+
    **Best Practices**:
+
    - Annotate at frame 0 when object first appears
    - Add annotations when object shape changes significantly
    - Add annotations before and after occlusion
    - Recommend 5-10 key frames, not too many
-   
+
    **Annotation Management**:
+
    - View all annotated frames in the annotation panel
    - Click "Jump" to quickly navigate to specific frames
    - Click "Delete" to remove unwanted annotations
@@ -230,33 +247,37 @@ python -m main
 ### Keyboard Shortcuts ⌨️
 
 #### Video Control
-| Shortcut | Function |
-|----------|----------|
-| `Space` | Play/Pause video |
-| `F` | Next frame |
-| `D` | Previous frame |
+
+| Shortcut | Function         |
+| -------- | ---------------- |
+| `Space`  | Play/Pause video |
+| `F`      | Next frame       |
+| `D`      | Previous frame   |
 
 #### Annotation Editing
-| Shortcut | Function |
-|----------|----------|
-| `Del` | Delete selected bounding box |
-| `A` | Save temporary clicks |
-| `Ctrl+C` | Clear temporary clicks |
+
+| Shortcut | Function                         |
+| -------- | -------------------------------- |
+| `Del`    | Delete selected bounding box     |
+| `A`      | Save temporary clicks            |
+| `Ctrl+C` | Clear temporary clicks           |
 | `Ctrl+S` | Save clicks and go to next frame |
 
 #### Mode Switching
-| Shortcut | Function |
-|----------|----------|
+
+| Shortcut | Function                            |
+| -------- | ----------------------------------- |
 | `Ctrl+Q` | Toggle prompt type (Box/Point mode) |
-| `Ctrl+H` | Hide/Show prompt markers |
+| `Ctrl+H` | Hide/Show prompt markers            |
 
 #### Mouse Operations
-| Action | Function |
-|--------|----------|
-| Left drag | Draw bounding box (New Object mode) |
-| Left click | Add positive point (Point mode) |
-| Right click | Add negative point (Point mode) |
-| Click on box | Select bounding box |
+
+| Action       | Function                            |
+| ------------ | ----------------------------------- |
+| Left drag    | Draw bounding box (New Object mode) |
+| Left click   | Add positive point (Point mode)     |
+| Right click  | Add negative point (Point mode)     |
+| Click on box | Select bounding box                 |
 
 ## 📁 Project Structure
 
@@ -325,7 +346,7 @@ This project was created based on the following excellent projects and gained ma
 
 # 🔬 Micro_Tracker [中文]
 
-Micro_Tracker 是一个功能强大的基于 SAM2 模型的显微镜视频分析工具，专为微观生物体和颗粒的跟踪和分析而设计。该应用提供直观的用户界面，支持多帧智能标注、实时mask预览和高级筛选功能，使研究人员能够高精度地标记、跟踪和分析显微镜视频中的目标物体。
+Micro_Tracker 是一个功能强大的基于 SAM2 模型的显微镜视频分析工具，专为微观生物体和颗粒的跟踪和分析而设计。该应用提供直观的用户界面，支持多帧智能标注、实时 mask 预览和高级筛选功能，使研究人员能够高精度地标记、跟踪和分析显微镜视频中的目标物体。
 
 ## 🖥️ GUI 界面
 
@@ -377,14 +398,18 @@ Micro_Tracker 是一个功能强大的基于 SAM2 模型的显微镜视频分析
 
 ## ✨ 功能特点
 
-- **🎯 目标分割跟踪**：利用 SAM2（Segment Anything Model 2）和 SAMRUAI 实现高精度的目标分割和跟踪。完全符合SAM2官方API最佳实践。
+- **🎯 目标分割跟踪**：利用 SAM2（Segment Anything Model 2）和 SAMRUAI 实现高精度的目标分割和跟踪。完全符合 SAM2 官方 API 最佳实践。
+- **📂 灵活的输入源**：同时支持视频文件和图像序列作为输入：
+  - **视频文件**：支持 MP4、AVI、MOV 等常见格式
+  - **图像序列**：支持 JPEG、PNG、TIFF、BMP 格式，智能文件名排序
+  - 自动格式转换以兼容 SAM2（非 JPEG 图像自动转换）
 - **🎯 多帧智能标注**：支持在视频任意帧添加标注，提供"新对象"和"修正对象"两种模式。在关键帧（形变、遮挡）添加标注可显著提升追踪质量。
-- **👁️ 实时预览功能**：添加标注后自动使用SAM2生成mask预览，实时验证标注质量。
-- **🔧 SAM2 API对齐**：
-  - 混合提示处理（box + points）遵循SAM2官方实现方式，单次API调用
-  - 修正模式强制使用点击提示（UI自动约束符合SAM2最佳实践）
-  - 确保最优的refinement质量和时序一致性
-- **📋 标注管理功能**：完善的标注管理面板，支持帧列表查看、快速跳转、删除和导入/导出（JSON格式）。
+- **👁️ 实时预览功能**：添加标注后自动使用 SAM2 生成 mask 预览，实时验证标注质量。
+- **🔧 SAM2 API 对齐**：
+  - 混合提示处理（box + points）遵循 SAM2 官方实现方式，单次 API 调用
+  - 修正模式强制使用点击提示（UI 自动约束符合 SAM2 最佳实践）
+  - 确保最优的 refinement 质量和时序一致性
+- **📋 标注管理功能**：完善的标注管理面板，支持帧列表查看、快速跳转、删除和导入/导出（JSON 格式）。
 - **🎬 视频分析**：处理显微镜视频并生成带有标记和轨迹的输出视频，采用分段前向传播策略。
 - **📊 数据提取**：提取目标物体的位置、大小、形状等关键参数。
 - **🎭 掩膜导出**：将分割结果保存为掩膜图像，便于后续分析。
@@ -436,6 +461,7 @@ pip install -r requirements.txt
 ```
 
 **重要说明**：
+
 - **PyTorch 与 CUDA**：请根据您设备实际的 CUDA 版本下载并安装相应的 PyTorch 和 Torchvision。访问 [PyTorch 官网](https://pytorch.org/) 选择合适的版本。
 - **最低版本要求**：确保 PyTorch >= 2.0.0 和 Torchvision >= 0.15.0 以保证 SAM2 兼容性。
 - **GPU 支持**：如需 GPU 加速，请确保安装支持 CUDA 的 PyTorch 版本。
@@ -473,40 +499,52 @@ python -m main
 
 #### 1. 视频跟踪 🎞️
 
-1.  点击 "**浏览**" 按钮选择显微镜视频文件和 SAM2 模型。
-2.  设置输出目录和相关参数。
+1.  **选择输入源**：
+
+    - **视频文件**：选择"视频文件"单选按钮，点击"浏览"选择视频文件（MP4、AVI、MOV 等）
+    - **图像序列**：选择"图像序列"单选按钮，点击"浏览"选择包含图像文件的文件夹
+      - 支持格式：JPEG、PNG、TIFF、BMP
+      - 图像会按文件名自动排序（支持 `001.jpg`、`frame_001.png` 等命名格式）
+      - 非 JPEG 图像会自动转换以兼容 SAM2
+      - 默认播放帧率：10 FPS（可配置）
+
+2.  选择 SAM2 模型并设置输出目录。
 3.  **多帧智能标注**（推荐使用以获得最佳追踪效果）:
-    
+
     **新对象标注**:
+
     - 选择"🆕 新对象"模式
-    - 浏览到对象首次出现的帧（通常是第0帧）
+    - 浏览到对象首次出现的帧（通常是第 0 帧）
     - 按住鼠标左键拖动绘制边界框
-    - 系统自动分配唯一ID和固定颜色
-    - 实时预览mask会自动生成并显示
-    
+    - 系统自动分配唯一 ID 和固定颜色
+    - 实时预览 mask 会自动生成并显示
+
     **修正对象标注**:
+
     - 选择"✏️ 修正对象"模式
-    - 从下拉框选择要修正的对象ID
+    - 从下拉框选择要修正的对象 ID
     - 浏览到关键帧（对象形变、遮挡前后等）
     - **使用点击提示**精细化修正对象（点击目标区域）
-    - 注意：修正模式下禁用边界框绘制（符合SAM2最佳实践）
+    - 注意：修正模式下禁用边界框绘制（符合 SAM2 最佳实践）
     - 正在修正的对象会以金色虚线高亮显示
-    
+
     **标注最佳实践**:
-    - 在第0帧标注对象首次出现位置
+
+    - 在第 0 帧标注对象首次出现位置
     - 在对象形状显著变化时添加标注
     - 在对象被遮挡前后添加标注
-    - 建议标注5-10个关键帧，不宜过多
-    
+    - 建议标注 5-10 个关键帧，不宜过多
+
     **标注管理**:
+
     - 在"标注管理"面板查看所有已标注帧
     - 点击"跳转"快速定位到指定标注帧
     - 点击"删除"移除不需要的标注
-    - 使用"导出标注"保存标注数据为JSON文件
-    - 使用"导入标注"从JSON文件恢复标注数据
+    - 使用"导出标注"保存标注数据为 JSON 文件
+    - 使用"导入标注"从 JSON 文件恢复标注数据
 
 4.  点击 "**开始处理**" 按钮。
-5.  系统会自动检测标注模式，在每个标注帧应用SAM2提示，采用分段前向传播策略，显著提升追踪质量。
+5.  系统会自动检测标注模式，在每个标注帧应用 SAM2 提示，采用分段前向传播策略，显著提升追踪质量。
 6.  处理完成后，在 "**结果预览**" 标签页查看结果。
 
 #### 2. 掩膜筛选 🎭
@@ -522,33 +560,37 @@ python -m main
 ### 快捷键 ⌨️
 
 #### 视频控制
-| 快捷键 | 功能 |
-|--------|------|
+
+| 快捷键 | 功能          |
+| ------ | ------------- |
 | `空格` | 播放/暂停视频 |
-| `F` | 下一帧 |
-| `D` | 上一帧 |
+| `F`    | 下一帧        |
+| `D`    | 上一帧        |
 
 #### 标注编辑
-| 快捷键 | 功能 |
-|--------|------|
-| `Del` | 删除当前选中的边界框 |
-| `A` | 保存临时点击 |
-| `Ctrl+C` | 清除临时点击 |
+
+| 快捷键   | 功能                       |
+| -------- | -------------------------- |
+| `Del`    | 删除当前选中的边界框       |
+| `A`      | 保存临时点击               |
+| `Ctrl+C` | 清除临时点击               |
 | `Ctrl+S` | 保存临时点击并切换到下一帧 |
 
 #### 模式切换
-| 快捷键 | 功能 |
-|--------|------|
+
+| 快捷键   | 功能                            |
+| -------- | ------------------------------- |
 | `Ctrl+Q` | 切换提示类型（边界框/点击模式） |
-| `Ctrl+H` | 隐藏/显示提示标记 |
+| `Ctrl+H` | 隐藏/显示提示标记               |
 
 #### 鼠标操作
-| 操作 | 功能 |
-|------|------|
-| 左键拖拽 | 绘制边界框（新对象模式） |
-| 左键点击 | 添加正向点击（点击模式） |
-| 右键点击 | 添加负向点击（点击模式） |
-| 单击边界框 | 选中边界框 |
+
+| 操作       | 功能                     |
+| ---------- | ------------------------ |
+| 左键拖拽   | 绘制边界框（新对象模式） |
+| 左键点击   | 添加正向点击（点击模式） |
+| 右键点击   | 添加负向点击（点击模式） |
+| 单击边界框 | 选中边界框               |
 
 ## 📁 项目结构
 

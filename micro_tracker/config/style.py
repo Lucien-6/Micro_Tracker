@@ -17,7 +17,7 @@ QTabBar::tab {
     border-top-left-radius: 4px;
     border-top-right-radius: 4px;
     min-width: 100px;
-    font-size: 10.5pt;
+    font-size: 9.0pt;
     color: #666666;
 }
 

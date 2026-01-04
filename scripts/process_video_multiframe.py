@@ -100,14 +100,25 @@ def process_video_with_refinement(args, annotations_data):
             progress_callback(f"✗ 视频加载失败: {e}")
         raise
     
-    # 3. 获取视频信息
-    cap = cv2.VideoCapture(args.video_path)
-    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-    fps = cap.get(cv2.CAP_PROP_FPS)
-    cap.release()
+    # 3. 获取视频/图像序列信息
+    input_type = getattr(args, 'input_type', 'video')
+    
+    if input_type == "image_sequence" and getattr(args, 'image_files', None):
+        # 图像序列模式
+        total_frames = len(args.image_files)
+        fps = getattr(args, 'image_sequence_fps', 10.0)
+        if progress_callback:
+            progress_callback(f"图像序列信息: {total_frames}帧, {fps:.2f} FPS", 20)
+    else:
+        # 视频模式
+        cap = cv2.VideoCapture(args.video_path)
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        cap.release()
+        if progress_callback:
+            progress_callback(f"视频信息: {total_frames}帧, {fps:.2f} FPS", 20)
     
     if progress_callback:
-        progress_callback(f"视频信息: {total_frames}帧, {fps:.2f} FPS", 20)
         progress_callback(f"\n==== 添加所有提示 ====", 25)
         progress_callback(f"标注帧数: {len(annotations_data)}", 25)
     
@@ -251,7 +262,10 @@ def process_video_with_refinement(args, annotations_data):
             args.video_output_path,
             args.mask_dir,
             args.save_to_video,
-            progress_callback
+            progress_callback,
+            input_type=getattr(args, 'input_type', 'video'),
+            image_files=getattr(args, 'image_files', None),
+            image_sequence_fps=getattr(args, 'image_sequence_fps', 10.0)
         )
     except Exception as e:
         if progress_callback:
@@ -262,17 +276,22 @@ def process_video_with_refinement(args, annotations_data):
         progress_callback("\n✅ Refinement模式处理完成！")
 
 
-def save_results(all_masks, video_path, output_path, mask_dir, save_to_video, progress_callback=None):
+def save_results(all_masks, video_path, output_path, mask_dir, save_to_video, 
+                 progress_callback=None, input_type="video", image_files=None, 
+                 image_sequence_fps=10.0):
     """
     保存处理结果（视频和掩码）
     
     Args:
         all_masks (dict): 所有帧的masks，{frame_idx: {obj_id: mask_array}}
-        video_path (str): 输入视频路径
+        video_path (str): 输入视频路径或图像序列工作目录
         output_path (str): 输出视频路径
         mask_dir (str): 掩码保存目录
         save_to_video (bool): 是否保存视频
         progress_callback (callable, optional): 进度回调
+        input_type (str): 输入类型 "video" 或 "image_sequence"
+        image_files (list, optional): 图像文件列表（图像序列模式）
+        image_sequence_fps (float): 图像序列帧率
     
     Notes:
         - 视频：将masks叠加到原始帧上
@@ -281,11 +300,26 @@ def save_results(all_masks, video_path, output_path, mask_dir, save_to_video, pr
     if progress_callback:
         progress_callback("\n==== 保存结果 ====")
     
-    cap = cv2.VideoCapture(video_path)
-    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    fps = cap.get(cv2.CAP_PROP_FPS)
-    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    # 根据输入类型初始化帧读取器
+    if input_type == "image_sequence" and image_files:
+        # 图像序列模式
+        first_img = cv2.imread(image_files[0])
+        if first_img is None:
+            raise RuntimeError(f"无法读取图像: {image_files[0]}")
+        height, width = first_img.shape[:2]
+        fps = image_sequence_fps
+        total_frames = len(image_files)
+        cap = None  # 图像序列不使用VideoCapture
+        
+        if progress_callback:
+            progress_callback(f"图像序列模式: {total_frames}帧, {fps:.1f}fps")
+    else:
+        # 视频模式
+        cap = cv2.VideoCapture(video_path)
+        width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     
     # 视频写入器
     video_writer = None
@@ -316,55 +350,104 @@ def save_results(all_masks, video_path, output_path, mask_dir, save_to_video, pr
     
     # 逐帧保存
     frame_idx = 0
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if not ret:
-            break
-        
-        # 叠加masks
-        if frame_idx in all_masks:
-            for obj_id, mask in all_masks[frame_idx].items():
-                # 调整mask尺寸
-                if mask.shape != (height, width):
-                    mask_resized = cv2.resize(mask.astype(np.uint8), (width, height), 
-                                             interpolation=cv2.INTER_NEAREST)
-                else:
-                    mask_resized = mask.astype(np.uint8)
-                
-                # 选择颜色
-                color = np.array(color_map[obj_id % len(color_map)])
-                
-                # 半透明叠加
-                frame[mask_resized > 0] = (frame[mask_resized > 0] * 0.5 + color * 0.5).astype(np.uint8)
-        
-        # 保存视频帧
-        if video_writer:
-            video_writer.write(frame)
-        
-        # 保存掩码
-        if mask_dir and frame_idx in all_masks:
-            mask_image = np.zeros((height, width), dtype=np.uint8)
-            for obj_id, mask in all_masks[frame_idx].items():
-                if mask.shape != (height, width):
-                    mask_resized = cv2.resize(mask.astype(np.uint8), (width, height),
-                                             interpolation=cv2.INTER_NEAREST)
-                else:
-                    mask_resized = mask.astype(np.uint8)
-                
-                # 像素值 = obj_id + 1（背景为0）
-                mask_image[mask_resized > 0] = obj_id + 1
-            
-            mask_path = Path(mask_dir) / f"frame_{frame_idx:05d}.png"
-            cv2.imwrite(str(mask_path), mask_image)
-        
-        frame_idx += 1
-        
-        # 进度报告（保存阶段占70-100%的进度）
-        if progress_callback and frame_idx % 50 == 0:
-            progress = 70 + int(frame_idx / total_frames * 30)
-            progress_callback(f"保存进度: {frame_idx}/{total_frames}帧", progress)
     
-    cap.release()
+    # 根据输入类型决定帧读取方式
+    if input_type == "image_sequence" and image_files:
+        # 图像序列模式：遍历图像文件
+        for img_path in image_files:
+            frame = cv2.imread(img_path)
+            if frame is None:
+                frame_idx += 1
+                continue
+            
+            # 叠加masks
+            if frame_idx in all_masks:
+                for obj_id, mask in all_masks[frame_idx].items():
+                    if mask.shape != (height, width):
+                        mask_resized = cv2.resize(mask.astype(np.uint8), (width, height), 
+                                                 interpolation=cv2.INTER_NEAREST)
+                    else:
+                        mask_resized = mask.astype(np.uint8)
+                    
+                    color = np.array(color_map[obj_id % len(color_map)])
+                    frame[mask_resized > 0] = (frame[mask_resized > 0] * 0.5 + color * 0.5).astype(np.uint8)
+            
+            # 保存视频帧
+            if video_writer:
+                video_writer.write(frame)
+            
+            # 保存掩码
+            if mask_dir and frame_idx in all_masks:
+                mask_image = np.zeros((height, width), dtype=np.uint8)
+                for obj_id, mask in all_masks[frame_idx].items():
+                    if mask.shape != (height, width):
+                        mask_resized = cv2.resize(mask.astype(np.uint8), (width, height),
+                                                 interpolation=cv2.INTER_NEAREST)
+                    else:
+                        mask_resized = mask.astype(np.uint8)
+                    mask_image[mask_resized > 0] = obj_id + 1
+                
+                mask_path = Path(mask_dir) / f"frame_{frame_idx:05d}.png"
+                cv2.imwrite(str(mask_path), mask_image)
+            
+            frame_idx += 1
+            
+            if progress_callback and frame_idx % 50 == 0:
+                progress = 70 + int(frame_idx / total_frames * 30)
+                progress_callback(f"保存进度: {frame_idx}/{total_frames}帧", progress)
+    else:
+        # 视频模式：使用VideoCapture
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                break
+            
+            # 叠加masks
+            if frame_idx in all_masks:
+                for obj_id, mask in all_masks[frame_idx].items():
+                    # 调整mask尺寸
+                    if mask.shape != (height, width):
+                        mask_resized = cv2.resize(mask.astype(np.uint8), (width, height), 
+                                                 interpolation=cv2.INTER_NEAREST)
+                    else:
+                        mask_resized = mask.astype(np.uint8)
+                    
+                    # 选择颜色
+                    color = np.array(color_map[obj_id % len(color_map)])
+                    
+                    # 半透明叠加
+                    frame[mask_resized > 0] = (frame[mask_resized > 0] * 0.5 + color * 0.5).astype(np.uint8)
+            
+            # 保存视频帧
+            if video_writer:
+                video_writer.write(frame)
+            
+            # 保存掩码
+            if mask_dir and frame_idx in all_masks:
+                mask_image = np.zeros((height, width), dtype=np.uint8)
+                for obj_id, mask in all_masks[frame_idx].items():
+                    if mask.shape != (height, width):
+                        mask_resized = cv2.resize(mask.astype(np.uint8), (width, height),
+                                                 interpolation=cv2.INTER_NEAREST)
+                    else:
+                        mask_resized = mask.astype(np.uint8)
+                    
+                    # 像素值 = obj_id + 1（背景为0）
+                    mask_image[mask_resized > 0] = obj_id + 1
+                
+                mask_path = Path(mask_dir) / f"frame_{frame_idx:05d}.png"
+                cv2.imwrite(str(mask_path), mask_image)
+            
+            frame_idx += 1
+            
+            # 进度报告（保存阶段占70-100%的进度）
+            if progress_callback and frame_idx % 50 == 0:
+                progress = 70 + int(frame_idx / total_frames * 30)
+                progress_callback(f"保存进度: {frame_idx}/{total_frames}帧", progress)
+    
+    # 释放资源
+    if cap is not None:
+        cap.release()
     if video_writer:
         video_writer.release()
     

@@ -41,6 +41,11 @@ class MainWindow(QMainWindow):
         self.mask_dir = ""
         self.save_mask_enabled = True  # 默认启用掩码保存
         
+        # === 输入源管理 ===
+        self.input_type = "video"       # "video" 或 "image_sequence"
+        self.input_source = None        # InputSource 实例
+        self.image_sequence_fps = 10.0  # 图像序列默认帧率
+        
         # === Phase 1 MVP: 多帧模式状态 ===
         self.multi_frame_mode = True  # 启用多帧模式
         self.current_frame_index = 0  # 当前帧索引
@@ -109,13 +114,25 @@ class MainWindow(QMainWindow):
     
     # ==== 文件操作方法 ====
     
+    def browse_input(self):
+        """浏览选择输入源（视频文件或图像序列文件夹）"""
+        if self.input_type == "video":
+            self._browse_video_input()
+        else:
+            self._browse_image_sequence_input()
+    
     def browse_video(self):
+        """兼容旧接口，调用browse_input"""
+        self.browse_input()
+    
+    def _browse_video_input(self):
         """浏览选择视频文件"""
         file_path, _ = QFileDialog.getOpenFileName(
             self, "选择视频文件", "", "视频文件 (*.mp4 *.avi *.mov *.mkv);;所有文件 (*)"
         )
         if file_path:
             self.video_path = file_path
+            self.input_source = None  # 视频模式不使用InputSource
             self.video_path_edit.setText(os.path.basename(file_path))
             self.video_path_edit.setToolTip(file_path)
             
@@ -140,10 +157,63 @@ class MainWindow(QMainWindow):
             self.log_message(f"掩码图片将保存到: {self.mask_dir}", "info")
             
             # 加载视频第一帧
-            self.load_video()
+            self.load_input_source()
             
             # 检查是否可以启用开始按钮
             self.check_start_enabled()
+    
+    def _browse_image_sequence_input(self):
+        """浏览选择图像序列文件夹"""
+        folder_path = QFileDialog.getExistingDirectory(
+            self, "选择图像序列文件夹", ""
+        )
+        if folder_path:
+            try:
+                from micro_tracker.utils.input_manager import ImageSequenceInputSource
+                
+                # 使用默认帧率10fps
+                fps = getattr(self, 'image_seq_fps', 10.0)
+                self.image_sequence_fps = fps
+                
+                # 创建输入源（会自动验证和转换）
+                input_source = ImageSequenceInputSource(folder_path, fps=fps)
+                
+                self.video_path = input_source.working_path  # SAM2使用的路径
+                self.input_source = input_source
+                
+                # 更新UI
+                folder_name = os.path.basename(folder_path)
+                self.video_path_edit.setText(f"{folder_name}/ ({input_source.total_frames}张图像)")
+                self.video_path_edit.setToolTip(folder_path)
+                
+                # 设置输出路径
+                self.output_path = os.path.join(folder_path, f"processed_{folder_name}.mp4")
+                self.output_path_edit.setText(self.output_path)
+                self.output_path_edit.setToolTip(self.output_path)
+                
+                # 设置掩码目录
+                self.mask_dir = os.path.join(folder_path, f"masks_{folder_name}")
+                self.mask_dir_edit.setText(self.mask_dir)
+                self.mask_dir_edit.setToolTip(self.mask_dir)
+                
+                # 日志
+                self.log_message(f"选择图像序列: {folder_path}", "info")
+                self.log_message(f"  共 {input_source.total_frames} 张图像", "info")
+                self.log_message(f"  分辨率: {input_source.frame_width}x{input_source.frame_height}", "info")
+                self.log_message(f"  帧率: {fps} FPS", "info")
+                self.log_message(f"输出视频将保存到: {self.output_path}", "info")
+                self.log_message(f"掩码图片将保存到: {self.mask_dir}", "info")
+                
+                if input_source.needs_cleanup:
+                    self.log_message(f"  ⚠️ 检测到非JPEG格式，已创建临时转换目录", "warning")
+                
+                # 加载预览
+                self.load_input_source()
+                self.check_start_enabled()
+                
+            except ValueError as e:
+                self.log_message(f"错误: {str(e)}", "error")
+                QMessageBox.warning(self, "图像序列加载失败", str(e))
     
     def browse_model(self):
         """浏览选择自定义模型文件"""
@@ -239,7 +309,18 @@ class MainWindow(QMainWindow):
     
     # ==== 视频处理方法 ====
     
+    def load_input_source(self):
+        """加载输入源（视频或图像序列）并显示第一帧"""
+        if self.input_type == "image_sequence" and self.input_source:
+            self._load_image_sequence()
+        else:
+            self._load_video()
+    
     def load_video(self):
+        """兼容旧接口，调用load_input_source"""
+        self.load_input_source()
+    
+    def _load_video(self):
         """加载视频并显示第一帧"""
         if not self.video_path or not os.path.exists(self.video_path):
             return
@@ -296,6 +377,64 @@ class MainWindow(QMainWindow):
         self.log_message("视频加载完成，请在第一帧上标注目标边界框", "success")
         
         # === 自动初始化实时预览功能 ===
+        self._init_preview_manager()
+    
+    def _load_image_sequence(self):
+        """加载图像序列并显示第一帧"""
+        from micro_tracker.threads.video_thread import ImageSequenceThread
+        
+        # 清空日志
+        self.log_text.clear()
+        self.log_message(f"加载图像序列: {self.input_source.source_path}", "highlight")
+        
+        # 停止之前的线程
+        if self.video_thread and self.video_thread.isRunning():
+            self.video_thread.stop()
+        
+        # 获取信息
+        total_frames = self.input_source.total_frames
+        fps = self.input_source.fps
+        width = self.input_source.frame_width
+        height = self.input_source.frame_height
+        duration = total_frames / fps if fps > 0 else 0
+        
+        self.log_message(f"图像分辨率: {width}x{height}", "info")
+        self.log_message(f"设定帧率: {fps:.2f} FPS", "info")
+        self.log_message(f"总帧数: {total_frames}", "info")
+        self.log_message(f"预计时长: {duration:.2f} 秒", "info")
+        
+        # 设置滑块
+        self.frame_slider.setRange(0, total_frames - 1)
+        self.frame_slider.setValue(0)
+        self.frame_slider.setEnabled(True)
+        self.frame_info_label.setText(f"当前帧: 0 / {total_frames-1}")
+        
+        # 启用播放按钮
+        self.play_pause_btn.setEnabled(True)
+        self.play_pause_btn.setText("播放")
+        self.play_pause_btn.setIcon(QIcon.fromTheme("media-playback-start"))
+        
+        # 清除边界框
+        count = self.video_label.clear_bboxes()
+        if count > 0:
+            self.log_message(f"清除了 {count} 个已有边界框", "warning")
+        
+        # 创建图像序列线程
+        self.video_thread = ImageSequenceThread(
+            self.input_source.image_files,
+            fps=self.input_source.fps
+        )
+        self.video_thread.frame_ready.connect(self.update_video_frame)
+        self.video_thread.frame_index_changed.connect(self.update_frame_slider)
+        self.video_thread.start()
+        
+        self.log_message("图像序列加载完成，请在第一帧上标注目标边界框", "success")
+        
+        # === 自动初始化实时预览功能 ===
+        self._init_preview_manager()
+    
+    def _init_preview_manager(self):
+        """初始化实时预览管理器"""
         self.log_message("正在初始化实时预览功能...", "info")
         try:
             preview_mgr = self.get_preview_manager()
@@ -423,6 +562,12 @@ class MainWindow(QMainWindow):
         self.frame_slider.blockSignals(True)
         self.frame_slider.setValue(frame_index)
         self.frame_slider.blockSignals(False)
+        
+        # === Bug Fix: 更新overlay层的帧索引（静默模式，不弹窗）===
+        # 解决问题：视频播放时预览mask停留在视频上
+        if hasattr(self, 'video_label') and self.video_label:
+            self.video_label.overlay_layer.set_current_frame_silent(frame_index)
+            self.current_frame_index = frame_index
         
         # 更新帧信息标签，将帧索引加1使其从1开始显示
         total_frames = self.video_thread.total_frames if self.video_thread else 0
@@ -753,13 +898,21 @@ class MainWindow(QMainWindow):
             preview_mgr = self.get_preview_manager()
             overlay = self.video_label.overlay_layer
             
-            # 获取当前帧图像
-            cap = cv2.VideoCapture(self.video_path)
-            cap.set(cv2.CAP_PROP_POS_FRAMES, self.current_frame_index)
-            ret, frame = cap.read()
-            cap.release()
+            # 获取当前帧图像（支持视频和图像序列两种模式）
+            frame = None
+            if self.input_type == "image_sequence" and self.input_source:
+                # 图像序列模式：从InputSource读取
+                frame = self.input_source.get_frame(self.current_frame_index)
+            else:
+                # 视频模式：使用cv2.VideoCapture
+                cap = cv2.VideoCapture(self.video_path)
+                cap.set(cv2.CAP_PROP_POS_FRAMES, self.current_frame_index)
+                ret, frame = cap.read()
+                cap.release()
+                if not ret:
+                    frame = None
             
-            if not ret:
+            if frame is None:
                 if not silent:
                     self.log_message("⚠️ 无法读取当前帧，跳过预览", "warning")
                 return
@@ -988,6 +1141,13 @@ class MainWindow(QMainWindow):
         clicked_button = msg_box.clickedButton()
 
         if clicked_button == confirm_btn:
+            # 清理输入源临时文件
+            if self.input_source and hasattr(self.input_source, 'cleanup'):
+                try:
+                    self.input_source.cleanup()
+                except Exception as e:
+                    print(f"清理临时文件失败: {e}")
+            
             # 如果有正在运行的线程，关闭它们
             if hasattr(self, 'video_thread') and self.video_thread and self.video_thread.isRunning():
                 self.video_thread.stop()

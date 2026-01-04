@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, 
                              QFileDialog, QLineEdit, QSlider, QCheckBox, QComboBox, 
                              QGroupBox, QFormLayout, QProgressBar, QMessageBox, QSizePolicy, 
-                             QTextEdit, QApplication, QRadioButton, QButtonGroup)
+                             QTextEdit, QApplication, QRadioButton, QButtonGroup, QDoubleSpinBox)
 from PyQt5.QtGui import QIcon, QTextCursor, QRegExpValidator
 from PyQt5.QtCore import Qt, QTimer, QRegExp
 
@@ -99,22 +99,50 @@ class SetupTab(BaseTab):
         file_layout.setLabelAlignment(Qt.AlignRight | Qt.AlignVCenter)
         file_layout.setFormAlignment(Qt.AlignLeft | Qt.AlignVCenter)
         
-        # 视频文件选择
-        video_layout = QHBoxLayout()
-        video_layout.setSpacing(8)
+        # === 输入类型选择 ===
+        input_type_layout = QHBoxLayout()
+        input_type_layout.setSpacing(15)
+        
+        self.video_input_radio = QRadioButton("视频文件")
+        self.video_input_radio.setChecked(True)
+        self.video_input_radio.setToolTip("选择 .mp4, .avi, .mov, .mkv 等视频文件")
+        
+        self.image_seq_input_radio = QRadioButton("图像序列")
+        self.image_seq_input_radio.setToolTip("选择包含图像序列的文件夹 (支持 jpg, png, tif, bmp)")
+        
+        self.input_type_group = QButtonGroup()
+        self.input_type_group.addButton(self.video_input_radio)
+        self.input_type_group.addButton(self.image_seq_input_radio)
+        
+        input_type_layout.addWidget(self.video_input_radio)
+        input_type_layout.addWidget(self.image_seq_input_radio)
+        input_type_layout.addStretch()
+        
+        file_layout.addRow("输入类型:", input_type_layout)
+        
+        # 连接信号（两个单选按钮都需要连接）
+        self.video_input_radio.toggled.connect(self.on_input_type_changed)
+        self.image_seq_input_radio.toggled.connect(self.on_input_type_changed)
+        
+        # === 输入源选择（视频文件或图像序列文件夹）===
+        input_source_layout = QHBoxLayout()
+        input_source_layout.setSpacing(8)
         self.main_window.video_path_edit = QLineEdit()
         self.main_window.video_path_edit.setReadOnly(True)
         self.main_window.video_path_edit.setPlaceholderText("选择输入视频文件...")
-        self.main_window.video_path_edit.setMinimumHeight(24)  # 设置输入框高度
-        video_browse_btn = QPushButton("浏览")
-        video_browse_btn.setIcon(QIcon.fromTheme("document-open"))
-        video_browse_btn.setMinimumWidth(60)
-        video_browse_btn.setMaximumWidth(60)
-        video_browse_btn.setMinimumHeight(24)  # 设置按钮高度与输入框一致
-        video_browse_btn.clicked.connect(self.main_window.browse_video)
-        video_layout.addWidget(self.main_window.video_path_edit)
-        video_layout.addWidget(video_browse_btn)
-        file_layout.addRow("输入视频:", video_layout)
+        self.main_window.video_path_edit.setMinimumHeight(24)
+        self.input_browse_btn = QPushButton("浏览")
+        self.input_browse_btn.setIcon(QIcon.fromTheme("document-open"))
+        self.input_browse_btn.setMinimumWidth(60)
+        self.input_browse_btn.setMaximumWidth(60)
+        self.input_browse_btn.setMinimumHeight(24)
+        self.input_browse_btn.clicked.connect(self.main_window.browse_input)
+        input_source_layout.addWidget(self.main_window.video_path_edit)
+        input_source_layout.addWidget(self.input_browse_btn)
+        file_layout.addRow("输入源:", input_source_layout)
+        
+        # === 图像序列默认帧率（不显示UI，使用默认值10fps）===
+        self.main_window.image_seq_fps = 10.0  # 默认10fps
         
         # 模型文件选择（下拉选择）
         model_layout = QHBoxLayout()
@@ -706,6 +734,51 @@ class SetupTab(BaseTab):
             self.box_mode_radio.setChecked(True)
         
         return True
+    
+    def on_input_type_changed(self, checked):
+        """
+        输入类型切换处理
+        
+        Args:
+            checked (bool): 按钮是否被选中
+        
+        Notes:
+            - 切换视频文件和图像序列输入模式
+            - 更新UI元素的可见性和占位符文本
+            - 清空当前选择
+        """
+        # 只处理按钮被选中的情况
+        if not checked:
+            return
+        
+        is_video_mode = self.video_input_radio.isChecked()
+        
+        # 更新占位符文本
+        if is_video_mode:
+            self.main_window.video_path_edit.setPlaceholderText("选择输入视频文件...")
+            self.main_window.input_type = "video"
+        else:
+            self.main_window.video_path_edit.setPlaceholderText("选择图像序列文件夹...")
+            self.main_window.input_type = "image_sequence"
+        
+        # 清空当前选择
+        self.main_window.video_path_edit.clear()
+        self.main_window.video_path_edit.setToolTip("")
+        self.main_window.video_path = ""
+        self.main_window.input_source = None
+        
+        # 禁用开始按钮
+        self.start_btn.setEnabled(False)
+        
+        # 日志
+        mode_name = "视频文件" if is_video_mode else "图像序列"
+        self.main_window.log_message(f"输入模式已切换为: {mode_name}", "info")
+        
+        if not is_video_mode:
+            self.main_window.log_message(
+                "  支持格式: jpg, jpeg, png, tif, tiff, bmp", 
+                "info"
+            )
     
     def populate_model_list(self):
         """自动扫描并填充模型列表"""

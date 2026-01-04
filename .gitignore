@@ -197,3 +197,6 @@ assets/
 
 # Cursor settings
 .cursor/
+
+# Tests
+tests/

@@ -70,17 +70,36 @@ class ProcessingThread(QThread):
             # 导入多帧处理脚本（统一处理路径）
             from scripts.process_video_multiframe import process_video_multiframe
             
-            # 获取视频信息
-            cap = cv2.VideoCapture(self.args.video_path)
-            if not cap.isOpened():
-                raise Exception(f"无法打开视频: {self.args.video_path}")
+            # 获取视频/图像序列信息
+            input_type = getattr(self.args, 'input_type', 'video')
             
-            total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-            fps = cap.get(cv2.CAP_PROP_FPS)
-            duration = total_frames / fps if fps > 0 else 0
-            cap.release()
-            
-            self.progress_update.emit(f"视频信息: {total_frames}帧, {fps:.1f}fps, {duration:.1f}秒")
+            if input_type == "image_sequence" and getattr(self.args, 'image_files', None):
+                # 图像序列模式
+                total_frames = len(self.args.image_files)
+                fps = getattr(self.args, 'image_sequence_fps', 10.0)
+                
+                # 获取分辨率
+                first_img = cv2.imread(self.args.image_files[0])
+                if first_img is not None:
+                    height, width = first_img.shape[:2]
+                else:
+                    raise Exception(f"无法读取图像: {self.args.image_files[0]}")
+                
+                duration = total_frames / fps if fps > 0 else 0
+                self.progress_update.emit(f"图像序列: {total_frames}帧, {fps:.1f}fps, {duration:.1f}秒")
+                self.progress_update.emit(f"图像分辨率: {width}x{height}")
+            else:
+                # 视频模式（原有逻辑）
+                cap = cv2.VideoCapture(self.args.video_path)
+                if not cap.isOpened():
+                    raise Exception(f"无法打开视频: {self.args.video_path}")
+                
+                total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+                fps = cap.get(cv2.CAP_PROP_FPS)
+                duration = total_frames / fps if fps > 0 else 0
+                cap.release()
+                
+                self.progress_update.emit(f"视频信息: {total_frames}帧, {fps:.1f}fps, {duration:.1f}秒")
             
             # 设置进度条最大值
             self.progress_percent.emit(0)

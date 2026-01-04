@@ -313,6 +313,46 @@ class OverlayLayer(QGraphicsItem):
         self.update()
     
     # === Phase 1 MVP: 多帧管理方法 ===
+    def set_current_frame_silent(self, frame_idx):
+        """
+        静默设置当前帧索引（用于视频播放期间）
+        
+        Args:
+            frame_idx (int): 要切换到的帧索引（从0开始）
+        
+        Notes:
+            - 不弹出对话框、不询问未保存的临时点击
+            - 清除预览masks
+            - 同步边界框显示
+            - 用于视频播放时的帧切换，避免打断播放流程
+        
+        Version:
+            Added to fix preview masks persisting during video playback
+        """
+        try:
+            old_frame_idx = self.current_frame_idx
+            self.current_frame_idx = frame_idx
+            
+            # 清除选择状态
+            if old_frame_idx != frame_idx:
+                self.selected_bbox = -1
+                
+                # 切换帧时自动取消隐藏提示
+                self.prompts_hidden = False
+                
+                # 清除预览masks（关键：防止预览停留在视频上）
+                self.preview_masks.clear()
+            
+            # 同步边界框显示
+            self._sync_bboxes_from_current_frame()
+            self.update()
+        except Exception as e:
+            print(f"Error in set_current_frame_silent: {e}")
+            import traceback
+            traceback.print_exc()
+            self.bboxes = []
+            self.update()
+    
     def set_current_frame(self, frame_idx):
         """
         设置当前帧索引，触发边界框显示更新

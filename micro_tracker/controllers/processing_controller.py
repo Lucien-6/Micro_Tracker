@@ -50,6 +50,19 @@ class ProcessingController:
             
         args.device = self.main_window.device_combo.currentData()
         
+        # === 输入类型相关参数 ===
+        args.input_type = self.main_window.input_type
+        args.input_source = self.main_window.input_source
+        
+        if args.input_type == "image_sequence" and args.input_source:
+            args.image_files = args.input_source.image_files
+            args.image_sequence_fps = args.input_source.fps
+            args.original_source_path = args.input_source.source_path
+        else:
+            args.image_files = None
+            args.image_sequence_fps = None
+            args.original_source_path = None
+        
         # === Phase 1 MVP: 多帧标注数据 ===
         args.multi_frame_annotations = multi_frame_annotations
         

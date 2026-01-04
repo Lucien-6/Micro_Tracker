@@ -767,7 +767,30 @@ class AnnotationManagerWidget(QWidget):
             <li>按 <kbd>Ctrl+C</kbd> 清除临时点击</li>
         </ul>
         
-        <h2><span class="emoji">🎬</span> 三、视频浏览</h2>
+        <h2><span class="emoji">📂</span> 三、输入源选择</h2>
+        
+        <h3><span class="emoji">🎬</span> 视频文件</h3>
+        <ul>
+            <li>支持格式：MP4、AVI、MOV等常见视频格式</li>
+            <li>选择"视频文件"单选按钮后点击"浏览"</li>
+        </ul>
+        
+        <h3><span class="emoji">🖼️</span> 图像序列 <span style="color: #FF5722; font-size: 9pt;">（v2.1.0 新增）</span></h3>
+        <ul>
+            <li>支持格式：JPEG、PNG、TIFF、BMP</li>
+            <li>选择"图像序列"单选按钮后点击"浏览"选择文件夹</li>
+            <li><b>智能排序：</b>支持多种命名格式
+                <ul>
+                    <li>纯数字：<code>00001.jpg</code>, <code>00002.jpg</code>...</li>
+                    <li>前缀+数字：<code>frame_001.png</code>, <code>img_001.tif</code>...</li>
+                </ul>
+            </li>
+            <li><b>自动转换：</b>非JPEG图像自动转换以兼容SAM2</li>
+            <li><b>默认帧率：</b>10 FPS（可配置）</li>
+        </ul>
+        <div class="note">💡 适用场景：显微镜逐帧采集、时间序列拍摄、已提取的视频帧</div>
+        
+        <h2><span class="emoji">🎬</span> 四、视频浏览</h2>
         <ul>
             <li><b>滑块：</b>拖动滑块快速跳转到任意帧</li>
             <li><b>快捷键：</b>
@@ -780,7 +803,7 @@ class AnnotationManagerWidget(QWidget):
         </ul>
         <div class="note">💡 提示：使用快捷键可以更精确地定位关键帧</div>
         
-        <h2><span class="emoji">⌨️</span> 四、键盘快捷键</h2>
+        <h2><span class="emoji">⌨️</span> 五、键盘快捷键</h2>
         
         <h3>基本操作</h3>
         <ul>
@@ -805,7 +828,7 @@ class AnnotationManagerWidget(QWidget):
             <li>使用"删除"按钮移除不需要的标注</li>
         </ul>
         
-        <h2><span class="emoji">👁️</span> 五、实时预览功能</h2>
+        <h2><span class="emoji">👁️</span> 六、实时预览功能</h2>
         <div class="success">
             <b>✨ 添加标注后自动生成mask预览</b>
             <ul>
@@ -816,7 +839,7 @@ class AnnotationManagerWidget(QWidget):
             </ul>
         </div>
         
-        <h2><span class="emoji">📋</span> 六、标注管理</h2>
+        <h2><span class="emoji">📋</span> 七、标注管理</h2>
         
         <h3>查看与管理</h3>
         <ul>
@@ -842,7 +865,7 @@ class AnnotationManagerWidget(QWidget):
             </li>
         </ul>
         
-        <h2><span class="emoji">✅</span> 七、标注最佳实践</h2>
+        <h2><span class="emoji">✅</span> 八、标注最佳实践</h2>
         
         <h3>建议</h3>
         <ol>
@@ -870,7 +893,7 @@ class AnnotationManagerWidget(QWidget):
             </ul>
         </div>
         
-        <h2><span class="emoji">❓</span> 八、常见问题</h2>
+        <h2><span class="emoji">❓</span> 九、常见问题</h2>
         
         <p><b>Q: 临时点击无法保存？</b><br>
         A: 检查是否在正确的帧上（临时点击只能在添加它的帧上保存）</p>

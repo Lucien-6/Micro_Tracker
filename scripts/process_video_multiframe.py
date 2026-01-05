@@ -369,7 +369,7 @@ def save_results(all_masks, video_path, output_path, mask_dir, save_to_video,
                     else:
                         mask_resized = mask.astype(np.uint8)
                     
-                    color = np.array(color_map[obj_id % len(color_map)])
+                    color = np.array(color_map[int(obj_id) % len(color_map)])
                     frame[mask_resized > 0] = (frame[mask_resized > 0] * 0.5 + color * 0.5).astype(np.uint8)
             
             # 保存视频帧
@@ -385,7 +385,7 @@ def save_results(all_masks, video_path, output_path, mask_dir, save_to_video,
                                                  interpolation=cv2.INTER_NEAREST)
                     else:
                         mask_resized = mask.astype(np.uint8)
-                    mask_image[mask_resized > 0] = obj_id + 1
+                    mask_image[mask_resized > 0] = int(obj_id) + 1
                 
                 mask_path = Path(mask_dir) / f"frame_{frame_idx:05d}.png"
                 cv2.imwrite(str(mask_path), mask_image)
@@ -413,7 +413,7 @@ def save_results(all_masks, video_path, output_path, mask_dir, save_to_video,
                         mask_resized = mask.astype(np.uint8)
                     
                     # 选择颜色
-                    color = np.array(color_map[obj_id % len(color_map)])
+                    color = np.array(color_map[int(obj_id) % len(color_map)])
                     
                     # 半透明叠加
                     frame[mask_resized > 0] = (frame[mask_resized > 0] * 0.5 + color * 0.5).astype(np.uint8)
@@ -433,7 +433,7 @@ def save_results(all_masks, video_path, output_path, mask_dir, save_to_video,
                         mask_resized = mask.astype(np.uint8)
                     
                     # 像素值 = obj_id + 1（背景为0）
-                    mask_image[mask_resized > 0] = obj_id + 1
+                    mask_image[mask_resized > 0] = int(obj_id) + 1
                 
                 mask_path = Path(mask_dir) / f"frame_{frame_idx:05d}.png"
                 cv2.imwrite(str(mask_path), mask_image)

@@ -15,6 +15,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor
 from pathlib import Path
 import json
+import os
 
 
 def validate_annotation_data(import_data, video_width=None, video_height=None):
@@ -541,11 +542,36 @@ class AnnotationManagerWidget(QWidget):
             QMessageBox.information(self, "提示", "没有标注可以导出")
             return
         
+        # 确定默认文件名和保存路径
+        if hasattr(self.main_window, 'input_source') and self.main_window.input_source:
+            # 图像序列模式：使用原始文件夹名而非临时转换目录名
+            source_path = self.main_window.input_source.source_path
+            input_name = Path(source_path).stem
+            # Results目录在父目录下
+            parent_dir = os.path.dirname(source_path)
+            results_dir = os.path.join(parent_dir, f"Results_{input_name}")
+        elif self.main_window.video_path:
+            # 视频模式：使用视频文件名
+            input_name = Path(self.main_window.video_path).stem
+            # Results目录在视频文件同级目录
+            video_dir = os.path.dirname(self.main_window.video_path)
+            results_dir = os.path.join(video_dir, f"Results_{input_name}")
+        else:
+            # 无输入源：使用当前目录和通用名称
+            input_name = "annotations"
+            results_dir = os.getcwd()
+        
+        # 构建完整的默认保存路径
+        default_file_path = os.path.join(results_dir, f"{input_name}_annotations.json")
+        
+        # 确保Results目录存在
+        os.makedirs(results_dir, exist_ok=True)
+        
         # 选择保存路径
         file_path, _ = QFileDialog.getSaveFileName(
             self,
             "导出标注",
-            f"{Path(self.main_window.video_path).stem}_annotations.json" if self.main_window.video_path else "annotations.json",
+            default_file_path,
             "JSON Files (*.json)"
         )
         

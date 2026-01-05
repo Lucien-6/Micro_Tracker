@@ -37,6 +37,12 @@ class ProcessingController:
         args.video_output_path = self.main_window.output_path_edit.text() if os.path.isabs(self.main_window.output_path_edit.text()) else self.main_window.output_path
         args.save_to_video = self.main_window.save_video_check.isChecked()
         
+        # 确保Results文件夹存在
+        output_parent_dir = os.path.dirname(args.video_output_path)
+        if output_parent_dir and not os.path.exists(output_parent_dir):
+            os.makedirs(output_parent_dir, exist_ok=True)
+            self.main_window.log_message(f"创建输出目录: {output_parent_dir}", "info")
+        
         # 根据保存掩码选项决定是否使用掩码保存目录
         if self.main_window.save_mask_check.isChecked():
             # 确保掩码目录存在

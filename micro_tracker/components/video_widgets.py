@@ -147,7 +147,7 @@ class OverlayLayer(QGraphicsItem):
         for obj_id, points in self.tracks.items():
             if len(points) < 2:
                 continue
-            color_idx = obj_id % len(self.colors) if obj_id >= 0 else 0
+            color_idx = int(obj_id) % len(self.colors) if int(obj_id) >= 0 else 0
             color = self.colors[color_idx]
             qcolor = QColor(color[0], color[1], color[2])
             pen = QPen(qcolor)
@@ -599,7 +599,7 @@ class OverlayLayer(QGraphicsItem):
         """
         if obj_id not in self.object_registry:
             # 新对象：分配颜色
-            color_idx = obj_id % len(self.color_palette)
+            color_idx = int(obj_id) % len(self.color_palette)
             self.object_registry[obj_id] = {
                 "first_frame": frame_idx,
                 "frames": [frame_idx],
@@ -645,7 +645,7 @@ class OverlayLayer(QGraphicsItem):
             return self.object_registry[obj_id]["color"]
         else:
             # 未注册对象：临时分配颜色
-            color_idx = obj_id % len(self.color_palette)
+            color_idx = int(obj_id) % len(self.color_palette)
             return self.color_palette[color_idx]
     
     def save_temp_clicks(self):

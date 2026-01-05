@@ -141,13 +141,16 @@ class MainWindow(QMainWindow):
             video_filename = os.path.basename(file_path)
             video_name_without_ext = os.path.splitext(video_filename)[0]
             
-            # 设置输出视频路径为原视频同级目录下的processed_{原视频文件名}
-            self.output_path = os.path.join(video_dir, f"processed_{video_filename}")
+            # 创建Results文件夹路径
+            results_dir = os.path.join(video_dir, f"Results_{video_name_without_ext}")
+            
+            # 设置输出视频路径为Results文件夹下的processed_{原视频文件名}
+            self.output_path = os.path.join(results_dir, f"processed_{video_filename}")
             self.output_path_edit.setText(self.output_path)
             self.output_path_edit.setToolTip(self.output_path)
             
-            # 设置掩码保存目录为原视频同级目录下的masks_{原视频文件名}文件夹
-            self.mask_dir = os.path.join(video_dir, f"masks_{video_name_without_ext}")
+            # 设置掩码保存目录为Results文件夹下的masks子文件夹
+            self.mask_dir = os.path.join(results_dir, "masks")
             self.mask_dir_edit.setText(self.mask_dir)
             self.mask_dir_edit.setToolTip(self.mask_dir)
             
@@ -186,13 +189,19 @@ class MainWindow(QMainWindow):
                 self.video_path_edit.setText(f"{folder_name}/ ({input_source.total_frames}张图像)")
                 self.video_path_edit.setToolTip(folder_path)
                 
+                # 获取图像序列文件夹的父目录
+                parent_dir = os.path.dirname(folder_path)
+                
+                # 创建Results文件夹路径在父目录下
+                results_dir = os.path.join(parent_dir, f"Results_{folder_name}")
+                
                 # 设置输出路径
-                self.output_path = os.path.join(folder_path, f"processed_{folder_name}.mp4")
+                self.output_path = os.path.join(results_dir, f"processed_{folder_name}.mp4")
                 self.output_path_edit.setText(self.output_path)
                 self.output_path_edit.setToolTip(self.output_path)
                 
                 # 设置掩码目录
-                self.mask_dir = os.path.join(folder_path, f"masks_{folder_name}")
+                self.mask_dir = os.path.join(results_dir, "masks")
                 self.mask_dir_edit.setText(self.mask_dir)
                 self.mask_dir_edit.setToolTip(self.mask_dir)
                 

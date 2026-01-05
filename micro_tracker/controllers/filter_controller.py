@@ -1,10 +1,11 @@
 import os
+import sys
+import subprocess
 from PyQt5.QtWidgets import QMessageBox, QApplication
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QDateTime
 import cv2
 import numpy as np
-import pandas as pd
 from pathlib import Path
 
 class FilterController:
@@ -18,6 +19,47 @@ class FilterController:
             main_window: 主窗口引用
         """
         self.main_window = main_window
+    
+    def try_install_pandas(self):
+        """
+        尝试自动安装pandas和openpyxl库
+        
+        Returns:
+            bool: 安装成功返回True，失败返回False
+        """
+        try:
+            self.filter_log_message(
+                "检测到缺少pandas库，正在尝试自动安装...", 
+                "warning"
+            )
+            self.filter_log_message(
+                "执行命令: pip install pandas openpyxl", 
+                "info"
+            )
+            
+            # 使用pip安装pandas和openpyxl
+            subprocess.check_call(
+                [sys.executable, "-m", "pip", "install", 
+                 "pandas", "openpyxl"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
+            
+            self.filter_log_message("pandas库安装成功！", "success")
+            return True
+            
+        except subprocess.CalledProcessError as e:
+            self.filter_log_message(
+                f"自动安装失败: {str(e)}", 
+                "error"
+            )
+            return False
+        except Exception as e:
+            self.filter_log_message(
+                f"自动安装过程出错: {str(e)}", 
+                "error"
+            )
+            return False
     
     def apply_mask_filter(self):
         """应用掩膜筛选"""
@@ -363,6 +405,47 @@ class FilterController:
             self.filter_log_message("错误: 没有可保存的筛选结果", "error")
             return
         
+        # 检查pandas库是否可用
+        try:
+            import pandas as pd
+        except ImportError:
+            # 尝试自动安装pandas
+            if self.try_install_pandas():
+                try:
+                    import pandas as pd
+                except ImportError:
+                    # 安装后仍然无法导入，可能需要重启
+                    error_msg = (
+                        "pandas库安装成功，但需要重启应用程序才能使用。\n\n"
+                        "请关闭程序后重新启动，然后再次尝试保存。"
+                    )
+                    QMessageBox.warning(
+                        self.main_window, 
+                        "需要重启", 
+                        error_msg
+                    )
+                    self.filter_log_message(error_msg, "warning")
+                    return
+            else:
+                # 自动安装失败，提示用户手动安装
+                error_msg = (
+                    "❌ 缺少必需库：pandas\n\n"
+                    "无法保存筛选结果，因为系统缺少 pandas 库且自动安装失败。\n\n"
+                    "请手动安装必需的依赖库：\n\n"
+                    "    pip install pandas openpyxl\n\n"
+                    "安装完成后，请重新执行保存操作。"
+                )
+                QMessageBox.critical(
+                    self.main_window, 
+                    "缺少必需库", 
+                    error_msg
+                )
+                self.filter_log_message(
+                    "保存失败: 缺少pandas库且自动安装失败", 
+                    "error"
+                )
+                return
+        
         # 显示进度条
         self.main_window.filter_progress_bar.setValue(0)
         self.main_window.filter_progress_bar.setVisible(True)
@@ -379,18 +462,25 @@ class FilterController:
             # 获取原始视频文件名（不含扩展名）
             video_name = "video"
             
-            # 优先从主窗口的video_path获取
-            if hasattr(self.main_window, 'video_path') and self.main_window.video_path:
+            # 优先从input_source获取原始路径（图像序列模式）
+            if hasattr(self.main_window, 'input_source') and self.main_window.input_source:
+                # 图像序列模式：使用原始文件夹名而非临时转换目录名
+                source_path = self.main_window.input_source.source_path
+                video_name = os.path.basename(source_path)
+                if not video_name:  # 如果是根目录或空
+                    video_name = os.path.splitext(os.path.basename(source_path))[0]
+            # 其次从主窗口的video_path获取（视频模式）
+            elif hasattr(self.main_window, 'video_path') and self.main_window.video_path:
                 video_filename = os.path.basename(self.main_window.video_path)
                 video_name = os.path.splitext(video_filename)[0]
-            # 如果没有直接的视频路径，尝试从掩膜文件夹名称推断
+            # 最后尝试从掩膜文件夹名称推断（降级方案）
             else:
                 # 掩膜目录通常命名为 "masks_视频名"
                 mask_dirname = os.path.basename(mask_dir)
                 if mask_dirname.startswith("masks_"):
                     video_name = mask_dirname[6:]  # 去掉 "masks_" 前缀
             
-            self.filter_log_message(f"使用原始视频名称: {video_name}", "info")
+            self.filter_log_message(f"使用原始数据源名称: {video_name}", "info")
             
             # 创建Filtered_Masks文件夹，使用原始视频名称
             filtered_masks_dir = os.path.join(base_dir, f"Filtered_Masks_{video_name}")
@@ -456,164 +546,124 @@ class FilterController:
             self.filter_log_message("正在保存轨迹数据到Excel...", "progress")
             self.update_filter_progress_bar(65)
             
-            try:
-                import pandas as pd
+            # 创建Excel文件，使用原始视频名称
+            excel_path = os.path.join(base_dir, f"Trajectories_Results_{video_name}.xlsx")
+            
+            # 统计数据点总数
+            total_data_points = sum(len(trajectory) for trajectory in self.main_window.filter_thread.object_trajectories.values())
+            self.filter_log_message(f"正在处理 {len(object_ids)} 个对象的轨迹, 共 {total_data_points} 个数据点", "info")
+            
+            # 创建ExcelWriter
+            with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
+                # 首先创建参数信息sheet
+                self.filter_log_message("创建参数信息表...", "info")
                 
-                # 创建Excel文件，使用原始视频名称
-                excel_path = os.path.join(base_dir, f"Trajectories_Results_{video_name}.xlsx")
+                # 收集筛选参数
+                parameters_data = {
+                    "Parameter": [
+                        "Video Path",
+                        "Mask Directory",
+                        "FPS",
+                        "Pixel Scale (μm/pixel)",
+                        "Exclude Object IDs",
+                        "Area Filter",
+                        "Area Range (μm²)",
+                        "Area Change Filter",
+                        "Area Change Threshold",
+                        "Velocity Filter",
+                        "Velocity Range (μm/s)",
+                        "Displacement Filter",
+                        "Displacement Range (μm)",
+                        "Boundary Truncation",
+                        "Minimum Distance Filter",
+                        "Minimum Distance Threshold (μm)",
+                        "Total Objects",
+                        "Passed Objects",
+                        "Filtered Objects"
+                    ],
+                    "Value": [
+                        self.main_window.video_path if hasattr(self.main_window, 'video_path') else "Unknown",
+                        mask_dir,
+                        self.main_window.fps_input.text(),
+                        self.main_window.um_per_pixel_input.text(),
+                        ", ".join(map(str, self.main_window.filter_thread.filter_params.get('exclude_ids', []))) if self.main_window.filter_thread.filter_params.get('exclude_ids') else "None",
+                        "Enabled" if self.main_window.filter_thread.filter_params.get('area_filter', False) else "Disabled",
+                        f"{self.main_window.filter_thread.filter_params.get('area_min', 0)} - {self.main_window.filter_thread.filter_params.get('area_max', 'inf')}" if self.main_window.filter_thread.filter_params.get('area_filter', False) else "N/A",
+                        "Enabled" if self.main_window.filter_thread.filter_params.get('area_change_filter', False) else "Disabled",
+                        str(self.main_window.filter_thread.filter_params.get('area_change_threshold', 'N/A')) if self.main_window.filter_thread.filter_params.get('area_change_filter', False) else "N/A",
+                        "Enabled" if self.main_window.filter_thread.filter_params.get('velocity_filter', False) else "Disabled",
+                        f"{self.main_window.filter_thread.filter_params.get('velocity_min', 0)} - {self.main_window.filter_thread.filter_params.get('velocity_max', 'inf')}" if self.main_window.filter_thread.filter_params.get('velocity_filter', False) else "N/A",
+                        "Enabled" if self.main_window.filter_thread.filter_params.get('displacement_filter', False) else "Disabled",
+                        f"{self.main_window.filter_thread.filter_params.get('displacement_min', 0)} - {self.main_window.filter_thread.filter_params.get('displacement_max', 'inf')}" if self.main_window.filter_thread.filter_params.get('displacement_filter', False) else "N/A",
+                        "Enabled" if self.main_window.filter_thread.filter_params.get('boundary_filter', False) else "Disabled",
+                        "Enabled" if self.main_window.filter_thread.filter_params.get('min_distance_filter', False) else "Disabled",
+                        str(self.main_window.filter_thread.filter_params.get('min_distance_threshold', 'N/A')) if self.main_window.filter_thread.filter_params.get('min_distance_filter', False) else "N/A",
+                        str(self.main_window.filter_thread.total_objects),
+                        str(self.main_window.filter_thread.passed_objects),
+                        str(self.main_window.filter_thread.total_objects - self.main_window.filter_thread.passed_objects)
+                    ]
+                }
                 
-                # 统计数据点总数
-                total_data_points = sum(len(trajectory) for trajectory in self.main_window.filter_thread.object_trajectories.values())
-                self.filter_log_message(f"正在处理 {len(object_ids)} 个对象的轨迹, 共 {total_data_points} 个数据点", "info")
+                # 创建参数DataFrame
+                params_df = pd.DataFrame(parameters_data)
                 
-                # 创建ExcelWriter
-                with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
-                    # 首先创建参数信息sheet
-                    self.filter_log_message("创建参数信息表...", "info")
+                # 写入参数sheet
+                params_df.to_excel(writer, sheet_name="Parameters", index=False)
+                
+                # 自适应列宽
+                worksheet = writer.sheets["Parameters"]
+                for i, col in enumerate(params_df.columns):
+                    max_width = max(
+                        params_df[col].astype(str).map(len).max(),
+                        len(col)
+                    ) + 2  # 添加一些额外空间
+                    worksheet.column_dimensions[chr(65 + i)].width = max_width
+                
+                # 然后保存对象轨迹sheets
+                obj_count = 0
+                for obj_id, trajectory in self.main_window.filter_thread.object_trajectories.items():
+                    obj_count += 1
+                    # 更新进度条, Excel保存占总进度的20%
+                    excel_percent = 65 + int((obj_count / len(object_ids)) * 20)
+                    self.update_filter_progress_bar(excel_percent)
                     
-                    # 收集筛选参数
-                    parameters_data = {
-                        "Parameter": [
-                            "Video Path",
-                            "Mask Directory",
-                            "FPS",
-                            "Pixel Scale (μm/pixel)",
-                            "Exclude Object IDs",
-                            "Area Filter",
-                            "Area Range (μm²)",
-                            "Area Change Filter",
-                            "Area Change Threshold",
-                            "Velocity Filter",
-                            "Velocity Range (μm/s)",
-                            "Displacement Filter",
-                            "Displacement Range (μm)",
-                            "Boundary Truncation",
-                            "Minimum Distance Filter",
-                            "Minimum Distance Threshold (μm)",
-                            "Total Objects",
-                            "Passed Objects",
-                            "Filtered Objects"
-                        ],
-                        "Value": [
-                            self.main_window.video_path if hasattr(self.main_window, 'video_path') else "Unknown",
-                            mask_dir,
-                            self.main_window.fps_input.text(),
-                            self.main_window.um_per_pixel_input.text(),
-                            ", ".join(map(str, self.main_window.filter_thread.filter_params.get('exclude_ids', []))) if self.main_window.filter_thread.filter_params.get('exclude_ids') else "None",
-                            "Enabled" if self.main_window.filter_thread.filter_params.get('area_filter', False) else "Disabled",
-                            f"{self.main_window.filter_thread.filter_params.get('area_min', 0)} - {self.main_window.filter_thread.filter_params.get('area_max', 'inf')}" if self.main_window.filter_thread.filter_params.get('area_filter', False) else "N/A",
-                            "Enabled" if self.main_window.filter_thread.filter_params.get('area_change_filter', False) else "Disabled",
-                            str(self.main_window.filter_thread.filter_params.get('area_change_threshold', 'N/A')) if self.main_window.filter_thread.filter_params.get('area_change_filter', False) else "N/A",
-                            "Enabled" if self.main_window.filter_thread.filter_params.get('velocity_filter', False) else "Disabled",
-                            f"{self.main_window.filter_thread.filter_params.get('velocity_min', 0)} - {self.main_window.filter_thread.filter_params.get('velocity_max', 'inf')}" if self.main_window.filter_thread.filter_params.get('velocity_filter', False) else "N/A",
-                            "Enabled" if self.main_window.filter_thread.filter_params.get('displacement_filter', False) else "Disabled",
-                            f"{self.main_window.filter_thread.filter_params.get('displacement_min', 0)} - {self.main_window.filter_thread.filter_params.get('displacement_max', 'inf')}" if self.main_window.filter_thread.filter_params.get('displacement_filter', False) else "N/A",
-                            "Enabled" if self.main_window.filter_thread.filter_params.get('boundary_filter', False) else "Disabled",
-                            "Enabled" if self.main_window.filter_thread.filter_params.get('min_distance_filter', False) else "Disabled",
-                            str(self.main_window.filter_thread.filter_params.get('min_distance_threshold', 'N/A')) if self.main_window.filter_thread.filter_params.get('min_distance_filter', False) else "N/A",
-                            str(self.main_window.filter_thread.total_objects),
-                            str(self.main_window.filter_thread.passed_objects),
-                            str(self.main_window.filter_thread.total_objects - self.main_window.filter_thread.passed_objects)
-                        ]
-                    }
+                    # 转换为DataFrame
+                    df = pd.DataFrame(trajectory)
                     
-                    # 创建参数DataFrame
-                    params_df = pd.DataFrame(parameters_data)
+                    # 仅保留micro_tracker.py中指定的列
+                    df = df[['time', 'area', 'center_x', 'center_y', 'major_axis', 'minor_axis', 'angle']]
                     
-                    # 写入参数sheet
-                    params_df.to_excel(writer, sheet_name="Parameters", index=False)
+                    # 列名重命名与micro_tracker.py完全一致
+                    df = df.rename(columns={
+                        'time': 'time (s)',
+                        'area': 'area (μm²)',
+                        'center_x': 'center_x (μm)',
+                        'center_y': 'center_y (μm)',
+                        'major_axis': 'major axis length (μm)',
+                        'minor_axis': 'minor axis length (μm)',
+                        'angle': 'posture angle (°)'
+                    })
+                    
+                    # 保存到Excel的sheet
+                    sheet_name = f"Object_{obj_id}"
+                    df.to_excel(writer, sheet_name=sheet_name, index=False)
                     
                     # 自适应列宽
-                    worksheet = writer.sheets["Parameters"]
-                    for i, col in enumerate(params_df.columns):
+                    worksheet = writer.sheets[sheet_name]
+                    for i, col in enumerate(df.columns):
                         max_width = max(
-                            params_df[col].astype(str).map(len).max(),
+                            df[col].astype(str).map(len).max(),
                             len(col)
                         ) + 2  # 添加一些额外空间
                         worksheet.column_dimensions[chr(65 + i)].width = max_width
                     
-                    # 然后保存对象轨迹sheets
-                    obj_count = 0
-                    for obj_id, trajectory in self.main_window.filter_thread.object_trajectories.items():
-                        obj_count += 1
-                        # 更新进度条, Excel保存占总进度的20%
-                        excel_percent = 65 + int((obj_count / len(object_ids)) * 20)
-                        self.update_filter_progress_bar(excel_percent)
-                        
-                        # 转换为DataFrame
-                        df = pd.DataFrame(trajectory)
-                        
-                        # 仅保留micro_tracker.py中指定的列
-                        df = df[['time', 'area', 'center_x', 'center_y', 'major_axis', 'minor_axis', 'angle']]
-                        
-                        # 列名重命名与micro_tracker.py完全一致
-                        df = df.rename(columns={
-                            'time': 'time (s)',
-                            'area': 'area (μm²)',
-                            'center_x': 'center_x (μm)',
-                            'center_y': 'center_y (μm)',
-                            'major_axis': 'major axis length (μm)',
-                            'minor_axis': 'minor axis length (μm)',
-                            'angle': 'posture angle (°)'
-                        })
-                        
-                        # 保存到Excel的sheet
-                        sheet_name = f"Object_{obj_id}"
-                        df.to_excel(writer, sheet_name=sheet_name, index=False)
-                        
-                        # 自适应列宽
-                        worksheet = writer.sheets[sheet_name]
-                        for i, col in enumerate(df.columns):
-                            max_width = max(
-                                df[col].astype(str).map(len).max(),
-                                len(col)
-                            ) + 2  # 添加一些额外空间
-                            worksheet.column_dimensions[chr(65 + i)].width = max_width
-                        
-                        # 定期更新进度
-                        if obj_count % 5 == 0 or obj_count == len(object_ids):
-                            percent_complete = int((obj_count / len(object_ids)) * 100)
-                            self.filter_log_message(f"Excel数据保存进度: {obj_count}/{len(object_ids)} 个对象 ({percent_complete}%)", "progress")
-                
-                self.filter_log_message(f"轨迹数据已保存到Excel文件: {excel_path}", "success")
-                self.update_filter_progress_bar(90)  # 90%进度
-                
-            except ImportError:
-                # 如果没有pandas，使用CSV格式保存
-                self.filter_log_message("警告: 未安装pandas库，将使用CSV格式保存轨迹数据", "warning")
-                
-                # 为每个对象创建CSV文件
-                obj_count = 0
-                csv_files = []
-                
-                for obj_id, trajectory in self.main_window.filter_thread.object_trajectories.items():
-                    obj_count += 1
-                    # 更新进度条, CSV保存占总进度的20%
-                    csv_percent = 65 + int((obj_count / len(object_ids)) * 20)
-                    self.update_filter_progress_bar(csv_percent)
-                    
-                    csv_path = os.path.join(base_dir, f"Object_{obj_id}_Trajectory_{video_name}.csv")
-                    csv_files.append(csv_path)
-                    
-                    with open(csv_path, 'w', newline='') as csvfile:
-                        # 写入标题行，与micro_tracker.py一致
-                        header = "time (s),area (μm²),center_x (μm),center_y (μm),major axis length (μm),minor axis length (μm),posture angle (°)\n"
-                        csvfile.write(header)
-                        
-                        # 写入数据行
-                        for point in trajectory:
-                            line = f"{point['time']},{point['area']},{point['center_x']},{point['center_y']},{point['major_axis']},{point['minor_axis']},{point['angle']}\n"
-                            csvfile.write(line)
-                    
                     # 定期更新进度
                     if obj_count % 5 == 0 or obj_count == len(object_ids):
                         percent_complete = int((obj_count / len(object_ids)) * 100)
-                        self.filter_log_message(f"CSV数据保存进度: {obj_count}/{len(object_ids)} 个对象 ({percent_complete}%)", "progress")
-                
-                # 列出所有生成的CSV文件
-                csv_dir = os.path.dirname(csv_files[0])
-                self.filter_log_message(f"轨迹数据已保存到CSV文件夹: {csv_dir}", "success")
-                self.update_filter_progress_bar(90)  # 90%进度
+                        self.filter_log_message(f"Excel数据保存进度: {obj_count}/{len(object_ids)} 个对象 ({percent_complete}%)", "progress")
+            
+            self.filter_log_message(f"轨迹数据已保存到Excel文件: {excel_path}", "success")
+            self.update_filter_progress_bar(90)  # 90%进度
             
             # 完成保存
             self.update_filter_progress_bar(100)  # 100%进度
@@ -633,8 +683,13 @@ class FilterController:
             self.filter_log_message(f"- 平均帧数: {avg_frames:.1f} 帧/对象", "info")
             
             # 显示成功消息
-            QMessageBox.information(self.main_window, "保存成功", 
-                f"筛选结果保存成功！\n\n掩膜保存路径:\n{filtered_masks_dir}\n\n轨迹数据保存路径:\n{excel_path if 'excel_path' in locals() else csv_dir}")
+            QMessageBox.information(
+                self.main_window, 
+                "保存成功", 
+                f"筛选结果保存成功！\n\n"
+                f"掩膜保存路径:\n{filtered_masks_dir}\n\n"
+                f"轨迹数据保存路径:\n{excel_path}"
+            )
             
             # 隐藏进度条并重新启用保存按钮
             self.main_window.filter_progress_bar.setVisible(False)

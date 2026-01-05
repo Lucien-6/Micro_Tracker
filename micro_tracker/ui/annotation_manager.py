@@ -578,9 +578,17 @@ class AnnotationManagerWidget(QWidget):
         if not file_path:
             return
         
+        # 确定正确的视频路径
+        # 图像序列模式：使用原始文件夹路径
+        # 视频模式：使用视频文件路径
+        if hasattr(self.main_window, 'input_source') and self.main_window.input_source:
+            video_path_for_export = self.main_window.input_source.source_path
+        else:
+            video_path_for_export = self.main_window.video_path
+        
         # 构建导出数据
         export_data = {
-            "video_path": self.main_window.video_path,
+            "video_path": video_path_for_export,
             "annotations": refinement_data,
             "object_registry": overlay.object_registry,
             "format": "refinement" if use_refinement else "legacy",

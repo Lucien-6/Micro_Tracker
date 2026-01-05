@@ -558,6 +558,16 @@ class FilterController:
                 # 首先创建参数信息sheet
                 self.filter_log_message("创建参数信息表...", "info")
                 
+                # 确定正确的视频路径
+                # 图像序列模式：使用原始文件夹路径
+                # 视频模式：使用视频文件路径
+                if hasattr(self.main_window, 'input_source') and self.main_window.input_source:
+                    video_path_for_export = self.main_window.input_source.source_path
+                elif hasattr(self.main_window, 'video_path'):
+                    video_path_for_export = self.main_window.video_path
+                else:
+                    video_path_for_export = "Unknown"
+                
                 # 收集筛选参数
                 parameters_data = {
                     "Parameter": [
@@ -582,7 +592,7 @@ class FilterController:
                         "Filtered Objects"
                     ],
                     "Value": [
-                        self.main_window.video_path if hasattr(self.main_window, 'video_path') else "Unknown",
+                        video_path_for_export,
                         mask_dir,
                         self.main_window.fps_input.text(),
                         self.main_window.um_per_pixel_input.text(),

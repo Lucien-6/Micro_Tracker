@@ -254,6 +254,29 @@ class GuideTab(BaseTab):
             <p>注意：在可视化显示中，系统会自动确定哪个是主轴（长轴）并用红色显示，哪个是次轴（短轴）并用蓝色显示。但保存的角度数据始终是cv2.fitEllipse的原始返回值，没有经过调整。</p>
         </div>
         
+        <h3>后处理工具推荐：</h3>
+        <div class="note" style="background-color: #E8F5E9; border-left-color: #4CAF50;">
+            <h4>🔬 Micro Post - 细菌轨迹运动分析器</h4>
+            <p><b>仓库地址：</b> <a href="https://github.com/Lucien-6/Micro-Post" style="color: #1976D2; text-decoration: none;">https://github.com/Lucien-6/Micro-Post</a></p>
+            <p>在通过 Micro Tracker 获得追踪结果后，强烈推荐使用 <b>Micro Post</b> 进行深度运动分析。该工具专为处理 Micro Tracker 输出的 Excel 数据而设计，提供：</p>
+            <ul>
+                <li><b>交互式轨迹可视化：</b> 支持缩放、平移和悬停交互，直观展示对象运动轨迹</li>
+                <li><b>高级运动分析：</b> 
+                    <ul>
+                        <li>位移分析（X/Y 和总位移）</li>
+                        <li>角位移分析（处理 180° 对称性）</li>
+                        <li>均方位移 (MSD) 和均方角位移 (MSAD)</li>
+                        <li>轨迹椭圆拟合和振荡指数计算</li>
+                    </ul>
+                </li>
+                <li><b>数据过滤：</b> 按最小追踪时长筛选对象，确保数据质量</li>
+                <li><b>统计分析：</b> 提供均值和标准差的综合统计信息</li>
+                <li><b>MSD/MSAD 曲线拟合：</b> 支持恒定速度漂移模型和主动扩散模型</li>
+                <li><b>Excel 导出：</b> 自动调整列宽的格式化输出</li>
+            </ul>
+            <p><b>使用建议：</b> 在 Micro Tracker 完成数据导出后，直接使用 Micro Post 加载导出的 Excel 文件进行后续分析。两个工具的数据格式完全兼容，无需手动转换。</p>
+        </div>
+        
         <h3>高级操作指南：</h3>
         
         <h4>多帧智能标注操作</h4>

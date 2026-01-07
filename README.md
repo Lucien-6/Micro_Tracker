@@ -328,6 +328,31 @@ Micro_Tracker/
    - Confirm if the GPU is being used by the program (usually there will be relevant logs during program startup or processing).
    - Consider using a more powerful GPU.
 
+## 🔬 Post-Processing Tools
+
+After obtaining tracking results from Micro_Tracker, you can use the following specialized tool for advanced motion analysis:
+
+### Micro Post - Bacterial Trajectory Motion Analyzer
+
+**Repository**: [https://github.com/Lucien-6/Micro-Post](https://github.com/Lucien-6/Micro-Post)
+
+Micro Post is a professional desktop application designed for comprehensive motion analysis of bacterial trajectories from Micro_Tracker's output data. It provides:
+
+- **Interactive Trajectory Visualization**: Zoom, pan, and hover interactions
+- **Advanced Motion Analytics**: 
+  - Displacement analysis (X/Y and total)
+  - Angular displacement with 180° wrapping
+  - Mean Squared Displacement (MSD)
+  - Mean Squared Angular Displacement (MSAD)
+  - Trajectory ellipse fitting
+  - Oscillation index calculation
+- **Data Filtering**: Filter objects by minimum tracking duration
+- **Statistical Analysis**: Comprehensive statistics with mean and standard deviation
+- **MSD/MSAD Curve Fitting**: Constant velocity drift model and active diffusion model
+- **Excel Export**: Formatted output with auto-adjusted column widths
+
+This tool seamlessly integrates with Micro_Tracker's Excel output format, making it easy to perform in-depth motion analysis on your tracking data.
+
 ## 📜 License
 
 This project is licensed under the [Apache 2.0 License](LICENSE).
@@ -640,6 +665,31 @@ Micro_Tracker/
 4.  **处理速度慢**
     - 确认 GPU 是否正在被程序使用 (通常在程序启动时或处理过程中会有相关日志)。
     - 考虑使用性能更强的 GPU。
+
+## 🔬 后处理工具
+
+在通过 Micro_Tracker 获得追踪结果后，您可以使用以下专业工具进行深度运动分析：
+
+### Micro Post - 细菌轨迹运动分析器
+
+**仓库地址**: [https://github.com/Lucien-6/Micro-Post](https://github.com/Lucien-6/Micro-Post)
+
+Micro Post 是一款专业的桌面应用程序，专为对 Micro_Tracker 输出数据进行全面的细菌轨迹运动分析而设计。它提供：
+
+- **交互式轨迹可视化**：缩放、平移和悬停交互
+- **高级运动分析**：
+  - 位移分析（X/Y 和总位移）
+  - 角位移分析（处理 180° 对称性）
+  - 均方位移 (MSD)
+  - 均方角位移 (MSAD)
+  - 轨迹椭圆拟合
+  - 振荡指数计算
+- **数据过滤**：按最小追踪时长筛选对象
+- **统计分析**：包含均值和标准差的综合统计
+- **MSD/MSAD 曲线拟合**：恒定速度漂移模型和主动扩散模型
+- **Excel 导出**：自动调整列宽的格式化输出
+
+该工具与 Micro_Tracker 的 Excel 输出格式无缝集成，方便您对追踪数据进行深入的运动分析。
 
 ## 📜 许可证
 

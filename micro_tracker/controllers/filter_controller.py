@@ -219,7 +219,7 @@ class FilterController:
         # 在筛选日志区域显示消息
         self.filter_log_message(message, msg_type)
     
-    def filter_log_message(self, message, msg_type="info"):
+    def filter_log_message(self, message, msg_type="info", cross_log=True):
         """在筛选过滤日志区域添加消息，并根据消息类型设置样式"""
         color_map = {
             "info": "#424242",     # 黑色 - 一般信息
@@ -244,8 +244,8 @@ class FilterController:
             self.main_window.filter_log_text.verticalScrollBar().maximum()
         )
         
-        # 如果有错误或警告，也记录到主日志中
-        if msg_type in ["error", "warning"]:
+        # 如果有错误或警告，且允许跨日志输出，也记录到主日志中
+        if cross_log and msg_type in ["error", "warning"]:
             self.main_window.log_message(message, msg_type)
         
         # 更新UI
@@ -320,7 +320,7 @@ class FilterController:
                 
                 # 显示部分截断的对象
                 if result_counts['truncated'] > 0:
-                    self.filter_log_message("【部分截断的对象】", "warning")
+                    self.filter_log_message("【部分截断的对象】", "warning", cross_log=False)
                     for obj_id in sorted_obj_ids:
                         result = self.main_window.filter_thread.object_filter_results[obj_id]
                         if result['result'] == 'truncated':
@@ -329,16 +329,16 @@ class FilterController:
                             valid_frames = truncated_at + 1
                             frames_percent = int((valid_frames / original_frames) * 100) if original_frames > 0 else 0
                             frames_info = f"保留 {valid_frames}/{original_frames} 帧 ({frames_percent}%)"
-                            self.filter_log_message(f"对象 {obj_id}: {frames_info} - {result['reason']}", "warning")
+                            self.filter_log_message(f"对象 {obj_id}: {frames_info} - {result['reason']}", "warning", cross_log=False)
                     self.filter_log_message("", "info")  # 添加空行
                 
                 # 显示完全过滤的对象
                 if result_counts['filtered'] > 0:
-                    self.filter_log_message("【完全过滤的对象】", "error")
+                    self.filter_log_message("【完全过滤的对象】", "error", cross_log=False)
                     for obj_id in sorted_obj_ids:
                         result = self.main_window.filter_thread.object_filter_results[obj_id]
                         if result['result'] == 'filtered':
-                            self.filter_log_message(f"对象 {obj_id}: {result['reason']}", "error")
+                            self.filter_log_message(f"对象 {obj_id}: {result['reason']}", "error", cross_log=False)
                     self.filter_log_message("", "info")  # 添加空行
             
             # 启用播放按钮和保存按钮

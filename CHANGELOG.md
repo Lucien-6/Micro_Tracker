@@ -4,6 +4,66 @@
 
 ---
 
+## [v2.3.0] - 2026-01-13
+
+### 🐛 重要修复 (Critical Bug Fix)
+
+#### 修复连续加载视频时旧数据缓存干扰新视频处理的问题
+
+**问题描述：**
+当用户完成一个视频的追踪处理后，不关闭 GUI 界面直接加载新视频时，旧视频的标注数据和状态未被完全清理，导致：
+
+- 新视频的对象 ID 不从 0 开始（继承了旧视频的 ID 计数器）
+- 旧视频的多帧标注数据可能残留并干扰新视频处理
+- 对象注册表和颜色分配混乱
+- 预览管理器缓存了旧视频的帧数据
+
+**修复内容：**
+
+1. **新增 `OverlayLayer.reset_all_state()` 方法** (`micro_tracker/components/video_widgets.py`)
+
+   - 清空所有帧的边界框数据 (`bboxes_per_frame`)
+   - 清空所有帧的点击标注数据 (`annotations_per_frame`)
+   - 重置对象注册表 (`object_registry`) 和 ID 计数器 (`next_available_id`)
+   - 重置标注模式、预览 masks、临时点击状态等
+
+2. **新增 `MaskPreviewManager.reset()` 方法** (`micro_tracker/utils/preview_manager.py`)
+
+   - 清除帧缓存和预测线程
+   - 保留 predictor 实例避免重复加载模型
+
+3. **新增 `SetupTab.reset_ui_state()` 方法** (`micro_tracker/ui/setup_tab.py`)
+
+   - 重置标注模式 UI 为"新对象"模式
+   - 重置提示类型 UI 为"边界框模式"
+   - 清空并禁用对象选择器
+
+4. **新增 `MainWindow._reset_for_new_input()` 方法** (`micro_tracker/ui/main_window.py`)
+
+   - 统一调度所有清理操作
+   - 停止运行中的处理线程和结果视频线程
+   - 调用各组件的重置方法
+   - 刷新标注管理器和状态显示
+
+5. **修改 `_load_video()` 和 `_load_image_sequence()` 方法**
+   - 在加载新输入源时自动调用 `_reset_for_new_input()`
+   - 确保新视频从干净状态开始
+
+**影响范围：**
+
+- 修复了连续处理多个视频时的数据污染问题
+- 新视频的对象 ID 现在正确从 0 开始
+- 标注管理器正确显示新视频的标注状态
+- 实时预览功能正常工作
+
+### 🔄 向后兼容性
+
+- ✅ 完全向后兼容，无数据格式变更
+- ✅ 不影响已保存的标注 JSON 文件
+- ✅ 不影响处理逻辑和输出格式
+
+---
+
 ## [v2.2.0] - 2026-01-05
 
 ### 📚 文档更新 (Documentation Update)

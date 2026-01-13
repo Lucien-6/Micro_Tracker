@@ -273,6 +273,17 @@ class MaskPreviewManager:
                 self.preview_thread.terminate()
                 self.preview_thread.wait()
     
+    def reset(self):
+        """
+        重置预览管理器状态（用于加载新视频/图像序列时）
+        
+        Notes:
+            - 清除帧缓存和预测线程
+            - predictor实例保留（避免重复加载模型）
+            - 下次set_current_frame()时会自动更新predictor状态
+        """
+        self.clear()
+    
     def toggle_preview(self, enabled):
         """
         开关预览功能

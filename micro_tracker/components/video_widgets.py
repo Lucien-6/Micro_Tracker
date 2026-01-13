@@ -851,6 +851,58 @@ class OverlayLayer(QGraphicsItem):
         self.update()
         return count
     
+    def reset_all_state(self):
+        """
+        完全重置所有状态（用于加载新视频/图像序列时）
+        
+        Notes:
+            - 清空所有帧的边界框和点击标注数据
+            - 重置对象注册表和ID计数器
+            - 重置标注模式和UI相关状态
+            - 比clear_bboxes()更彻底，适用于加载新输入源时
+        """
+        # 清空所有帧的边界框数据
+        self.bboxes_per_frame.clear()
+        self.bboxes = []
+        
+        # 清空所有帧的点击标注数据
+        self.annotations_per_frame.clear()
+        
+        # 清空临时点击状态
+        self.temp_points = []
+        self.temp_labels = []
+        self.temp_points_frame_idx = None
+        self.current_editing_obj_id = None
+        
+        # 重置对象注册表和ID计数器
+        self.object_registry.clear()
+        self.next_available_id = 0
+        
+        # 重置标注模式
+        self.annotation_mode = "new_object"
+        self.selected_object_id_for_refine = None
+        
+        # 重置选择和绘制状态
+        self.selected_bbox = -1
+        self.drawing = False
+        self.current_bbox = [0, 0, 0, 0, -1]
+        
+        # 清空轨迹和特征数据
+        self.tracks.clear()
+        self.object_features.clear()
+        
+        # 清空预览masks
+        self.preview_masks.clear()
+        
+        # 重置提示隐藏状态
+        self.prompts_hidden = False
+        
+        # 重置当前帧索引
+        self.current_frame_idx = 0
+        
+        # 刷新显示
+        self.update()
+    
     def update_object_feature(self, obj_id, feature_name, value):
         if obj_id not in self.object_features:
             self.object_features[obj_id] = {}

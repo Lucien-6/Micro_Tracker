@@ -53,8 +53,8 @@ class GuideTab(BaseTab):
             <h3 style="margin-top: 15px;">作者信息</h3>
             <p style="margin: 5px 0;">作者：LUCIEN</p>
             <p style="margin: 5px 0;">邮箱：lucien-6@qq.com</p>
-            <p style="margin: 5px 0;">版本：2.2.0</p>
-            <p style="margin: 5px 0;">发布日期：2026年1月5日</p>
+            <p style="margin: 5px 0;">版本：2.3.0</p>
+            <p style="margin: 5px 0;">发布日期：2026年1月13日</p>
             <p style="margin: 5px 0;">Copyright © 2026 LUCIEN. 保留所有权利。</p>
         </div>
         <p>Micro Tracker 是一个基于 SAM2 (Segment Anything Model 2) 的显微视频对象分割和跟踪工具。本工具采用最新的 SAM2 模型，支持多帧智能标注、实时预览和高级数据筛选功能，可以帮助您对显微视频中的多个对象进行高精度自动分割和跟踪，广泛适用于生物医学研究、材料科学、细胞追踪等显微视频分析场景。</p>
@@ -395,5 +395,5 @@ class GuideTab(BaseTab):
             <p>如果遇到任何问题，请首先检查日志输出，并确保所有依赖项已正确安装。您可以通过邮件联系作者获取技术支持。</p>
         </div>
         
-        <div class="note">\n            <p style="text-align: center; font-size: 9pt; color: #757575;">Micro Tracker v2.2.0 | Copyright © 2026 LUCIEN</p>\n        </div>
+        <div class="note">\n            <p style="text-align: center; font-size: 9pt; color: #757575;">Micro Tracker v2.3.0 | Copyright © 2026 LUCIEN</p>\n        </div>
         """ 

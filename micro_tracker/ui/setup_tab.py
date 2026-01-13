@@ -847,4 +847,24 @@ class SetupTab(BaseTab):
             self.main_window.log_message(f"选择模型: {Path(model_path).name}", "info")
             self.main_window.check_start_enabled()
         else:
-            self.main_window.log_message("警告: 无效的模型路径", "warning") 
+            self.main_window.log_message("警告: 无效的模型路径", "warning")
+    
+    def reset_ui_state(self):
+        """
+        重置标注相关的UI状态（用于加载新视频/图像序列时）
+        
+        Notes:
+            - 重置标注模式为"新对象"
+            - 重置提示类型为"边界框模式"
+            - 清空并禁用对象选择器
+        """
+        # 重置标注模式为"新对象"
+        self.new_object_radio.setChecked(True)
+        
+        # 重置提示类型为"边界框模式"并启用
+        self.box_mode_radio.setEnabled(True)
+        self.box_mode_radio.setChecked(True)
+        
+        # 清空并禁用对象选择器
+        self.main_window.object_selector_combo.clear()
+        self.main_window.object_selector_combo.setEnabled(False) 

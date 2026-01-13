@@ -15,7 +15,7 @@
 </div>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-2.2.0-brightgreen.svg" alt="Version 2.2.0">
+  <img src="https://img.shields.io/badge/Version-2.3.0-brightgreen.svg" alt="Version 2.3.0">
   <img src="https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white" alt="Python 3.10+">
   <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License: Apache 2.0">
   <img src="https://img.shields.io/badge/PyQt5-5.15%2B-green.svg" alt="PyQt5 5.15+">

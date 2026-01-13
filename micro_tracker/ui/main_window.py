@@ -318,6 +318,55 @@ class MainWindow(QMainWindow):
     
     # ==== 视频处理方法 ====
     
+    def _reset_for_new_input(self):
+        """
+        重置所有状态（用于加载新视频/图像序列时）
+        
+        Notes:
+            - 停止运行中的处理线程和结果视频线程
+            - 重置标注层所有状态
+            - 重置预览管理器
+            - 重置UI状态
+            - 确保新视频从干净状态开始
+        """
+        # 停止可能正在运行的处理线程
+        if self.processing_thread and self.processing_thread.isRunning():
+            self.processing_thread.stop()
+            self.processing_thread.wait(1000)
+            self.log_message("已停止处理线程", "warning")
+        
+        # 停止可能正在运行的结果视频线程
+        if self.result_video_thread and self.result_video_thread.isRunning():
+            self.result_video_thread.stop()
+        
+        # 重置标注层所有状态
+        if hasattr(self, 'video_label') and self.video_label:
+            self.video_label.overlay_layer.reset_all_state()
+        
+        # 重置预览管理器
+        if self.preview_manager is not None:
+            self.preview_manager.reset()
+        
+        # 重置当前帧索引
+        self.current_frame_index = 0
+        
+        # 重置进度条
+        self.progress_bar.setValue(0)
+        self.progress_bar.setVisible(False)
+        
+        # 重置标注相关UI状态
+        if hasattr(self, 'setup_tab') and self.setup_tab:
+            self.setup_tab.reset_ui_state()
+        
+        # 刷新标注管理器表格
+        if hasattr(self, 'annotation_manager') and self.annotation_manager:
+            self.annotation_manager.refresh_table()
+        
+        # 更新标注状态显示
+        self._update_annotation_status_display()
+        
+        self.log_message("已重置所有标注状态", "info")
+    
     def load_input_source(self):
         """加载输入源（视频或图像序列）并显示第一帧"""
         if self.input_type == "image_sequence" and self.input_source:
@@ -333,6 +382,9 @@ class MainWindow(QMainWindow):
         """加载视频并显示第一帧"""
         if not self.video_path or not os.path.exists(self.video_path):
             return
+        
+        # === 重置所有旧状态（防止旧视频缓存干扰）===
+        self._reset_for_new_input()
         
         # 清空日志
         self.log_text.clear()
@@ -371,11 +423,6 @@ class MainWindow(QMainWindow):
         self.play_pause_btn.setText("播放")
         self.play_pause_btn.setIcon(QIcon.fromTheme("media-playback-start"))
         
-        # 清除之前的边界框
-        count = self.video_label.clear_bboxes()
-        if count > 0:
-            self.log_message(f"清除了 {count} 个已有边界框", "warning")
-        
         # 创建新的视频线程
         self.video_thread = VideoThread(self.video_path)
         self.video_thread.frame_ready.connect(self.update_video_frame)
@@ -391,6 +438,9 @@ class MainWindow(QMainWindow):
     def _load_image_sequence(self):
         """加载图像序列并显示第一帧"""
         from micro_tracker.threads.video_thread import ImageSequenceThread
+        
+        # === 重置所有旧状态（防止旧视频缓存干扰）===
+        self._reset_for_new_input()
         
         # 清空日志
         self.log_text.clear()
@@ -422,11 +472,6 @@ class MainWindow(QMainWindow):
         self.play_pause_btn.setEnabled(True)
         self.play_pause_btn.setText("播放")
         self.play_pause_btn.setIcon(QIcon.fromTheme("media-playback-start"))
-        
-        # 清除边界框
-        count = self.video_label.clear_bboxes()
-        if count > 0:
-            self.log_message(f"清除了 {count} 个已有边界框", "warning")
         
         # 创建图像序列线程
         self.video_thread = ImageSequenceThread(

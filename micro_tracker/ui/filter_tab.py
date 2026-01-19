@@ -273,7 +273,7 @@ class FilterTab(BaseTab):
         self.main_window.filter_progress_bar.setRange(0, 100)
         self.main_window.filter_progress_bar.setValue(0)
         self.main_window.filter_progress_bar.setTextVisible(True)
-        self.main_window.filter_progress_bar.setFormat("%p% (%v/%m)")
+        self.main_window.filter_progress_bar.setFormat("%p%")  # 只显示百分比
         self.main_window.filter_progress_bar.setStyleSheet("""
             QProgressBar {
                 border: 1px solid #e0e0e0;

@@ -70,7 +70,7 @@ def process_video_with_refinement(args, annotations_data):
     # 1. 初始化SAM2
     if progress_callback:
         progress_callback("==== Refinement模式: SAM2处理 ====", 0)
-        progress_callback("正在初始化SAM2模型...", 5)
+        progress_callback("正在初始化SAM2模型...", 3)
     
     try:
         # 延迟导入SAM2
@@ -80,7 +80,7 @@ def process_video_with_refinement(args, annotations_data):
         predictor = build_sam2_video_predictor(model_cfg, args.model_path, device=args.device)
         
         if progress_callback:
-            progress_callback(f"✓ 模型加载成功: {Path(args.model_path).name}", 10)
+            progress_callback(f"✓ 模型加载成功: {Path(args.model_path).name}", 7)
     except Exception as e:
         if progress_callback:
             progress_callback(f"✗ 模型加载失败: {e}")
@@ -88,13 +88,13 @@ def process_video_with_refinement(args, annotations_data):
     
     # 2. 初始化inference state（只做一次）
     if progress_callback:
-        progress_callback("正在加载视频...", 15)
+        progress_callback("正在加载视频...", 10)
     
     try:
         inference_state = predictor.init_state(video_path=args.video_path)
         
         if progress_callback:
-            progress_callback(f"✓ 视频加载成功: {Path(args.video_path).name}", 20)
+            progress_callback(f"✓ 视频加载成功: {Path(args.video_path).name}", 13)
     except Exception as e:
         if progress_callback:
             progress_callback(f"✗ 视频加载失败: {e}")
@@ -108,7 +108,7 @@ def process_video_with_refinement(args, annotations_data):
         total_frames = len(args.image_files)
         fps = getattr(args, 'image_sequence_fps', 10.0)
         if progress_callback:
-            progress_callback(f"图像序列信息: {total_frames}帧, {fps:.2f} FPS", 20)
+            progress_callback(f"图像序列信息: {total_frames}帧, {fps:.2f} FPS", 13)
     else:
         # 视频模式
         cap = cv2.VideoCapture(args.video_path)
@@ -116,11 +116,11 @@ def process_video_with_refinement(args, annotations_data):
         fps = cap.get(cv2.CAP_PROP_FPS)
         cap.release()
         if progress_callback:
-            progress_callback(f"视频信息: {total_frames}帧, {fps:.2f} FPS", 20)
+            progress_callback(f"视频信息: {total_frames}帧, {fps:.2f} FPS", 13)
     
     if progress_callback:
-        progress_callback(f"\n==== 添加所有提示 ====", 25)
-        progress_callback(f"标注帧数: {len(annotations_data)}", 25)
+        progress_callback(f"\n==== 添加所有提示 ====", 17)
+        progress_callback(f"标注帧数: {len(annotations_data)}", 17)
     
     # 4. 按帧顺序添加所有提示
     # 首先确保所有对象都已注册（避免初始化问题）
@@ -205,8 +205,8 @@ def process_video_with_refinement(args, annotations_data):
     
     # 5. 一次性传播整个视频
     if progress_callback:
-        progress_callback(f"\n==== 传播到整个视频 ====", 30)
-        progress_callback(f"对象首次标注帧: {obj_first_frame}", 30)
+        progress_callback(f"\n==== 传播到整个视频 ====", 20)
+        progress_callback(f"对象首次标注帧: {obj_first_frame}", 20)
     
     all_masks = {}
     
@@ -229,8 +229,8 @@ def process_video_with_refinement(args, annotations_data):
             
             # 进度回调（每20帧报告一次）
             if progress_callback and frame_count % 20 == 0:
-                # 传播阶段占0-70%的进度
-                progress = int(frame_count / total_frames * 70)
+                # 传播阶段占20-80%的进度（60%区间）
+                progress = 20 + int(frame_count / total_frames * 60)
                 progress_callback(f"  传播进度: {frame_count}/{total_frames}帧", progress)
     
     except Exception as e:
@@ -239,7 +239,7 @@ def process_video_with_refinement(args, annotations_data):
         raise
     
     if progress_callback:
-        progress_callback(f"  ✓ 传播完成，获得 {len(all_masks)} 帧结果", 70)  # 传播完成算70%
+        progress_callback(f"  ✓ 传播完成，获得 {len(all_masks)} 帧结果", 80)  # 传播完成算80%
         
         # 统计每个对象的实际追踪范围
         obj_tracking_stats = {}
@@ -393,7 +393,7 @@ def save_results(all_masks, video_path, output_path, mask_dir, save_to_video,
             frame_idx += 1
             
             if progress_callback and frame_idx % 50 == 0:
-                progress = 70 + int(frame_idx / total_frames * 30)
+                progress = 80 + int(frame_idx / total_frames * 20)
                 progress_callback(f"保存进度: {frame_idx}/{total_frames}帧", progress)
     else:
         # 视频模式：使用VideoCapture
@@ -440,9 +440,9 @@ def save_results(all_masks, video_path, output_path, mask_dir, save_to_video,
             
             frame_idx += 1
             
-            # 进度报告（保存阶段占70-100%的进度）
+            # 进度报告（保存阶段占80-100%的进度）
             if progress_callback and frame_idx % 50 == 0:
-                progress = 70 + int(frame_idx / total_frames * 30)
+                progress = 80 + int(frame_idx / total_frames * 20)
                 progress_callback(f"保存进度: {frame_idx}/{total_frames}帧", progress)
     
     # 释放资源

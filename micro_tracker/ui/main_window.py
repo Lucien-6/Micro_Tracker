@@ -347,6 +347,10 @@ class MainWindow(QMainWindow):
         if self.preview_manager is not None:
             self.preview_manager.reset()
         
+        # 重置筛选过滤状态
+        if hasattr(self, 'filter_controller') and self.filter_controller:
+            self.filter_controller.reset_filter_state()
+        
         # 重置当前帧索引
         self.current_frame_index = 0
         

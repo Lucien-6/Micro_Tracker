@@ -718,4 +718,66 @@ class FilterController:
             
             # 隐藏进度条并重新启用保存按钮
             self.main_window.filter_progress_bar.setVisible(False)
-            self.main_window.save_filter_btn.setEnabled(True) 
+            self.main_window.save_filter_btn.setEnabled(True)
+    
+    def reset_filter_state(self):
+        """
+        完全重置筛选状态（用于加载新视频/图像序列时）
+        
+        Notes:
+            - 停止运行中的筛选线程和视频播放线程
+            - 清空所有筛选数据缓存
+            - 重置UI状态到初始状态
+            - 静默清理，不显示日志消息
+        """
+        # 停止筛选处理线程
+        if hasattr(self.main_window, 'filter_thread') and \
+           self.main_window.filter_thread and \
+           self.main_window.filter_thread.isRunning():
+            self.main_window.filter_thread.stop()
+            self.main_window.filter_thread.wait(1000)
+        
+        # 停止筛选视频播放线程
+        if hasattr(self.main_window, 'filter_video_thread') and \
+           self.main_window.filter_video_thread and \
+           self.main_window.filter_video_thread.isRunning():
+            self.main_window.filter_video_thread.stop()
+        
+        # 清空线程对象引用
+        if hasattr(self.main_window, 'filter_thread'):
+            self.main_window.filter_thread = None
+        if hasattr(self.main_window, 'filter_video_thread'):
+            self.main_window.filter_video_thread = None
+        
+        # 重置UI状态
+        # 进度条
+        self.main_window.filter_progress_bar.setValue(0)
+        self.main_window.filter_progress_bar.setVisible(False)
+        
+        # 统计标签
+        self.main_window.filter_stats_label.setText(
+            "对象数量: 0 | 通过筛选: 0"
+        )
+        
+        # 预览视频标签
+        self.main_window.filter_video_label.clear()
+        
+        # 滑块
+        self.main_window.filter_slider.setRange(0, 0)
+        self.main_window.filter_slider.setValue(0)
+        self.main_window.filter_slider.setEnabled(False)
+        
+        # 信息标签
+        self.main_window.filter_info_label.setText("筛选结果: 0 / 0")
+        
+        # 按钮状态
+        self.main_window.filter_play_pause_btn.setEnabled(False)
+        self.main_window.filter_play_pause_btn.setText("播放")
+        self.main_window.filter_play_pause_btn.setIcon(
+            QIcon.fromTheme("media-playback-start")
+        )
+        
+        self.main_window.save_filter_btn.setEnabled(False)
+        
+        # 日志区域
+        self.main_window.filter_log_text.clear() 

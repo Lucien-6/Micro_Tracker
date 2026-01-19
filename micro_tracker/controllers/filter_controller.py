@@ -365,7 +365,9 @@ class FilterController:
             return
         
         # 停止之前的视频线程
-        if hasattr(self.main_window, 'filter_video_thread') and self.main_window.filter_video_thread.isRunning():
+        if hasattr(self.main_window, 'filter_video_thread') and \
+           self.main_window.filter_video_thread and \
+           self.main_window.filter_video_thread.isRunning():
             self.main_window.filter_video_thread.stop()
         
         # 创建新的视频线程

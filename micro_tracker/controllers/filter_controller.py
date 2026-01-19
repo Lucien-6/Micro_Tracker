@@ -297,12 +297,12 @@ class FilterController:
                         result_counts[result['result']] += 1
                 
                 self.filter_log_message("", "info")  # 添加空行
-                self.filter_log_message("===== 对象筛选结果汇总 =====", "highlight")
-                self.filter_log_message(f"总对象数: {self.main_window.filter_thread.total_objects}", "info")
+                self.filter_log_message("===== 对象筛选结果汇总 =====", "highlight", cross_log=False)
+                self.filter_log_message(f"总对象数: {self.main_window.filter_thread.total_objects}", "info", cross_log=False)
                 # 修改通过筛选的对象数量，包括完全通过的对象和部分截断的对象
                 passed_total = result_counts['passed'] + result_counts['truncated']
-                self.filter_log_message(f"通过筛选: {passed_total} 个对象 (完全通过: {result_counts['passed']}, 部分截断: {result_counts['truncated']})", "success")
-                self.filter_log_message(f"完全过滤: {result_counts['filtered']} 个对象", "error")
+                self.filter_log_message(f"通过筛选: {passed_total} 个对象 (完全通过: {result_counts['passed']}, 部分截断: {result_counts['truncated']})", "success", cross_log=False)
+                self.filter_log_message(f"完全过滤: {result_counts['filtered']} 个对象", "error", cross_log=False)
                 self.filter_log_message("", "info")  # 添加空行
                 
                 # 按对象ID排序
@@ -310,12 +310,12 @@ class FilterController:
                 
                 # 显示通过筛选的对象
                 if result_counts['passed'] > 0:
-                    self.filter_log_message("【完全通过筛选的对象】", "success")
+                    self.filter_log_message("【完全通过筛选的对象】", "success", cross_log=False)
                     for obj_id in sorted_obj_ids:
                         result = self.main_window.filter_thread.object_filter_results[obj_id]
                         if result['result'] == 'passed':
                             frames_info = f"{result['frames']}/{result['original_frames']} 帧"
-                            self.filter_log_message(f"对象 {obj_id}: {frames_info} - {result['reason']}", "success")
+                            self.filter_log_message(f"对象 {obj_id}: {frames_info} - {result['reason']}", "success", cross_log=False)
                     self.filter_log_message("", "info")  # 添加空行
                 
                 # 显示部分截断的对象

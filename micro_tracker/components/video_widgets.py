@@ -1115,7 +1115,7 @@ class MultiLayerVideoView(QGraphicsView):
         if self.window():
             click_type = "正向" if label == 1 else "负向"
             icon = "➕" if label == 1 else "➖"
-            self.window().log_message(f"{icon} 添加{click_type}点击: ({int(x)}, {int(y)}) 到对象 {obj_id}", "info")
+            self.window().log_message(f"{icon} 添加{click_type}点击: ({x:.2f}, {y:.2f}) 到对象 {obj_id}", "info")
         
         # === 触发实时预览 ===
         if self.overlay_layer.preview_enabled and self.window():
@@ -1250,6 +1250,18 @@ class MultiLayerVideoView(QGraphicsView):
         
     def clear_ui_elements(self):
         self.overlay_layer.clear_all()
+    
+    def clear(self):
+        """Clear all content including frame and overlay elements"""
+        # Clear frame layer
+        self.frame_layer.setPixmap(QPixmap())
+        
+        # Reset state variables
+        self.frame = None
+        self.original_pixmap = None
+        
+        # Clear overlay layer
+        self.clear_ui_elements()
 
 class VideoLabel(MultiLayerVideoView):
     def __init__(self, parent=None):

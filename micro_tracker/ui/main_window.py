@@ -914,13 +914,13 @@ class MainWindow(QMainWindow):
         if mode == "new_object":
             self.log_message(
                 f"在第 {frame_idx} 帧添加新对象 {obj_id}, "
-                f"坐标=({int(bbox[0])},{int(bbox[1])},{int(bbox[2])},{int(bbox[3])})", 
+                f"坐标=({bbox[0]:.2f},{bbox[1]:.2f},{bbox[2]:.2f},{bbox[3]:.2f})", 
                 "success"
             )
         else:  # refine_object
             self.log_message(
                 f"在第 {frame_idx} 帧为对象 {obj_id} 添加修正标注, "
-                f"坐标=({int(bbox[0])},{int(bbox[1])},{int(bbox[2])},{int(bbox[3])})", 
+                f"坐标=({bbox[0]:.2f},{bbox[1]:.2f},{bbox[2]:.2f},{bbox[3]:.2f})", 
                 "highlight"
             )
         

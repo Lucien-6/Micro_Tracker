@@ -146,7 +146,9 @@ def process_video_with_refinement(args, annotations_data):
                 if "box" in prompts and prompts["box"]:
                     box = np.array(prompts["box"], dtype=np.float32)
                     if progress_callback:
-                        progress_callback(f"  - 对象 {obj_id}: 添加边界框 {prompts['box']}")
+                        box_coords = prompts['box']
+                        box_str = f"[{box_coords[0]:.2f}, {box_coords[1]:.2f}, {box_coords[2]:.2f}, {box_coords[3]:.2f}]"
+                        progress_callback(f"  - 对象 {obj_id}: 添加边界框 {box_str}")
                 
                 # 处理点击提示
                 if "points" in prompts and prompts["points"]:

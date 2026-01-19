@@ -746,12 +746,12 @@ class MainWindow(QMainWindow):
     
     def set_filter_frame_index(self, index):
         """设置筛选预览的帧索引"""
-        if hasattr(self, 'filter_video_thread') and self.filter_video_thread.isRunning():
+        if hasattr(self, 'filter_video_thread') and self.filter_video_thread and self.filter_video_thread.isRunning():
             self.filter_video_thread.set_frame_index(index)
     
     def toggle_filter_play_pause(self):
         """切换筛选预览的播放/暂停状态"""
-        if hasattr(self, 'filter_video_thread') and self.filter_video_thread.isRunning():
+        if hasattr(self, 'filter_video_thread') and self.filter_video_thread and self.filter_video_thread.isRunning():
             self.filter_video_thread.toggle_pause()
             
             # 获取当前状态以更新按钮
@@ -816,7 +816,7 @@ class MainWindow(QMainWindow):
                 return
         
         # 第三个标签页（筛选过滤）- 控制筛选视频
-        elif current_tab == 2 and hasattr(self, 'filter_video_thread') and self.filter_video_thread.isRunning():
+        elif current_tab == 2 and hasattr(self, 'filter_video_thread') and self.filter_video_thread and self.filter_video_thread.isRunning():
             # 空格键 - 播放/暂停
             if event.key() == Qt.Key_Space:
                 self.toggle_filter_play_pause()
@@ -857,7 +857,7 @@ class MainWindow(QMainWindow):
             elif video_thread is self.result_video_thread:
                 self.result_play_pause_btn.setText("播放")
                 self.result_play_pause_btn.setIcon(QIcon.fromTheme("media-playback-start"))
-            elif hasattr(self, 'filter_video_thread') and video_thread is self.filter_video_thread:
+            elif hasattr(self, 'filter_video_thread') and self.filter_video_thread and video_thread is self.filter_video_thread:
                 self.filter_play_pause_btn.setText("播放")
                 self.filter_play_pause_btn.setIcon(QIcon.fromTheme("media-playback-start"))
         
@@ -890,7 +890,7 @@ class MainWindow(QMainWindow):
             elif video_thread is self.result_video_thread:
                 self.result_play_pause_btn.setText("播放")
                 self.result_play_pause_btn.setIcon(QIcon.fromTheme("media-playback-start"))
-            elif hasattr(self, 'filter_video_thread') and video_thread is self.filter_video_thread:
+            elif hasattr(self, 'filter_video_thread') and self.filter_video_thread and video_thread is self.filter_video_thread:
                 self.filter_play_pause_btn.setText("播放")
                 self.filter_play_pause_btn.setIcon(QIcon.fromTheme("media-playback-start"))
         

@@ -359,7 +359,9 @@ class FilterController:
     
     def start_filter_video_playback(self):
         """初始化并开始筛选结果视频播放"""
-        if not hasattr(self.main_window, 'filter_thread') or not self.main_window.filter_thread.filtered_masks:
+        if not hasattr(self.main_window, 'filter_thread') or \
+           not self.main_window.filter_thread or \
+           not self.main_window.filter_thread.filtered_masks:
             return
         
         # 停止之前的视频线程
@@ -395,13 +397,16 @@ class FilterController:
         self.main_window.filter_slider.blockSignals(False)
         
         # 更新帧信息标签
-        total_frames = len(self.main_window.filter_thread.filtered_masks) if hasattr(self.main_window, 'filter_thread') else 0
+        total_frames = len(self.main_window.filter_thread.filtered_masks) if \
+            (hasattr(self.main_window, 'filter_thread') and self.main_window.filter_thread) else 0
         percent = int((frame_index + 1) / total_frames * 100) if total_frames > 0 else 0
         self.main_window.filter_info_label.setText(f"筛选结果: {frame_index+1}/{total_frames} ({percent}%)")
     
     def save_filter_results(self):
         """保存筛选结果"""
-        if not hasattr(self.main_window, 'filter_thread') or not self.main_window.filter_thread.object_trajectories:
+        if not hasattr(self.main_window, 'filter_thread') or \
+           not self.main_window.filter_thread or \
+           not self.main_window.filter_thread.object_trajectories:
             self.filter_log_message("错误: 没有可保存的筛选结果", "error")
             return
         

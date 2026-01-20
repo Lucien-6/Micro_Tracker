@@ -95,7 +95,7 @@ class MainWindow(QMainWindow):
         self.guide_tab = GuideTab(self)
         
         # 添加标签页
-        self.tab_widget.addTab(self.setup_tab, "参数设置与标注")
+        self.tab_widget.addTab(self.setup_tab, "分割追踪")
         self.tab_widget.addTab(self.result_tab, "结果预览")
         self.tab_widget.addTab(self.filter_tab, "筛选过滤")
         self.tab_widget.addTab(self.guide_tab, "使用指南")
@@ -927,12 +927,12 @@ class MainWindow(QMainWindow):
         self._update_annotation_status_display()
         
         # === Phase 2: 刷新对象选择器和标注管理器 ===
-        if hasattr(self, 'tabs'):
-            setup_tab = self.tabs.widget(0)
-            if hasattr(setup_tab, 'update_object_selector'):
-                setup_tab.update_object_selector()
-            if hasattr(setup_tab, 'annotation_manager'):
-                setup_tab.annotation_manager.refresh_table()
+        if hasattr(self, 'setup_tab') and self.setup_tab:
+            if hasattr(self.setup_tab, 'update_object_selector'):
+                self.setup_tab.update_object_selector()
+        
+        if hasattr(self, 'annotation_manager') and self.annotation_manager:
+            self.annotation_manager.refresh_table()
         
         # === 触发实时预览 ===
         if hasattr(self, 'video_label') and self.video_label:
@@ -1075,12 +1075,12 @@ class MainWindow(QMainWindow):
         self._update_annotation_status_display()
         
         # === Phase 2: 刷新对象选择器和标注管理器 ===
-        if hasattr(self, 'tabs'):
-            setup_tab = self.tabs.widget(0)
-            if hasattr(setup_tab, 'update_object_selector'):
-                setup_tab.update_object_selector()
-            if hasattr(setup_tab, 'annotation_manager'):
-                setup_tab.annotation_manager.refresh_table()
+        if hasattr(self, 'setup_tab') and self.setup_tab:
+            if hasattr(self.setup_tab, 'update_object_selector'):
+                self.setup_tab.update_object_selector()
+        
+        if hasattr(self, 'annotation_manager') and self.annotation_manager:
+            self.annotation_manager.refresh_table()
     
     def create_unit_label(self, unit_text):
         """创建统一样式的单位标签，特别处理带有微米符号的单位"""

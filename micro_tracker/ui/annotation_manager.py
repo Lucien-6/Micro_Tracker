@@ -243,9 +243,10 @@ class AnnotationManagerWidget(QWidget):
     
     def init_ui(self):
         """初始化UI"""
-        layout = QVBoxLayout()
-        layout.setContentsMargins(5, 5, 5, 5)
-        layout.setSpacing(8)
+        # 主布局（水平布局：表格在左，按钮在右）
+        main_layout = QHBoxLayout()
+        main_layout.setContentsMargins(5, 5, 5, 5)
+        main_layout.setSpacing(8)
         
         # 表格
         self.table = QTableWidget()
@@ -268,43 +269,46 @@ class AnnotationManagerWidget(QWidget):
                 color: #000;
             }
         """)
-        self.table.setMaximumHeight(200)
-        layout.addWidget(self.table)
+        # 移除最大高度限制，让表格自由伸展
+        self.table.setMinimumHeight(160)
+        main_layout.addWidget(self.table)
         
-        # 按钮区
-        button_layout = QHBoxLayout()
+        # 右侧按钮区（垂直布局）
+        button_layout = QVBoxLayout()
+        button_layout.setSpacing(30)
         
-        self.help_btn = QPushButton("操作说明")
-        self.help_btn.setToolTip("查看详细的操作说明")
-        self.help_btn.clicked.connect(self.show_help_dialog)
-        
-        self.refresh_btn = QPushButton("刷新")
-        self.refresh_btn.setToolTip("刷新标注列表")
-        self.refresh_btn.clicked.connect(self.refresh_table)
-        
-        self.export_btn = QPushButton("导出")
-        self.export_btn.setToolTip("导出标注为JSON文件")
-        self.export_btn.clicked.connect(self.export_annotations)
-        
-        self.import_btn = QPushButton("导入")
+        # 导入标注按钮
+        self.import_btn = QPushButton("导入标注")
         self.import_btn.setToolTip("从JSON文件导入标注")
+        self.import_btn.setMinimumWidth(80)
+        self.import_btn.setMinimumHeight(35)
+        self.import_btn.setStyleSheet("margin-top: 15px;")
         self.import_btn.clicked.connect(self.import_annotations)
+        button_layout.addWidget(self.import_btn)
         
-        self.clear_all_btn = QPushButton("清空")
+        # 清空所有按钮
+        self.clear_all_btn = QPushButton("清空所有")
         self.clear_all_btn.setToolTip("清空所有标注")
+        self.clear_all_btn.setMinimumWidth(80)
+        self.clear_all_btn.setMinimumHeight(35)
         self.clear_all_btn.setStyleSheet("background-color: #f44336; color: white;")
         self.clear_all_btn.clicked.connect(self.clear_all_annotations)
-        
-        button_layout.addWidget(self.help_btn)
-        button_layout.addWidget(self.refresh_btn)
-        button_layout.addWidget(self.export_btn)
-        button_layout.addWidget(self.import_btn)
-        button_layout.addStretch()
         button_layout.addWidget(self.clear_all_btn)
         
-        layout.addLayout(button_layout)
+        # 标注说明按钮
+        self.help_btn = QPushButton("标注说明")
+        self.help_btn.setToolTip("查看详细的标注操作说明")
+        self.help_btn.setMinimumWidth(80)
+        self.help_btn.setMinimumHeight(35)
+        self.help_btn.clicked.connect(self.show_help_dialog)
+        button_layout.addWidget(self.help_btn)
         
-        self.setLayout(layout)
+        # 添加弹簧，将按钮推到顶部
+        button_layout.addStretch()
+        
+        main_layout.addLayout(button_layout)
+        
+        self.setLayout(main_layout)
     
     def refresh_table(self):
         """刷新表格数据（支持纯点击标注显示）"""
@@ -366,10 +370,10 @@ class AnnotationManagerWidget(QWidget):
                     # 构建单个对象的提示描述
                     obj_prompt_parts = []
                     
-                    # 检查边界框（使用黑色方块符号）
+                    # 检查边界框（使用空心方块符号）
                     has_box = prompts.get("box") is not None and prompts.get("box")
                     if has_box:
-                        obj_prompt_parts.append('<span style="font-size: 12pt;">⬛️</span>')
+                        obj_prompt_parts.append('<span style="font-size: 12pt;">□</span>')
                     
                     # 检查点击（使用emoji符号，格式：🟢×3）
                     if prompts.get("points"):
@@ -383,9 +387,9 @@ class AnnotationManagerWidget(QWidget):
                     
                     # 如果该对象有任何提示，添加到列表
                     if obj_prompt_parts:
-                        prompt_info_html.append(f"obj{obj_id}: {' + '.join(obj_prompt_parts)}")
+                        prompt_info_html.append(f"Obj_{obj_id}: {' + '.join(obj_prompt_parts)}")
                     else:
-                        prompt_info_html.append(f"obj{obj_id}: ⚠️无提示")
+                        prompt_info_html.append(f"Obj_{obj_id}: ⚠️无提示")
             
             # 显示提示信息（使用QLabel支持HTML格式）
             if prompt_info_html:
@@ -393,24 +397,27 @@ class AnnotationManagerWidget(QWidget):
             else:
                 prompt_html = "⚠️无提示数据"
             
-            # 创建QLabel作为cell widget以支持HTML富文本
+            # 创建QLabel作为cell widget以支持HTML富文本（启用自动换行）
             prompt_label = QLabel(prompt_html)
             prompt_label.setTextFormat(Qt.RichText)
+            prompt_label.setWordWrap(True)  # 启用自动换行
             prompt_label.setStyleSheet("padding: 2px 5px;")
             self.table.setCellWidget(row, 2, prompt_label)
             
-            # 操作按钮
+            # 操作按钮（上下布局）
             action_widget = QWidget()
-            action_layout = QHBoxLayout()
+            action_layout = QVBoxLayout()
             action_layout.setContentsMargins(2, 2, 2, 2)
-            action_layout.setSpacing(4)
+            action_layout.setSpacing(3)
             
             jump_btn = QPushButton("跳转")
             jump_btn.setMaximumWidth(50)
+            jump_btn.setMinimumHeight(22)
             jump_btn.clicked.connect(lambda checked, f=frame_idx: self.jump_to_frame(f))
             
             delete_btn = QPushButton("删除")
             delete_btn.setMaximumWidth(50)
+            delete_btn.setMinimumHeight(22)
             delete_btn.setStyleSheet("background-color: #ff5252; color: white;")
             delete_btn.clicked.connect(lambda checked, f=frame_idx: self.delete_frame_annotation(f))
             
@@ -419,6 +426,10 @@ class AnnotationManagerWidget(QWidget):
             action_widget.setLayout(action_layout)
             
             self.table.setCellWidget(row, 3, action_widget)
+        
+        # 自动调整所有行的高度以适应多行内容
+        for row in range(self.table.rowCount()):
+            self.table.resizeRowToContents(row)
     
     def jump_to_frame(self, frame_idx):
         """跳转到指定帧"""
@@ -526,8 +537,16 @@ class AnnotationManagerWidget(QWidget):
             self.refresh_table()
             self.main_window._update_annotation_status_display()
     
-    def export_annotations(self):
-        """导出标注为JSON文件"""
+    def auto_save_annotations(self, file_path):
+        """
+        自动保存标注到指定路径（用于开始处理前自动保存）
+        
+        Args:
+            file_path (str): 保存路径
+        
+        Returns:
+            tuple: (bool, str) - (是否成功, 消息)
+        """
         overlay = self.main_window.video_label.overlay_layer
         
         # 获取refinement格式的数据（包含box和points）
@@ -539,48 +558,9 @@ class AnnotationManagerWidget(QWidget):
             use_refinement = False
         
         if not refinement_data:
-            QMessageBox.information(self, "提示", "没有标注可以导出")
-            return
-        
-        # 确定默认文件名和保存路径
-        if hasattr(self.main_window, 'input_source') and self.main_window.input_source:
-            # 图像序列模式：使用原始文件夹名而非临时转换目录名
-            source_path = self.main_window.input_source.source_path
-            input_name = Path(source_path).stem
-            # Results目录在父目录下
-            parent_dir = os.path.dirname(source_path)
-            results_dir = os.path.join(parent_dir, f"Results_{input_name}")
-        elif self.main_window.video_path:
-            # 视频模式：使用视频文件名
-            input_name = Path(self.main_window.video_path).stem
-            # Results目录在视频文件同级目录
-            video_dir = os.path.dirname(self.main_window.video_path)
-            results_dir = os.path.join(video_dir, f"Results_{input_name}")
-        else:
-            # 无输入源：使用当前目录和通用名称
-            input_name = "annotations"
-            results_dir = os.getcwd()
-        
-        # 构建完整的默认保存路径
-        default_file_path = os.path.join(results_dir, f"{input_name}_annotations.json")
-        
-        # 确保Results目录存在
-        os.makedirs(results_dir, exist_ok=True)
-        
-        # 选择保存路径
-        file_path, _ = QFileDialog.getSaveFileName(
-            self,
-            "导出标注",
-            default_file_path,
-            "JSON Files (*.json)"
-        )
-        
-        if not file_path:
-            return
+            return False, "没有标注数据"
         
         # 确定正确的视频路径
-        # 图像序列模式：使用原始文件夹路径
-        # 视频模式：使用视频文件路径
         if hasattr(self.main_window, 'input_source') and self.main_window.input_source:
             video_path_for_export = self.main_window.input_source.source_path
         else:
@@ -596,16 +576,16 @@ class AnnotationManagerWidget(QWidget):
         }
         
         try:
+            # 确保目录存在
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            
             with open(file_path, 'w', encoding='utf-8') as f:
                 json.dump(export_data, f, indent=2, ensure_ascii=False)
             
-            self.main_window.log_message(f"标注已导出到: {file_path}", "success")
-            QMessageBox.information(self, "成功", f"标注已导出!\n{file_path}")
+            return True, f"标注已自动保存到: {file_path}"
         
         except Exception as e:
-            friendly_msg = format_user_friendly_error(e)
-            self.main_window.log_message(f"导出失败: {str(e)}", "error")
-            QMessageBox.critical(self, "导出失败", friendly_msg)
+            return False, f"保存失败: {str(e)}"
     
     def import_annotations(self):
         """从JSON文件导入标注"""
@@ -661,8 +641,14 @@ class AnnotationManagerWidget(QWidget):
             version = import_data.get("version", "")
             
             if format_type == "refinement" or "refinement" in version:
-                # 新格式：直接导入到annotations_per_frame
-                annotations = {int(k): v for k, v in import_data["annotations"].items()}
+                # 新格式：直接导入到annotations_per_frame（确保obj_id为整数）
+                annotations = {}
+                for frame_idx_str, frame_data in import_data["annotations"].items():
+                    frame_idx = int(frame_idx_str)
+                    annotations[frame_idx] = {}
+                    for obj_id_str, prompts in frame_data.items():
+                        obj_id = int(obj_id_str)  # 确保对象ID为整数
+                        annotations[frame_idx][obj_id] = prompts
                 overlay.annotations_per_frame = annotations
                 
                 # 从 refinement 数据提取 bbox 到旧格式（以保持兼容性）
@@ -714,7 +700,7 @@ class AnnotationManagerWidget(QWidget):
             QMessageBox.critical(self, "导入失败", friendly_msg)
     
     def show_help_dialog(self):
-        """显示操作说明弹窗（带滚动条的增强版）"""
+        """显示标注说明弹窗（带滚动条的增强版）"""
         # 创建自定义对话框
         dialog = QDialog(self)
         dialog.setWindowTitle("📖 标注操作详细说明")
@@ -877,27 +863,34 @@ class AnnotationManagerWidget(QWidget):
         
         <h3>查看与管理</h3>
         <ul>
-            <li><b>刷新：</b>更新标注列表显示</li>
-            <li><b>跳转：</b>快速切换到指定标注帧</li>
-            <li><b>删除：</b>移除单帧的所有标注</li>
-            <li><b>清空：</b>移除所有帧的标注（需确认）</li>
+            <li><b>跳转：</b>快速切换到指定标注帧（表格中的按钮）</li>
+            <li><b>删除：</b>移除单帧的所有标注（表格中的按钮）</li>
+            <li><b>清空所有：</b>移除所有帧的标注（右侧按钮，需确认）</li>
         </ul>
         
-        <h3>💾 导入/导出</h3>
+        <h3>💾 标注保存与导入</h3>
         <ul>
-            <li><b>导出：</b>保存标注为JSON文件
+            <li><b>自动保存：</b>点击"开始处理"时自动保存
                 <ul>
+                    <li>标注文件自动保存到Results文件夹</li>
+                    <li>文件名格式：<code>{输入名}_annotations.json</code></li>
+                    <li>如果文件已存在，会询问是否覆盖</li>
                     <li>包含边界框、点击、对象注册等完整信息</li>
-                    <li>可作为项目备份</li>
                 </ul>
             </li>
-            <li><b>导入：</b>从JSON文件恢复标注
+            <li><b>导入标注：</b>从JSON文件恢复标注（右侧按钮）
                 <ul>
                     <li>支持新旧格式自动识别</li>
                     <li>导入前会进行数据验证</li>
+                    <li>可用于恢复之前的标注或在不同会话间迁移</li>
                 </ul>
             </li>
         </ul>
+        
+        <div class="note">
+            <b>💡 提示</b><br>
+            标注列表会在标注操作（添加/删除对象、保存点击）后自动更新，无需手动刷新
+        </div>
         
         <h2><span class="emoji">✅</span> 八、标注最佳实践</h2>
         
@@ -914,7 +907,7 @@ class AnnotationManagerWidget(QWidget):
                 </ul>
             </li>
             <li>使用实时预览验证标注质量</li>
-            <li>定期导出标注作为备份</li>
+            <li>标注会在开始处理时自动保存，无需手动操作</li>
         </ol>
         
         <div class="warning">
@@ -922,12 +915,16 @@ class AnnotationManagerWidget(QWidget):
             <ul>
                 <li>切换帧前记得保存临时点击（按<kbd>A</kbd>键）</li>
                 <li>未保存的临时点击切换帧后会丢失（有警告提示）</li>
+                <li>标注信息在点击"开始处理"时自动保存</li>
                 <li>导入标注会覆盖当前所有标注</li>
                 <li>删除操作不可撤销，请谨慎操作</li>
             </ul>
         </div>
         
         <h2><span class="emoji">❓</span> 九、常见问题</h2>
+        
+        <p><b>Q: 标注会自动保存吗？</b><br>
+        A: 是的，点击"开始处理"时会自动保存到Results文件夹，无需手动导出</p>
         
         <p><b>Q: 临时点击无法保存？</b><br>
         A: 检查是否在正确的帧上（临时点击只能在添加它的帧上保存）</p>

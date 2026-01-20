@@ -19,6 +19,47 @@ class ProcessingController:
     
     def start_processing(self):
         """启动视频处理"""
+        # === 自动保存标注信息 ===
+        if hasattr(self.main_window, 'annotation_manager') and self.main_window.annotation_manager:
+            # 确定默认保存路径
+            if hasattr(self.main_window, 'input_source') and self.main_window.input_source:
+                # 图像序列模式
+                source_path = self.main_window.input_source.source_path
+                input_name = os.path.basename(source_path)
+                parent_dir = os.path.dirname(source_path)
+                results_dir = os.path.join(parent_dir, f"Results_{input_name}")
+            elif self.main_window.video_path:
+                # 视频模式
+                input_name = os.path.splitext(os.path.basename(self.main_window.video_path))[0]
+                video_dir = os.path.dirname(self.main_window.video_path)
+                results_dir = os.path.join(video_dir, f"Results_{input_name}")
+            else:
+                results_dir = os.getcwd()
+                input_name = "annotations"
+            
+            annotation_file_path = os.path.join(results_dir, f"{input_name}_annotations.json")
+            
+            # 检查文件是否已存在
+            if os.path.exists(annotation_file_path):
+                reply = QMessageBox.question(
+                    self.main_window,
+                    "文件已存在",
+                    f"标注文件已存在：\n{annotation_file_path}\n\n是否覆盖？",
+                    QMessageBox.Yes | QMessageBox.No,
+                    QMessageBox.No
+                )
+                
+                if reply != QMessageBox.Yes:
+                    self.main_window.log_message("用户取消了处理操作", "info")
+                    return
+            
+            # 执行自动保存
+            success, message = self.main_window.annotation_manager.auto_save_annotations(annotation_file_path)
+            if success:
+                self.main_window.log_message(message, "success")
+            else:
+                self.main_window.log_message(f"警告: {message}", "warning")
+        
         # === Phase 2: 获取refinement格式标注数据（包含边界框和点击）===
         multi_frame_annotations = self.main_window.video_label.get_refinement_annotations()
         

@@ -375,8 +375,8 @@ class SetupTab(BaseTab):
         right_layout = QVBoxLayout(right_panel)
         right_layout.setContentsMargins(5, 0, 0, 0)
         
-        # 视频预览和边界框绘制区域
-        preview_group = QGroupBox("视频预览和边界框绘制")
+        # 视频预览和提示绘制区域
+        preview_group = QGroupBox("视频预览和提示绘制")
         preview_layout = QVBoxLayout()
         preview_layout.setContentsMargins(10, 15, 10, 15)
         preview_layout.setSpacing(10)

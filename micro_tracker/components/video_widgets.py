@@ -644,7 +644,8 @@ class OverlayLayer(QGraphicsItem):
             raise ValueError(f"Invalid annotation mode: {mode}")
         
         self.annotation_mode = mode
-        self.selected_object_id_for_refine = obj_id
+        # 确保obj_id为整数类型
+        self.selected_object_id_for_refine = int(obj_id) if obj_id is not None else None
         
         if mode == "refine_object" and obj_id is None:
             raise ValueError("修正模式下必须指定对象ID")
@@ -796,7 +797,7 @@ class OverlayLayer(QGraphicsItem):
     def delete_selected_bbox(self):
         if self.selected_bbox == -1:
             return -1
-        deleted_id = self.bboxes[self.selected_bbox][4]
+        deleted_id = int(self.bboxes[self.selected_bbox][4])  # 确保为整数类型
         del self.bboxes[self.selected_bbox]
         
         # Phase 1 MVP: 同步到多帧字典
@@ -1093,14 +1094,17 @@ class MultiLayerVideoView(QGraphicsView):
         elif len(self.overlay_layer.bboxes) > 0:
             # 如果有选中的bbox，使用它；否则使用最后一个bbox
             if self.overlay_layer.selected_bbox >= 0:
-                obj_id = self.overlay_layer.bboxes[self.overlay_layer.selected_bbox][4]
+                obj_id = int(self.overlay_layer.bboxes[self.overlay_layer.selected_bbox][4])
             else:
-                obj_id = self.overlay_layer.bboxes[-1][4]
+                obj_id = int(self.overlay_layer.bboxes[-1][4])
         else:
             # 没有任何对象，无法添加点击
             if self.window():
                 self.window().log_message("❗ 请先绘制一个边界框再添加点击提示", "warning")
             return
+        
+        # 确保obj_id为整数类型
+        obj_id = int(obj_id)
         
         # 保存点击到临时列表
         self.overlay_layer.temp_points.append((x, y))
@@ -1138,6 +1142,9 @@ class MultiLayerVideoView(QGraphicsView):
                     # === 更新预览 ===
                     if self.overlay_layer.preview_enabled and obj_id is not None:
                         self.window()._generate_preview_for_object(obj_id)
+                    # === 刷新标注管理器 ===
+                    if hasattr(self.window(), 'annotation_manager') and self.window().annotation_manager:
+                        self.window().annotation_manager.refresh_table()
             event.accept()
             return
         elif event.key() == Qt.Key_S and event.modifiers() == Qt.ControlModifier:
@@ -1150,6 +1157,9 @@ class MultiLayerVideoView(QGraphicsView):
                     # 更新预览
                     if self.overlay_layer.preview_enabled and obj_id is not None:
                         self.window()._generate_preview_for_object(obj_id)
+                    # === 刷新标注管理器 ===
+                    if hasattr(self.window(), 'annotation_manager') and self.window().annotation_manager:
+                        self.window().annotation_manager.refresh_table()
                     # 切换到下一帧
                     if hasattr(self.window(), 'set_frame_index'):
                         current_idx = self.overlay_layer.current_frame_idx

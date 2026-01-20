@@ -275,8 +275,7 @@ class FilterController:
         self.main_window.filter_slider.setEnabled(True)
         
         # 更新信息标签
-        percent = int((current_idx + 1) / total_frames * 100)
-        self.main_window.filter_info_label.setText(f"筛选结果: {current_idx+1}/{total_frames} ({percent}%)")
+        self.main_window.filter_info_label.setText(f"{current_idx}/{total_frames-1}")
     
     def filter_processing_done(self, success, message):
         """筛选处理完成回调"""
@@ -338,7 +337,16 @@ class FilterController:
                     for obj_id in sorted_obj_ids:
                         result = self.main_window.filter_thread.object_filter_results[obj_id]
                         if result['result'] == 'filtered':
-                            self.filter_log_message(f"对象 {obj_id}: {result['reason']}", "error", cross_log=False)
+                            # 基本原因
+                            msg = f"对象 {obj_id}: {result['reason']}"
+                            
+                            # 添加具体参数信息
+                            if 'actual_area_min' in result:
+                                msg += f" | 实际面积范围: {result['actual_area_min']:.2f}~{result['actual_area_max']:.2f} μm² (平均: {result['actual_area_avg']:.2f} μm²)"
+                            elif 'actual_displacement' in result:
+                                msg += f" | 实际位移: {result['actual_displacement']:.2f} μm"
+                            
+                            self.filter_log_message(msg, "error", cross_log=False)
                     self.filter_log_message("", "info")  # 添加空行
             
             # 启用播放按钮和保存按钮
@@ -401,8 +409,7 @@ class FilterController:
         # 更新帧信息标签
         total_frames = len(self.main_window.filter_thread.filtered_masks) if \
             (hasattr(self.main_window, 'filter_thread') and self.main_window.filter_thread) else 0
-        percent = int((frame_index + 1) / total_frames * 100) if total_frames > 0 else 0
-        self.main_window.filter_info_label.setText(f"筛选结果: {frame_index+1}/{total_frames} ({percent}%)")
+        self.main_window.filter_info_label.setText(f"{frame_index}/{total_frames-1}")
     
     def save_filter_results(self):
         """保存筛选结果"""
@@ -775,7 +782,7 @@ class FilterController:
         self.main_window.filter_slider.setEnabled(False)
         
         # 信息标签
-        self.main_window.filter_info_label.setText("筛选结果: 0 / 0")
+        self.main_window.filter_info_label.setText("0 / 0")
         
         # 按钮状态
         self.main_window.filter_play_pause_btn.setEnabled(False)

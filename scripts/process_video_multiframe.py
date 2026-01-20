@@ -69,7 +69,7 @@ def process_video_with_refinement(args, annotations_data):
     
     # 1. 初始化SAM2
     if progress_callback:
-        progress_callback("==== Refinement模式: SAM2处理 ====", 0)
+        progress_callback("\n============ Refinement模式: SAM2处理 ============", 0)
         progress_callback("正在初始化SAM2模型...", 3)
     
     try:
@@ -119,7 +119,7 @@ def process_video_with_refinement(args, annotations_data):
             progress_callback(f"视频信息: {total_frames}帧, {fps:.2f} FPS", 13)
     
     if progress_callback:
-        progress_callback(f"\n==== 添加所有提示 ====", 17)
+        progress_callback(f"\n============ 添加所有提示 ============", 17)
         progress_callback(f"标注帧数: {len(annotations_data)}", 17)
     
     # 4. 按帧顺序添加所有提示
@@ -207,7 +207,7 @@ def process_video_with_refinement(args, annotations_data):
     
     # 5. 一次性传播整个视频
     if progress_callback:
-        progress_callback(f"\n==== 传播到整个视频 ====", 20)
+        progress_callback(f"\n============ 传播到整个视频 ============", 20)
         progress_callback(f"对象首次标注帧: {obj_first_frame}", 20)
     
     all_masks = {}
@@ -300,7 +300,7 @@ def save_results(all_masks, video_path, output_path, mask_dir, save_to_video,
         - 掩码：保存为8位灰度图，像素值=obj_id+1，背景=0
     """
     if progress_callback:
-        progress_callback("\n==== 保存结果 ====")
+        progress_callback("\n============ 保存结果 ============")
     
     # 根据输入类型初始化帧读取器
     if input_type == "image_sequence" and image_files:

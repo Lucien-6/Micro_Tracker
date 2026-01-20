@@ -420,7 +420,7 @@ class MainWindow(QMainWindow):
         self.frame_slider.setRange(0, total_frames - 1)
         self.frame_slider.setValue(0)
         self.frame_slider.setEnabled(True)
-        self.frame_info_label.setText(f"当前帧: 0 / {total_frames-1}")
+        self.frame_info_label.setText(f"0 / {total_frames-1}")
         
         # 启用播放/暂停按钮
         self.play_pause_btn.setEnabled(True)
@@ -470,7 +470,7 @@ class MainWindow(QMainWindow):
         self.frame_slider.setRange(0, total_frames - 1)
         self.frame_slider.setValue(0)
         self.frame_slider.setEnabled(True)
-        self.frame_info_label.setText(f"当前帧: 0 / {total_frames-1}")
+        self.frame_info_label.setText(f"0 / {total_frames-1}")
         
         # 启用播放按钮
         self.play_pause_btn.setEnabled(True)
@@ -633,7 +633,7 @@ class MainWindow(QMainWindow):
         # === Phase 1 MVP: 显示标注状态（简化版：仅通过颜色指示）===
         if hasattr(self, 'video_label') and self.video_label:
             annotation_count = self.video_label.get_current_frame_annotation_count()
-            self.frame_info_label.setText(f"当前帧: {frame_index} / {total_frames-1}")
+            self.frame_info_label.setText(f"{frame_index} / {total_frames-1}")
             if annotation_count > 0:
                 # 有标注时显示绿色
                 self.frame_info_label.setStyleSheet("font-weight: bold; color: #4CAF50;")
@@ -641,7 +641,7 @@ class MainWindow(QMainWindow):
                 # 无标注时显示默认颜色
                 self.frame_info_label.setStyleSheet("font-weight: bold; color: #455a64;")
         else:
-            self.frame_info_label.setText(f"当前帧: {frame_index} / {total_frames-1}")
+            self.frame_info_label.setText(f"{frame_index} / {total_frames-1}")
             self.frame_info_label.setStyleSheet("font-weight: bold; color: #455a64;")
     
     def set_frame_index(self, index):
@@ -697,7 +697,7 @@ class MainWindow(QMainWindow):
         self.result_slider.setEnabled(True)
         
         # 更新结果信息标签
-        self.result_info_label.setText(f"处理结果: {current_idx} / {total_frames-1}")
+        self.result_info_label.setText(f"{current_idx} / {total_frames-1}")
         
         # 定期更新日志（避免大量更新），每50帧或达到100%时更新一次
         if current_idx % 50 == 0 or current_idx == total_frames - 1:
@@ -713,7 +713,7 @@ class MainWindow(QMainWindow):
         
         # 更新帧信息标签
         total_frames = self.result_video_thread.total_frames if self.result_video_thread else 0
-        self.result_info_label.setText(f"处理结果: {frame_index} / {total_frames-1}")
+        self.result_info_label.setText(f"{frame_index} / {total_frames-1}")
     
     def update_result_video_frame(self, frame):
         """更新结果预览的视频帧"""

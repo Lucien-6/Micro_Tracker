@@ -31,7 +31,7 @@ def main():
     
     # 使用定时器确保GUI完全初始化后再显示欢迎消息
     QTimer.singleShot(100, lambda: window.log_message("欢迎使用 Micro Tracker - 显微视频目标分割和追踪工具", "highlight"))
-    QTimer.singleShot(200, lambda: window.log_message("请选择一个视频文件开始...", "info"))
+    QTimer.singleShot(200, lambda: window.log_message("请选择一个视频文件开始... (支持格式: mp4, avi, mov, mkv)", "info"))
     
     sys.exit(app.exec_())
 

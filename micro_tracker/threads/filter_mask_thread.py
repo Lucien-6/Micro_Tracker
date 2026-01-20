@@ -240,10 +240,19 @@ class FilterMaskThread(QThread):
                     
                     # 如果所有帧都不符合条件，则排除该对象
                     if len(invalid_indices) == len(obj_frames):
+                        # 计算对象的实际面积范围
+                        areas = [frame_data['area'] for frame_data in obj_frames]
+                        actual_area_min = min(areas)
+                        actual_area_max = max(areas)
+                        actual_area_avg = sum(areas) / len(areas)
+                        
                         # 记录对象筛选结果
                         self.object_filter_results[obj_id] = {
                             "result": "filtered", 
-                            "reason": f"面积不在指定范围内 ({area_min}~{area_max} μm²)"
+                            "reason": f"面积不在指定范围内 ({area_min}~{area_max} μm²)",
+                            "actual_area_min": actual_area_min,
+                            "actual_area_max": actual_area_max,
+                            "actual_area_avg": actual_area_avg
                         }
                         excluded_ids.add(obj_id)
                         continue
@@ -357,7 +366,8 @@ class FilterMaskThread(QThread):
                         # 记录对象筛选结果
                         self.object_filter_results[obj_id] = {
                             "result": "filtered", 
-                            "reason": f"总位移超出范围 [{displacement_min}-{displacement_max}] μm"
+                            "reason": f"总位移超出范围 [{displacement_min}-{displacement_max}] μm",
+                            "actual_displacement": displacement
                         }
                         excluded_ids.add(obj_id)
                         continue

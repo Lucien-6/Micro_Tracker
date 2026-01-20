@@ -65,8 +65,8 @@ class ResultPreviewTab(BaseTab):
         self.main_window.result_slider.setMinimumHeight(30)  # 增加滑块高度
         self.main_window.result_slider.valueChanged.connect(self.main_window.set_result_frame_index)
         
-        self.main_window.result_info_label = QLabel("处理结果: 0 / 0")
-        self.main_window.result_info_label.setMinimumWidth(120)  # 增加标签宽度
+        self.main_window.result_info_label = QLabel("0 / 0")
+        self.main_window.result_info_label.setMinimumWidth(50)  # 增加标签宽度
         self.main_window.result_info_label.setStyleSheet("font-weight: bold; color: #455a64;")  # 添加粗体样式
         
         open_output_btn = QPushButton("打开输出文件夹")
@@ -77,10 +77,10 @@ class ResultPreviewTab(BaseTab):
         open_output_btn.setMinimumHeight(36)  # 增加按钮高度
         open_output_btn.setStyleSheet("background-color: #03A9F4;")  # 使用蓝色突出此按钮
         
-        result_control_layout.addWidget(self.main_window.result_play_pause_btn)
-        result_control_layout.addWidget(self.main_window.result_slider)
-        result_control_layout.addWidget(self.main_window.result_info_label)
-        result_control_layout.addWidget(open_output_btn)
+        result_control_layout.addWidget(self.main_window.result_play_pause_btn, 0)  # 不伸展
+        result_control_layout.addWidget(self.main_window.result_slider, 1)  # 可伸展
+        result_control_layout.addWidget(self.main_window.result_info_label, 0)  # 不伸展
+        result_control_layout.addWidget(open_output_btn, 0)  # 不伸展
         
         result_layout.addLayout(result_control_layout)
         

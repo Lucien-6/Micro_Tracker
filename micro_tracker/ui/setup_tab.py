@@ -415,8 +415,8 @@ class SetupTab(BaseTab):
         self.main_window.frame_slider.setMinimumHeight(28)  # 增加滑块高度
         self.main_window.frame_slider.valueChanged.connect(self.main_window.set_frame_index)
         
-        self.main_window.frame_info_label = QLabel("当前帧: 0 / 0")
-        self.main_window.frame_info_label.setMinimumWidth(100)
+        self.main_window.frame_info_label = QLabel("0 / 0")
+        self.main_window.frame_info_label.setMinimumWidth(50)
         self.main_window.frame_info_label.setStyleSheet("font-weight: bold; color: #455a64;")
         
         # 已标注帧数统计（移到滑块右侧）
@@ -431,10 +431,10 @@ class SetupTab(BaseTab):
             font-size: 9pt;
         """)
         
-        control_layout.addWidget(self.main_window.play_pause_btn)
-        control_layout.addWidget(self.main_window.frame_slider)
-        control_layout.addWidget(self.main_window.frame_info_label)
-        control_layout.addWidget(self.main_window.annotated_frames_label)
+        control_layout.addWidget(self.main_window.play_pause_btn, 0)  # 不伸展
+        control_layout.addWidget(self.main_window.frame_slider, 1)  # 可伸展
+        control_layout.addWidget(self.main_window.frame_info_label, 0)  # 不伸展
+        control_layout.addWidget(self.main_window.annotated_frames_label, 0)  # 不伸展
         
         preview_layout.addLayout(control_layout)
         
@@ -771,10 +771,10 @@ class SetupTab(BaseTab):
         self.start_btn.setEnabled(False)
         
         # 日志
-        mode_name = "视频文件" if is_video_mode else "图像序列"
-        self.main_window.log_message(f"输入模式已切换为: {mode_name}", "info")
-        
-        if not is_video_mode:
+        if is_video_mode:
+            self.main_window.log_message("输入模式已切换为: 视频文件 (支持格式: mp4, avi, mov, mkv)", "info")
+        else:
+            self.main_window.log_message("输入模式已切换为: 图像序列", "info")
             self.main_window.log_message(
                 "  支持格式: jpg, jpeg, png, tif, tiff, bmp", 
                 "info"

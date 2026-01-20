@@ -126,8 +126,8 @@ class FilterTab(BaseTab):
         self.main_window.filter_slider.setMinimumHeight(28)
         self.main_window.filter_slider.valueChanged.connect(self.main_window.set_filter_frame_index)
         
-        self.main_window.filter_info_label = QLabel("筛选结果: 0 / 0")
-        self.main_window.filter_info_label.setMinimumWidth(100)
+        self.main_window.filter_info_label = QLabel("0 / 0")
+        self.main_window.filter_info_label.setMinimumWidth(50)
         self.main_window.filter_info_label.setStyleSheet("font-weight: bold; color: #455a64;")
         
         # 保存按钮
@@ -139,10 +139,10 @@ class FilterTab(BaseTab):
         self.main_window.save_filter_btn.setStyleSheet("background-color: #03A9F4;")
         self.main_window.save_filter_btn.clicked.connect(self.main_window.save_filter_results)
         
-        filter_control_layout.addWidget(self.main_window.filter_play_pause_btn)
-        filter_control_layout.addWidget(self.main_window.filter_slider)
-        filter_control_layout.addWidget(self.main_window.filter_info_label)
-        filter_control_layout.addWidget(self.main_window.save_filter_btn)
+        filter_control_layout.addWidget(self.main_window.filter_play_pause_btn, 0)  # 不伸展
+        filter_control_layout.addWidget(self.main_window.filter_slider, 1)  # 可伸展
+        filter_control_layout.addWidget(self.main_window.filter_info_label, 0)  # 不伸展
+        filter_control_layout.addWidget(self.main_window.save_filter_btn, 0)  # 不伸展
         
         filter_preview_layout.addLayout(filter_control_layout)
         

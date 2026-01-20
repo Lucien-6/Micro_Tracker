@@ -15,7 +15,7 @@
 </div>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-2.3.1-brightgreen.svg" alt="Version 2.3.1">
+  <img src="https://img.shields.io/badge/Version-2.4.0-brightgreen.svg" alt="Version 2.4.0">
   <img src="https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white" alt="Python 3.10+">
   <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License: Apache 2.0">
   <img src="https://img.shields.io/badge/PyQt5-5.15%2B-green.svg" alt="PyQt5 5.15+">
@@ -96,7 +96,8 @@ Micro_Tracker is a powerful microscopy video analysis tool based on the SAM2 mod
   - Mixed prompt handling (box + points) follows SAM2 official implementation with single API call
   - Refinement mode enforces point prompts only (UI auto-constraints per SAM2 best practices)
   - Ensures optimal refinement quality and temporal consistency
-- **📋 Annotation Management**: Comprehensive annotation management panel with frame list, quick jump, delete, and import/export functionality (JSON format).
+- **📋 Annotation Management**: Comprehensive annotation management panel with frame list, quick jump, delete, and import functionality (JSON format). Annotations are automatically saved when processing starts.
+- **💾 Auto-Save Annotations**: Annotations are automatically saved to the Results folder when you start processing, ensuring your work is always preserved without manual intervention.
 - **🎬 Video Analysis**: Process microscopy videos and generate output videos with markers and trajectories using segmented forward propagation strategy.
 - **📊 Data Extraction**: Extract key parameters such as position, size, and shape of target objects.
 - **🎭 Mask Export**: Save segmentation results as mask images for subsequent analysis.
@@ -227,7 +228,7 @@ python -m main
    - View all annotated frames in the annotation panel
    - Click "Jump" to quickly navigate to specific frames
    - Click "Delete" to remove unwanted annotations
-   - Use "Export Annotations" to save annotation data as JSON file
+   - Annotations are automatically saved when you click "Start Processing"
    - Use "Import Annotations" to restore annotation data from JSON file
 
 4. Click the "**Start Processing**" button.
@@ -434,7 +435,8 @@ Micro_Tracker 是一个功能强大的基于 SAM2 模型的显微镜视频分析
   - 混合提示处理（box + points）遵循 SAM2 官方实现方式，单次 API 调用
   - 修正模式强制使用点击提示（UI 自动约束符合 SAM2 最佳实践）
   - 确保最优的 refinement 质量和时序一致性
-- **📋 标注管理功能**：完善的标注管理面板，支持帧列表查看、快速跳转、删除和导入/导出（JSON 格式）。
+- **📋 标注管理功能**：完善的标注管理面板，支持帧列表查看、快速跳转、删除和导入（JSON 格式）。开始处理时自动保存标注数据。
+- **💾 标注自动保存**：点击"开始处理"时，标注数据会自动保存到 Results 文件夹，无需手动操作，确保数据安全。
 - **🎬 视频分析**：处理显微镜视频并生成带有标记和轨迹的输出视频，采用分段前向传播策略。
 - **📊 数据提取**：提取目标物体的位置、大小、形状等关键参数。
 - **🎭 掩膜导出**：将分割结果保存为掩膜图像，便于后续分析。
@@ -562,11 +564,11 @@ python -m main
 
     **标注管理**:
 
-    - 在"标注管理"面板查看所有已标注帧
-    - 点击"跳转"快速定位到指定标注帧
-    - 点击"删除"移除不需要的标注
-    - 使用"导出标注"保存标注数据为 JSON 文件
-    - 使用"导入标注"从 JSON 文件恢复标注数据
+   - 在"标注管理"面板查看所有已标注帧
+   - 点击"跳转"快速定位到指定标注帧
+   - 点击"删除"移除不需要的标注
+   - 点击"开始处理"时自动保存标注数据
+   - 使用"导入标注"从 JSON 文件恢复标注数据
 
 4.  点击 "**开始处理**" 按钮。
 5.  系统会自动检测标注模式，在每个标注帧应用 SAM2 提示，采用分段前向传播策略，显著提升追踪质量。

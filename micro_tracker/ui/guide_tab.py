@@ -53,8 +53,8 @@ class GuideTab(BaseTab):
             <h3 style="margin-top: 15px;">作者信息</h3>
             <p style="margin: 5px 0;">作者：LUCIEN</p>
             <p style="margin: 5px 0;">邮箱：lucien-6@qq.com</p>
-            <p style="margin: 5px 0;">版本：2.3.1</p>
-            <p style="margin: 5px 0;">发布日期：2026年1月19日</p>
+            <p style="margin: 5px 0;">版本：2.4.0</p>
+            <p style="margin: 5px 0;">发布日期：2026年1月20日</p>
             <p style="margin: 5px 0;">Copyright © 2026 LUCIEN. 保留所有权利。</p>
         </div>
         <p>Micro Tracker 是一个基于 SAM2 (Segment Anything Model 2) 的显微视频对象分割和跟踪工具。本工具采用最新的 SAM2 模型，支持多帧智能标注、实时预览和高级数据筛选功能，可以帮助您对显微视频中的多个对象进行高精度自动分割和跟踪，广泛适用于生物医学研究、材料科学、细胞追踪等显微视频分析场景。</p>
@@ -69,7 +69,7 @@ class GuideTab(BaseTab):
                     <li><b>新对象模式：</b> 选择"🆕 新对象"模式，在视频第一帧或对象首次出现的帧上绘制边界框。系统会自动分配唯一ID和固定颜色。</li>
                     <li><b>修正对象模式：</b> 当对象在后续帧中发生形变、遮挡或追踪不准确时，切换到"✏️ 修正对象"模式，从下拉框选择需要修正的对象ID，然后在关键帧（如形变帧、遮挡前后）绘制新的边界框。</li>
                     <li><b>实时预览：</b> 添加标注后，系统会自动使用SAM2生成实时mask预览，帮助您验证标注质量。</li>
-                    <li><b>标注管理：</b> 在"标注管理"面板查看所有已标注帧，支持快速跳转、删除不需要的标注，以及导出/导入标注数据（JSON格式）。</li>
+                    <li><b>标注管理：</b> 在"标注管理"面板查看所有已标注帧，支持快速跳转、删除不需要的标注，以及导入标注数据（JSON格式）。标注会在开始处理时自动保存。</li>
                 </ul>
             </li>
             <li><b>开始处理：</b> 点击"开始处理"按钮启动视频处理。处理过程中可以实时查看进度和预计完成时间。</li>
@@ -93,11 +93,12 @@ class GuideTab(BaseTab):
             <li><b>标注管理面板：</b> 
                 <ul>
                     <li>显示所有已标注帧列表（帧索引 + 对象数量）</li>
-                    <li>"跳转"按钮：快速定位到指定标注帧</li>
-                    <li>"删除"按钮：删除指定帧的所有标注</li>
-                    <li>"导出标注"：将标注数据保存为JSON文件</li>
-                    <li>"导入标注"：从JSON文件加载标注数据</li>
-                    <li>"清除所有"：删除所有帧的所有标注</li>
+                    <li>"跳转"按钮：快速定位到指定标注帧（表格中）</li>
+                    <li>"删除"按钮：删除指定帧的所有标注（表格中）</li>
+                    <li>"导入标注"：从JSON文件加载标注数据（右侧按钮）</li>
+                    <li>"清空所有"：删除所有帧的所有标注（右侧按钮）</li>
+                    <li>"标注说明"：查看详细的标注操作说明（右侧按钮）</li>
+                    <li><b>自动保存：</b> 点击"开始处理"时自动保存标注到Results文件夹</li>
                 </ul>
             </li>
             <li><b>实时预览功能：</b> 添加边界框后，系统自动调用SAM2生成mask预览，以半透明彩色覆盖层显示分割结果。</li>
@@ -318,7 +319,7 @@ class GuideTab(BaseTab):
                 <ul>
                     <li>在标注管理面板查看所有已标注帧</li>
                     <li>点击"跳转"快速定位到指定标注帧</li>
-                    <li>使用"导出标注"保存标注数据为JSON文件</li>
+                    <li>点击"开始处理"时标注会自动保存到Results文件夹</li>
                     <li>使用"导入标注"从JSON文件恢复标注数据</li>
                 </ul>
             </li>
@@ -395,5 +396,5 @@ class GuideTab(BaseTab):
             <p>如果遇到任何问题，请首先检查日志输出，并确保所有依赖项已正确安装。您可以通过邮件联系作者获取技术支持。</p>
         </div>
         
-        <div class="note">\n            <p style="text-align: center; font-size: 9pt; color: #757575;">Micro Tracker v2.3.1 | Copyright © 2026 LUCIEN</p>\n        </div>
+        <div class="note">\n            <p style="text-align: center; font-size: 9pt; color: #757575;">Micro Tracker v2.4.0 | Copyright © 2026 LUCIEN</p>\n        </div>
         """ 

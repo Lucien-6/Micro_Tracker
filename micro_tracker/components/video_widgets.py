@@ -795,40 +795,74 @@ class OverlayLayer(QGraphicsItem):
         return -1
     
     def delete_selected_bbox(self):
+        """
+        删除选中的对象在所有帧的标注
+        
+        Returns:
+            int: 被删除的对象ID，如果没有选中则返回-1
+        
+        Notes:
+            - 删除该对象在所有帧的边界框标注
+            - 删除该对象在所有帧的点击标注
+            - 完全移除对象注册信息
+            - 清理轨迹、特征和预览数据
+        """
         if self.selected_bbox == -1:
             return -1
+        
         deleted_id = int(self.bboxes[self.selected_bbox][4])  # 确保为整数类型
-        del self.bboxes[self.selected_bbox]
         
-        # Phase 1 MVP: 同步到多帧字典
-        self._sync_bboxes_to_current_frame()
+        # === 1. 删除该对象在所有帧的边界框标注 ===
+        frames_to_clean = []  # 记录需要清理的空帧
+        for frame_idx in list(self.bboxes_per_frame.keys()):
+            # 过滤掉该对象的边界框
+            self.bboxes_per_frame[frame_idx] = [
+                bbox for bbox in self.bboxes_per_frame[frame_idx] 
+                if bbox[4] != deleted_id
+            ]
+            # 如果该帧没有任何边界框了，标记为待清理
+            if len(self.bboxes_per_frame[frame_idx]) == 0:
+                frames_to_clean.append(frame_idx)
         
-        # === Phase 2: 从当前帧的对象注册中移除 ===
-        if deleted_id in self.object_registry:
-            frames = self.object_registry[deleted_id]["frames"]
-            if self.current_frame_idx in frames:
-                frames.remove(self.current_frame_idx)
-            
-            # 如果该对象所有帧都被删除，完全移除
-            if len(frames) == 0:
-                self.unregister_object(deleted_id)
+        # 清理空帧
+        for frame_idx in frames_to_clean:
+            del self.bboxes_per_frame[frame_idx]
         
-        # 删除该对象在当前帧的点击标注（修复：之前遗漏）
-        if self.current_frame_idx in self.annotations_per_frame:
-            if deleted_id in self.annotations_per_frame[self.current_frame_idx]:
-                del self.annotations_per_frame[self.current_frame_idx][deleted_id]
-                # 如果该帧没有任何点击标注了，删除该帧
-                if not self.annotations_per_frame[self.current_frame_idx]:
-                    del self.annotations_per_frame[self.current_frame_idx]
+        # === 2. 删除该对象在所有帧的点击标注 ===
+        frames_to_clean = []
+        for frame_idx in list(self.annotations_per_frame.keys()):
+            if deleted_id in self.annotations_per_frame[frame_idx]:
+                del self.annotations_per_frame[frame_idx][deleted_id]
+            # 如果该帧没有任何点击标注了，标记为待清理
+            if len(self.annotations_per_frame[frame_idx]) == 0:
+                frames_to_clean.append(frame_idx)
         
+        # 清理空帧
+        for frame_idx in frames_to_clean:
+            del self.annotations_per_frame[frame_idx]
+        
+        # === 3. 清除临时点击（如果属于该对象）===
+        if self.current_editing_obj_id == deleted_id:
+            self.temp_points = []
+            self.temp_labels = []
+            self.temp_points_frame_idx = None
+            self.current_editing_obj_id = None
+        
+        # === 4. 完全移除对象注册信息 ===
+        self.unregister_object(deleted_id)
+        
+        # === 5. 清理轨迹和特征数据 ===
         if deleted_id in self.tracks:
             del self.tracks[deleted_id]
         if deleted_id in self.object_features:
             del self.object_features[deleted_id]
         
-        # === 清除该对象的预览mask ===
+        # === 6. 清除该对象的预览mask ===
         if deleted_id in self.preview_masks:
             del self.preview_masks[deleted_id]
+        
+        # === 7. 同步当前帧的边界框显示 ===
+        self._sync_bboxes_from_current_frame()
         
         self.selected_bbox = -1
         self.update()

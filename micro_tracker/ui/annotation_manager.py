@@ -4,7 +4,7 @@ Phase 2: 标注管理器组件
 提供标注列表、跳转、删除、导入导出等功能
 
 Author: Lucien (lucien-6@qq.com)
-Date: 2025-10-30
+Date: 2026-01-28
 """
 
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, 

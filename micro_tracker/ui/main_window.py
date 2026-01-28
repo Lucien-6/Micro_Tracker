@@ -1070,8 +1070,10 @@ class MainWindow(QMainWindow):
     
     def on_bbox_deleted(self, bbox_id):
         """当删除边界框时的处理"""
-        frame_idx = self.current_frame_index
-        self.log_message(f"删除第 {frame_idx} 帧的边界框: ID={bbox_id}", "warning")
+        self.log_message(
+            f"已删除对象 {bbox_id} 在所有帧的标注（包括边界框和点击标注）", 
+            "warning"
+        )
         self._update_annotation_status_display()
         
         # === Phase 2: 刷新对象选择器和标注管理器 ===

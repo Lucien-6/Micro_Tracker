@@ -15,7 +15,7 @@
 </div>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-2.4.0-brightgreen.svg" alt="Version 2.4.0">
+  <img src="https://img.shields.io/badge/Version-2.4.1-brightgreen.svg" alt="Version 2.4.1">
   <img src="https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white" alt="Python 3.10+">
   <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License: Apache 2.0">
   <img src="https://img.shields.io/badge/PyQt5-5.15%2B-green.svg" alt="PyQt5 5.15+">
@@ -167,7 +167,6 @@ pip install -e ".[notebooks]"
 SAM2 model weights need to be downloaded separately:
 
 1. Visit the [SAM2 official repository](https://github.com/facebookresearch/segment-anything) to download model files, or click the following links directly:
-
    - [sam2.1_hiera_tiny.pt](https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_tiny.pt)
    - [sam2.1_hiera_small.pt](https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_small.pt)
    - [sam2.1_hiera_base_plus.pt](https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_base_plus.pt)
@@ -188,7 +187,6 @@ python -m main
 #### 1. Video Tracking 🎞️
 
 1. **Select Input Source**:
-
    - **Video File**: Select "Video File" radio button, then click "Browse" to select a video file (MP4, AVI, MOV, etc.)
    - **Image Sequence**: Select "Image Sequence" radio button, then click "Browse" to select a folder containing image files
      - Supported formats: JPEG, PNG, TIFF, BMP
@@ -200,7 +198,6 @@ python -m main
 3. **Multi-Frame Intelligent Annotation**:
 
    **New Object Annotation**:
-
    - Select "🆕 New Object" mode
    - Browse to the frame where the object first appears (usually frame 0)
    - Hold left mouse button and drag to draw bounding box
@@ -208,7 +205,6 @@ python -m main
    - Real-time preview mask will be automatically generated and displayed
 
    **Refine Object Annotation**:
-
    - Select "✏️ Refine Object" mode
    - Choose the object ID to refine from dropdown
    - Browse to key frames (deformation, occlusion, etc.)
@@ -217,14 +213,12 @@ python -m main
    - The object being refined will be highlighted with golden dashed line
 
    **Best Practices**:
-
    - Annotate at frame 0 when object first appears
    - Add annotations when object shape changes significantly
    - Add annotations before and after occlusion
    - Recommend 5-10 key frames, not too many
 
    **Annotation Management**:
-
    - View all annotated frames in the annotation panel
    - Click "Jump" to quickly navigate to specific frames
    - Click "Delete" to remove unwanted annotations
@@ -311,17 +305,14 @@ Micro_Tracker/
 ### Common Issues ❓
 
 1. **Startup Failure**
-
    - Check if the Python version is 3.10+.
    - Ensure all dependencies are correctly installed (refer to [Install Dependencies](#3-install-dependencies)).
 
 2. **GPU Memory Insufficient**
-
    - Try reducing the resolution of the processing video.
    - Reduce the number of targets being tracked simultaneously.
 
 3. **Tracking Inaccurate**
-
    - Ensure the accuracy of initial framing.
    - Try using higher quality or clearer videos.
 
@@ -340,7 +331,7 @@ After obtaining tracking results from Micro_Tracker, you can use the following s
 Micro Post is a professional desktop application designed for comprehensive motion analysis of bacterial trajectories from Micro_Tracker's output data. It provides:
 
 - **Interactive Trajectory Visualization**: Zoom, pan, and hover interactions
-- **Advanced Motion Analytics**: 
+- **Advanced Motion Analytics**:
   - Displacement analysis (X/Y and total)
   - Angular displacement with 180° wrapping
   - Mean Squared Displacement (MSD)
@@ -506,7 +497,6 @@ pip install -e ".[notebooks]"
 SAM2 模型权重文件需要单独下载：
 
 1.  访问 [SAM2 官方仓库](https://github.com/facebookresearch/segment-anything) 下载模型文件，或直接点击以下链接下载：
-
     - [sam2.1_hiera_tiny.pt](https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_tiny.pt)
     - [sam2.1_hiera_small.pt](https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_small.pt)
     - [sam2.1_hiera_base_plus.pt](https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_base_plus.pt)
@@ -527,7 +517,6 @@ python -m main
 #### 1. 视频跟踪 🎞️
 
 1.  **选择输入源**：
-
     - **视频文件**：选择"视频文件"单选按钮，点击"浏览"选择视频文件（MP4、AVI、MOV 等）
     - **图像序列**：选择"图像序列"单选按钮，点击"浏览"选择包含图像文件的文件夹
       - 支持格式：JPEG、PNG、TIFF、BMP
@@ -539,7 +528,6 @@ python -m main
 3.  **多帧智能标注**（推荐使用以获得最佳追踪效果）:
 
     **新对象标注**:
-
     - 选择"🆕 新对象"模式
     - 浏览到对象首次出现的帧（通常是第 0 帧）
     - 按住鼠标左键拖动绘制边界框
@@ -547,7 +535,6 @@ python -m main
     - 实时预览 mask 会自动生成并显示
 
     **修正对象标注**:
-
     - 选择"✏️ 修正对象"模式
     - 从下拉框选择要修正的对象 ID
     - 浏览到关键帧（对象形变、遮挡前后等）
@@ -556,7 +543,6 @@ python -m main
     - 正在修正的对象会以金色虚线高亮显示
 
     **标注最佳实践**:
-
     - 在第 0 帧标注对象首次出现位置
     - 在对象形状显著变化时添加标注
     - 在对象被遮挡前后添加标注
@@ -564,11 +550,11 @@ python -m main
 
     **标注管理**:
 
-   - 在"标注管理"面板查看所有已标注帧
-   - 点击"跳转"快速定位到指定标注帧
-   - 点击"删除"移除不需要的标注
-   - 点击"开始处理"时自动保存标注数据
-   - 使用"导入标注"从 JSON 文件恢复标注数据
+- 在"标注管理"面板查看所有已标注帧
+- 点击"跳转"快速定位到指定标注帧
+- 点击"删除"移除不需要的标注
+- 点击"开始处理"时自动保存标注数据
+- 使用"导入标注"从 JSON 文件恢复标注数据
 
 4.  点击 "**开始处理**" 按钮。
 5.  系统会自动检测标注模式，在每个标注帧应用 SAM2 提示，采用分段前向传播策略，显著提升追踪质量。
@@ -650,17 +636,14 @@ Micro_Tracker/
 ### 常见问题 ❓
 
 1.  **启动失败**
-
     - 检查 Python 版本是否为 3.10+。
     - 确保所有依赖项已正确安装 (参照 [安装依赖](#3-安装依赖))。
 
 2.  **GPU 内存不足**
-
     - 尝试降低处理视频的分辨率。
     - 减少同时跟踪的目标数量。
 
 3.  **跟踪不准确**
-
     - 确保初始框选的准确性。
     - 尝试使用更高质量或更清晰的视频。
 

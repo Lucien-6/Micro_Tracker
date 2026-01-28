@@ -643,6 +643,11 @@ class SetupTab(BaseTab):
     def update_object_selector(self):
         """更新对象选择下拉框"""
         combo = self.main_window.object_selector_combo
+        
+        # === 修复：阻塞信号，防止 clear() 和 addItem() 触发 currentIndexChanged ===
+        # 这会避免在新对象模式下意外触发模式切换
+        combo.blockSignals(True)
+        
         combo.clear()
         
         # 获取对象注册表
@@ -650,6 +655,7 @@ class SetupTab(BaseTab):
         
         if not registry:
             combo.addItem("（无可用对象，请先添加对象）", None)
+            combo.blockSignals(False)
             return
         
         # 按对象ID排序
@@ -662,9 +668,13 @@ class SetupTab(BaseTab):
             text = f"对象 {obj_id} (首次: 第{first_frame}帧, {frame_count}个标注)"
             combo.addItem(text, obj_id)
         
-        # 默认选中第一个
-        if combo.count() > 0:
+        # 恢复信号
+        combo.blockSignals(False)
+        
+        # === 只有在修正模式下才自动选中第一个对象 ===
+        if combo.count() > 0 and self.refine_object_radio.isChecked():
             combo.setCurrentIndex(0)
+            # 手动触发（因为信号已解除阻塞）
             self.on_object_selected(0)
     
     def on_object_selected(self, index):
@@ -677,6 +687,11 @@ class SetupTab(BaseTab):
         obj_id = combo.currentData()
         
         if obj_id is not None:
+            # === 修复：只有在修正模式下才设置修正模式 ===
+            # 避免在新对象模式下被意外触发
+            if not self.refine_object_radio.isChecked():
+                return
+            
             # 设置修正模式
             self.main_window.video_label.overlay_layer.set_annotation_mode("refine_object", obj_id)
             

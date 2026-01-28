@@ -4,6 +4,110 @@
 
 ---
 
+## [v2.4.1] - 2026-01-28
+
+### 🐛 重要修复 (Critical Bug Fixes)
+
+#### 修复绘制第一个对象后自动切换到修正模式的问题
+
+**问题描述：**
+用户在新对象模式下绘制第一个边界框后，系统会意外地自动切换到修正模式，导致后续绘制新边界框时收到警告："⚠️ 修正模式下不能绘制新的边界框，请使用点击提示（符合SAM2官方规范）"。
+
+**问题根源：**
+
+1. `update_object_selector()` 方法在刷新对象下拉框时，`combo.clear()` 和 `combo.addItem()` 会自动触发 `currentIndexChanged` 信号
+2. 该信号连接到 `on_object_selected()`，后者无条件地强制切换到修正模式
+3. 即使用户处于新对象模式，系统也会在后台悄悄切换模式
+
+**修复内容：**
+
+1. **双重保护机制** (`micro_tracker/ui/setup_tab.py`)
+
+   **保护层1：阻塞信号**（第647-672行）
+   - 在更新下拉框时使用 `combo.blockSignals(True)` 阻塞信号
+   - 防止 `clear()` 和 `addItem()` 触发 `currentIndexChanged`
+   - 更新完成后恢复信号
+   - 只在修正模式下才自动选中第一个对象
+
+   **保护层2：模式检查**（第690-693行）
+   - 在 `on_object_selected()` 中添加模式检查
+   - 只有在修正模式下才设置修正模式
+   - 避免在新对象模式下被意外触发
+
+2. **修复效果**：
+   - ✅ 新对象模式下绘制第一个边界框后，保持在新对象模式
+   - ✅ 可以连续绘制多个新对象（Obj_0, Obj_1, Obj_2...）
+   - ✅ 手动切换到修正模式时，正确选中对象并应用修正模式
+   - ✅ 删除对象时，仅更新下拉框，不改变当前模式
+
+---
+
+#### 修复对象删除机制 - 现支持删除所有帧的标注
+
+**问题描述：**
+之前的删除机制只删除当前帧的标注，如果对象在多个帧有标注（如第0帧、第5帧、第10帧），用户需要逐个切换到每一帧并删除，非常繁琐。
+
+**用户期望：**
+按一次Delete键应该完全删除对象及其在所有帧的标注。
+
+**修复内容：**
+
+1. **完全重写 `delete_selected_bbox()` 方法** (`micro_tracker/components/video_widgets.py` 第797-869行)
+
+   **新行为：**
+   - 删除该对象在**所有帧**的边界框标注
+   - 删除该对象在**所有帧**的点击标注
+   - 清除临时点击（如果正在编辑该对象）
+   - 完全移除对象注册信息和固定颜色
+   - 清理轨迹、特征数据
+   - 清理预览masks
+   - 自动同步当前帧显示
+
+2. **更新日志信息** (`micro_tracker/ui/main_window.py`)
+   - 修改删除提示信息，明确说明删除范围
+   - 新提示："已删除对象 X 在所有帧的标注（包括边界框和点击标注）"
+
+3. **两种删除方式对比**：
+
+   | 删除方式       | 触发方式               | 删除范围                 | 用途                 |
+   | -------------- | ---------------------- | ------------------------ | -------------------- |
+   | **删除对象**   | 选中边界框 + Delete键  | 该对象在**所有帧**的标注 | 完全移除某个对象     |
+   | **删除帧标注** | 标注管理器的"删除"按钮 | **指定帧**的所有对象标注 | 移除某一帧的所有标注 |
+
+4. **使用场景示例**：
+   - 对象0在第0帧、第5帧、第10帧有标注
+   - 对象1在第0帧、第8帧有标注
+   - 在任意帧选中对象0后按Delete
+   - 结果：对象0在所有帧（0、5、10）的标注全部删除
+   - 对象1的标注不受影响
+
+---
+
+### 🔄 向后兼容性
+
+- ✅ 完全向后兼容
+- ✅ 不影响已保存的标注JSON文件
+- ✅ 不影响处理逻辑和输出格式
+
+---
+
+### 📊 技术细节
+
+**修改的核心文件：**
+
+- `micro_tracker/ui/setup_tab.py` - 修复模式自动切换问题（双重保护）
+- `micro_tracker/components/video_widgets.py` - 重写对象删除机制
+- `micro_tracker/ui/main_window.py` - 更新删除日志信息
+
+**测试建议：**
+
+1. 测试新对象模式下连续绘制多个对象
+2. 测试修正模式的正常切换和对象选择
+3. 测试删除对象是否正确清除所有帧的标注
+4. 测试标注管理器的列表更新和刷新
+
+---
+
 ## [v2.4.0] - 2026-01-20
 
 ### ✨ 新增功能 (New Features)
@@ -32,6 +136,7 @@
    - 用户可选择取消处理操作
 
 **使用场景：**
+
 - 避免标注数据丢失
 - 确保每次处理都有对应的标注记录
 - 便于后续分析和重现处理流程
@@ -105,6 +210,7 @@
    - 确保数据一致性
 
 **影响范围：**
+
 - 修复了对象ID类型不一致导致的潜在bug
 - 提升了系统稳定性
 
@@ -122,6 +228,7 @@
 ### 📊 技术细节
 
 **修改的核心文件：**
+
 - `micro_tracker/controllers/processing_controller.py` - 自动保存逻辑
 - `micro_tracker/ui/annotation_manager.py` - UI布局和自动刷新
 - `micro_tracker/components/video_widgets.py` - ID类型一致性
@@ -129,6 +236,7 @@
 - `micro_tracker/ui/setup_tab.py` - 欢迎消息和界面文字
 
 **用户体验提升：**
+
 - ✅ 数据安全：自动保存防止数据丢失
 - ✅ 操作简化：移除手动导出步骤
 - ✅ 界面优化：更大的按钮、更好的布局
@@ -180,25 +288,21 @@
 **修复内容：**
 
 1. **新增 `OverlayLayer.reset_all_state()` 方法** (`micro_tracker/components/video_widgets.py`)
-
    - 清空所有帧的边界框数据 (`bboxes_per_frame`)
    - 清空所有帧的点击标注数据 (`annotations_per_frame`)
    - 重置对象注册表 (`object_registry`) 和 ID 计数器 (`next_available_id`)
    - 重置标注模式、预览 masks、临时点击状态等
 
 2. **新增 `MaskPreviewManager.reset()` 方法** (`micro_tracker/utils/preview_manager.py`)
-
    - 清除帧缓存和预测线程
    - 保留 predictor 实例避免重复加载模型
 
 3. **新增 `SetupTab.reset_ui_state()` 方法** (`micro_tracker/ui/setup_tab.py`)
-
    - 重置标注模式 UI 为"新对象"模式
    - 重置提示类型 UI 为"边界框模式"
    - 清空并禁用对象选择器
 
 4. **新增 `MainWindow._reset_for_new_input()` 方法** (`micro_tracker/ui/main_window.py`)
-
    - 统一调度所有清理操作
    - 停止运行中的处理线程和结果视频线程
    - 调用各组件的重置方法
@@ -272,21 +376,18 @@
 **核心功能：**
 
 1. **智能文件名排序** (`micro_tracker/utils/input_manager.py`)
-
    - 支持纯数字命名: `00001.jpg` → 帧 1
    - 支持前缀+数字命名: `frame_00001.png` → 帧 1
    - 支持任意前缀: `img_001.tif` → 帧 1
    - 自动按帧编号升序排列
 
 2. **自动格式转换**
-
    - SAM2 要求 JPEG 格式输入
    - 非 JPEG 图像自动转换到临时目录
    - 处理完成后自动清理临时文件
    - 原始图像不受影响
 
 3. **UI 集成** (`micro_tracker/ui/setup_tab.py`)
-
    - 输入类型单选按钮：视频文件 / 图像序列
    - 图像序列模式下选择文件夹
    - 显示图像数量、分辨率、帧率信息
@@ -320,7 +421,6 @@
 **修复内容：**
 
 1. **新增静默帧切换方法** (`micro_tracker/components/video_widgets.py`)
-
    - 添加 `set_current_frame_silent(frame_idx)` 方法
    - 视频播放期间使用此方法更新帧索引
    - 自动清除 `preview_masks`
@@ -369,19 +469,16 @@
 **改进内容：**
 
 1. **自动切换提示模式** (`micro_tracker/ui/setup_tab.py`)
-
    - 切换到修正对象模式时，自动切换到点击模式
    - 禁用边界框模式选项（防止误操作）
    - 切换回新对象模式时，自动恢复边界框选项
 
 2. **阻止 Refinement 模式下的 Box 绘制** (`micro_tracker/components/video_widgets.py`)
-
    - 修正模式下尝试绘制边界框时显示警告提示
    - 强制用户使用点击提示
    - 提示信息："⚠️ 修正模式下不能绘制新的边界框，请使用点击提示（符合 SAM2 官方规范）"
 
 3. **标注列表显示优化** (`micro_tracker/ui/annotation_manager.py`)
-
    - 支持显示纯点击标注（无边界框的帧）
    - 合并 bbox 和 refinement 数据源
    - 正确统计包含点击标注的对象数量
@@ -519,19 +616,16 @@
 ### 🐛 修复 (Fixed)
 
 - **多段处理冲突**：
-
   - 每个段开始前重新初始化 `inference_state`
   - 修复 `KeyError: 'best_iou_score'`
   - 修复 `AssertionError: all_consolidated_frame_inds == input_frames_inds`
 
 - **SAM2 box prompt 错误**：
-
   - 正确设置 `clear_old_points=True`
   - 修复 `RuntimeError: cannot add box without clearing old points`
   - 修复 `RuntimeError: No points are provided`
 
 - **进度回调签名**：
-
   - 创建统一的 `multiframe_progress_callback`
   - 修复 `TypeError: missing 1 required positional argument 'total'`
 
@@ -613,14 +707,12 @@
 ### 🐛 紧急修复 (Hotfix - 2025-10-30)
 
 - **修复多段处理时的 inference_state 冲突**
-
   - 在每个段开始前重新初始化 inference_state（seg_idx > 0）
   - 确保段与段之间相互独立，避免状态累积
   - 修复了错误: `KeyError: 'best_iou_score'`
   - 修复了错误: `AssertionError: all_consolidated_frame_inds == input_frames_inds`
 
 - **修复 SAM2 box prompt 参数错误**
-
   - `clear_old_points` 必须设置为 `True` 才能添加 box 提示
   - 修复了运行时错误: `cannot add box without clearing old points`
   - 修复了错误: `RuntimeError: No points are provided; please add points first`
@@ -632,13 +724,11 @@
 ### ✨ 新增功能 (Added)
 
 - **真正的多帧 SAM2 提示处理**
-
   - 在每个标注帧调用 SAM2 的 `add_new_points_or_box`
   - 实现分段前向传播策略
   - 显著提升追踪质量（特别是对象形变、遮挡场景）
 
 - **智能对象 ID 管理**
-
   - 新对象模式：自动分配新 ID
   - 修正对象模式：为已有对象添加新帧标注
   - 对象颜色固定映射（同一对象在不同帧用相同颜色）

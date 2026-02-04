@@ -1545,11 +1545,157 @@ class VideoLabel(MultiLayerVideoView):
         self.setStyleSheet("border: 1px solid #c0c0c0; background-color: #f0f0f0;")
 
 class ResultVideoLabel(MultiLayerVideoView):
+    """
+    Read-only video label for displaying processing results.
+    
+    This class extends MultiLayerVideoView but disables all annotation features.
+    Users can only view the video and use zoom/pan controls.
+    
+    Enabled features:
+        - Video frame display
+        - Ctrl+Scroll wheel zoom
+        - Ctrl+Left click drag to pan
+        - Middle click to reset zoom
+        - Home key to reset zoom
+        - Space/F/D keys for video playback control (handled by main window)
+    
+    Disabled features:
+        - Left click to draw bounding boxes
+        - Point annotation (positive/negative clicks)
+        - Object selection
+        - Delete key to remove objects
+        - A key to save clicks
+        - Ctrl+S to save and switch frame
+        - Ctrl+C to clear temporary clicks
+        - Ctrl+H to hide prompts
+    """
+    
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setStyleSheet("border: 1px solid #c0c0c0; background-color: #f0f0f0;")
+        
+        # Step 1: Set read-only flag
+        self.read_only = True
+        
+        # Step 6: Clear overlay layer to prevent annotation display
+        self.overlay_layer.clear_all()
     
     def setVideoFrame(self, frame):
         self.set_frame(frame)
         if hasattr(self, 'process_result_frame'): # This method is not defined, but kept for compatibility
-            self.process_result_frame(frame) 
+            self.process_result_frame(frame)
+    
+    def mousePressEvent(self, event):
+        """
+        Step 2: Override mouse press event to disable annotation features.
+        Only allow zoom and pan controls.
+        """
+        if self.frame is None:
+            return
+        self.setFocus()
+        
+        # Allow Ctrl+Left click drag for panning
+        if event.modifiers() == Qt.ControlModifier and event.button() == Qt.LeftButton:
+            self.is_panning = True
+            self.last_pan_pos = event.pos()
+            self.viewport().setCursor(Qt.ClosedHandCursor)
+            event.accept()
+            return
+        
+        # Allow middle click to reset zoom
+        if event.button() == Qt.MiddleButton:
+            self.reset_zoom()
+            event.accept()
+            return
+        
+        # Ignore all other mouse press events (no annotation)
+        event.accept()
+    
+    def mouseMoveEvent(self, event):
+        """
+        Step 3: Override mouse move event to disable annotation features.
+        Only allow panning.
+        """
+        if self.frame is None:
+            return
+        
+        # Handle panning
+        if self.is_panning and self.last_pan_pos is not None:
+            delta = event.pos() - self.last_pan_pos
+            self.last_pan_pos = event.pos()
+            
+            self.horizontalScrollBar().setValue(
+                self.horizontalScrollBar().value() - delta.x()
+            )
+            self.verticalScrollBar().setValue(
+                self.verticalScrollBar().value() - delta.y()
+            )
+            event.accept()
+            return
+        
+        # Ignore annotation update logic
+        event.accept()
+    
+    def mouseReleaseEvent(self, event):
+        """
+        Step 4: Override mouse release event to disable annotation features.
+        Only handle panning end.
+        """
+        if self.frame is None:
+            return
+        
+        # Handle panning end
+        if self.is_panning:
+            self.is_panning = False
+            self.last_pan_pos = None
+            self.viewport().setCursor(Qt.ArrowCursor)
+            event.accept()
+            return
+        
+        # Ignore annotation completion logic
+        event.accept()
+    
+    def keyPressEvent(self, event):
+        """
+        Step 5: Override key press event to disable annotation shortcuts.
+        Only allow zoom reset and video playback controls.
+        """
+        # Allow Home key to reset zoom
+        if event.key() == Qt.Key_Home:
+            self.reset_zoom()
+            event.accept()
+            return
+        
+        # Allow Space/F/D keys for video playback (handled by main window)
+        if event.key() in (Qt.Key_Space, Qt.Key_F, Qt.Key_D):
+            if self.window() and isinstance(self.window(), QMainWindow):
+                self.window().keyPressEvent(event)
+                event.accept()
+                return
+        
+        # Ignore all annotation shortcuts (Delete, A, Ctrl+S, Ctrl+C, Ctrl+H)
+        if event.key() == Qt.Key_Delete:
+            event.accept()
+            return
+        if event.key() == Qt.Key_A:
+            event.accept()
+            return
+        if event.key() == Qt.Key_S and event.modifiers() == Qt.ControlModifier:
+            event.accept()
+            return
+        if event.key() == Qt.Key_C and event.modifiers() == Qt.ControlModifier:
+            event.accept()
+            return
+        if event.key() == Qt.Key_H and event.modifiers() == Qt.ControlModifier:
+            event.accept()
+            return
+        
+        # Pass other events to base QGraphicsView (not MultiLayerVideoView)
+        QGraphicsView.keyPressEvent(self, event)
+    
+    def _handle_point_click(self, x, y, label):
+        """
+        Step 8: Empty implementation to prevent accidental annotation.
+        This method should never be called in read-only mode.
+        """
+        pass 

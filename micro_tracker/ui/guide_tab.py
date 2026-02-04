@@ -53,7 +53,7 @@ class GuideTab(BaseTab):
             <h3 style="margin-top: 15px;">作者信息</h3>
             <p style="margin: 5px 0;">作者：LUCIEN</p>
             <p style="margin: 5px 0;">邮箱：lucien-6@qq.com</p>
-            <p style="margin: 5px 0;">版本：2.5.0</p>
+            <p style="margin: 5px 0;">版本：2.5.1</p>
             <p style="margin: 5px 0;">发布日期：2026年2月4日</p>
             <p style="margin: 5px 0;">Copyright © 2026 LUCIEN. 保留所有权利。</p>
         </div>

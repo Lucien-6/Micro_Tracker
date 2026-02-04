@@ -4,6 +4,113 @@
 
 ---
 
+## [v2.5.1] - 2026-02-04
+
+### 🐛 重要修复 (Critical Bug Fix)
+
+#### 修复结果预览和筛选过滤画布允许标注操作的问题
+
+**问题描述：**
+用户可以在"结果预览"和"筛选过滤"标签页的视频画布上执行标注操作（绘制边界框、添加点击标注、删除对象等），但这些标签页的设计目的是只读查看处理结果，不应允许任何标注功能。
+
+**问题根源：**
+
+1. **类继承问题** (`micro_tracker/components/video_widgets.py`)
+
+   - `ResultVideoLabel` 直接继承 `MultiLayerVideoView`
+   - 完整继承了所有交互功能（边界框绘制、点击标注、对象选择、删除等）
+   - 鼠标事件和键盘事件未被禁用
+
+2. **影响范围：**
+   - 结果预览标签页 (`result_label`)
+   - 筛选过滤标签页 (`filter_video_label`)
+
+**修复内容：**
+
+1. **重写 `ResultVideoLabel` 事件处理方法**
+
+   - **新增类文档说明**：明确说明该类用于只读显示，列出已启用和已禁用的功能
+   - **添加只读标志位**：`self.read_only = True`
+   - **清空覆盖层**：初始化时调用 `overlay_layer.clear_all()` 清除标注数据
+
+   - **重写 `mousePressEvent()`**：
+
+     - ✅ 保留：Ctrl+左键拖拽、中键重置缩放
+     - ❌ 禁用：边界框绘制、点击标注、对象选择
+
+   - **重写 `mouseMoveEvent()`**：
+
+     - ✅ 保留：拖拽平移
+     - ❌ 禁用：边界框绘制更新
+
+   - **重写 `mouseReleaseEvent()`**：
+
+     - ✅ 保留：拖拽结束处理
+     - ❌ 禁用：边界框完成绘制
+
+   - **重写 `keyPressEvent()`**：
+
+     - ✅ 保留：Home 键重置缩放、空格/F/D 键视频控制
+     - ❌ 禁用：Delete 删除、A 保存点击、Ctrl+S 保存并切换、Ctrl+C 清除点击、Ctrl+H 隐藏提示
+
+   - **添加空方法**：`_handle_point_click()` 空实现防止意外调用
+
+2. **保留的查看功能：**
+
+   - 视频帧显示
+   - Ctrl+滚轮缩放（100%-1000%）
+   - Ctrl+左键拖拽平移
+   - 中键或 Home 键重置缩放
+   - 空格/F/D 键视频播放控制
+
+3. **禁用的标注功能：**
+   - 左键拖拽绘制边界框
+   - 左键/右键点击添加正负向标注
+   - 对象选择
+   - Delete 键删除对象
+   - A 键保存点击
+   - Ctrl+S 保存并切换帧
+   - Ctrl+C 清除临时点击
+   - Ctrl+H 隐藏提示
+
+**影响范围：**
+
+- ✅ 修复了用户体验问题：结果预览和筛选过滤画布现在是真正的只读模式
+- ✅ 不影响"参数设置与标注"标签页的 `VideoLabel`（标注功能仍正常）
+- ✅ 不影响数据处理逻辑和输出格式
+- ✅ 完全向后兼容
+
+---
+
+### 📊 技术细节
+
+**修改的核心文件：**
+
+- `micro_tracker/components/video_widgets.py` - 完全重写 `ResultVideoLabel` 类的事件处理
+
+**修改的方法：**
+
+- `ResultVideoLabel.__init__()` - 添加只读标志和清空覆盖层
+- `ResultVideoLabel.mousePressEvent()` - 仅保留缩放平移
+- `ResultVideoLabel.mouseMoveEvent()` - 仅保留拖拽平移
+- `ResultVideoLabel.mouseReleaseEvent()` - 仅处理拖拽结束
+- `ResultVideoLabel.keyPressEvent()` - 禁用标注快捷键
+- `ResultVideoLabel._handle_point_click()` - 空实现
+
+**新增文档：**
+
+- `ResultVideoLabel` 类文档字符串，详细说明只读特性和启用/禁用的功能列表
+
+---
+
+### 🔄 向后兼容性
+
+- ✅ 完全向后兼容
+- ✅ 不影响标注数据和处理逻辑
+- ✅ 纯 UI 交互改进，无破坏性变更
+
+---
+
 ## [v2.5.0] - 2026-02-04
 
 ### ✨ 新增功能 (New Features)

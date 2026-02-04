@@ -13,6 +13,7 @@ from micro_tracker.ui.base_tab import BaseTab
 from micro_tracker.components.video_widgets import VideoLabel
 from micro_tracker.config.style import TEXTEDIT_LOG_STYLE
 from micro_tracker.ui.annotation_manager import AnnotationManagerWidget
+from micro_tracker.components.custom_widgets import RippleButton, FocusGlowLineEdit, AnimatedProgressBar
 
 class SetupTab(BaseTab):
     """参数设置与标注标签页类"""
@@ -50,7 +51,7 @@ class SetupTab(BaseTab):
         left_panel.setMaximumWidth(500)  # 设置最大宽度
         left_layout = QVBoxLayout(left_panel)
         left_layout.setContentsMargins(0, 0, 0, 0)
-        left_layout.setSpacing(10)  # 增加组件间的垂直间距
+        left_layout.setSpacing(25)  # 主要功能区之间间距25px
         
         # 添加文件选择区域
         file_group = self.create_file_selection_group()
@@ -70,15 +71,17 @@ class SetupTab(BaseTab):
         left_bottom_layout.addWidget(progress_group, 1)  # 使用伸缩因子1
         
         # 添加开始处理按钮
-        self.start_btn = QPushButton("开 始 处 理")
+        self.start_btn = RippleButton("开 始 处 理", "开始处理视频并生成追踪结果")
         self.start_btn.setEnabled(False)
         self.start_btn.clicked.connect(self.main_window.start_processing)
         self.start_btn.setStyleSheet("""
-            font-weight: bold; 
-            font-size: 16px; 
-            padding: 5px;
-            background-color: #4CAF50;
-            border-radius: 6px;
+            QPushButton {
+                font-weight: bold; 
+                font-size: 16px; 
+                padding: 5px;
+                background-color: #4CAF50;
+                border-radius: 6px;
+            }
         """)
         self.start_btn.setMinimumHeight(40)  # 增加按钮高度
         self.start_btn.setIcon(QIcon.fromTheme("media-playback-start"))
@@ -127,11 +130,11 @@ class SetupTab(BaseTab):
         # === 输入源选择（视频文件或图像序列文件夹）===
         input_source_layout = QHBoxLayout()
         input_source_layout.setSpacing(8)
-        self.main_window.video_path_edit = QLineEdit()
+        self.main_window.video_path_edit = FocusGlowLineEdit()
         self.main_window.video_path_edit.setReadOnly(True)
         self.main_window.video_path_edit.setPlaceholderText("选择输入视频文件...")
         self.main_window.video_path_edit.setMinimumHeight(24)
-        self.input_browse_btn = QPushButton("浏览")
+        self.input_browse_btn = RippleButton("浏览", "选择视频文件或图像序列文件夹")
         self.input_browse_btn.setIcon(QIcon.fromTheme("document-open"))
         self.input_browse_btn.setMinimumWidth(60)
         self.input_browse_btn.setMaximumWidth(60)
@@ -187,12 +190,11 @@ class SetupTab(BaseTab):
             }
         """)
         
-        model_browse_btn = QPushButton("浏览")
+        model_browse_btn = RippleButton("浏览", "选择预设的SAM2模型文件")
         model_browse_btn.setIcon(QIcon.fromTheme("document-open"))
         model_browse_btn.setMinimumWidth(60)
         model_browse_btn.setMaximumWidth(60)
         model_browse_btn.setMinimumHeight(24)
-        model_browse_btn.setToolTip("选择自定义模型文件")
         model_browse_btn.clicked.connect(self.main_window.browse_model)
         
         model_layout.addWidget(self.main_window.model_combo)
@@ -202,11 +204,11 @@ class SetupTab(BaseTab):
         # 输出视频路径
         output_layout = QHBoxLayout()
         output_layout.setSpacing(8)
-        self.main_window.output_path_edit = QLineEdit()
+        self.main_window.output_path_edit = FocusGlowLineEdit()
         self.main_window.output_path_edit.setReadOnly(True)
         self.main_window.output_path_edit.setPlaceholderText("(默认由系统自动设置)")
         self.main_window.output_path_edit.setMinimumHeight(24)  # 设置输入框高度
-        output_browse_btn = QPushButton("浏览")
+        output_browse_btn = RippleButton("浏览", "设置处理后视频的保存位置")
         output_browse_btn.setIcon(QIcon.fromTheme("document-save"))
         output_browse_btn.setMinimumWidth(60)
         output_browse_btn.setMaximumWidth(60)
@@ -219,11 +221,11 @@ class SetupTab(BaseTab):
         # 掩码保存目录
         mask_layout = QHBoxLayout()
         mask_layout.setSpacing(8)
-        self.main_window.mask_dir_edit = QLineEdit()
+        self.main_window.mask_dir_edit = FocusGlowLineEdit()
         self.main_window.mask_dir_edit.setReadOnly(True)
         self.main_window.mask_dir_edit.setPlaceholderText("(默认由系统自动设置)")
         self.main_window.mask_dir_edit.setMinimumHeight(24)  # 设置输入框高度
-        mask_browse_btn = QPushButton("浏览")
+        mask_browse_btn = RippleButton("浏览", "设置掩码图片的保存目录")
         mask_browse_btn.setIcon(QIcon.fromTheme("folder"))
         mask_browse_btn.setMinimumWidth(60)
         mask_browse_btn.setMaximumWidth(60)
@@ -338,7 +340,7 @@ class SetupTab(BaseTab):
         
         progress_layout.addWidget(self.main_window.log_text)
         
-        self.main_window.progress_bar = QProgressBar()
+        self.main_window.progress_bar = AnimatedProgressBar()
         self.main_window.progress_bar.setRange(0, 100)
         self.main_window.progress_bar.setValue(0)
         self.main_window.progress_bar.setTextVisible(True)
@@ -346,7 +348,7 @@ class SetupTab(BaseTab):
         self.main_window.progress_bar.setStyleSheet("""
             QProgressBar {
                 border: 1px solid #e0e0e0;
-                border-radius: 4px;
+                border-radius: 6px;
                 text-align: center;
                 background-color: #f5f5f5;
                 height: 24px;
@@ -356,7 +358,7 @@ class SetupTab(BaseTab):
             }
             QProgressBar::chunk {
                 background-color: #4CAF50;
-                border-radius: 3px;
+                border-radius: 5px;
             }
         """)
         self.main_window.progress_bar.setVisible(False)
@@ -402,12 +404,12 @@ class SetupTab(BaseTab):
         control_layout.setSpacing(15)
         
         # 添加播放/暂停按钮
-        self.main_window.play_pause_btn = QPushButton("播放")
+        self.main_window.play_pause_btn = RippleButton("播放", "播放或暂停视频预览（快捷键：空格）")
         self.main_window.play_pause_btn.setIcon(QIcon.fromTheme("media-playback-start"))
         self.main_window.play_pause_btn.setMinimumWidth(90)
         self.main_window.play_pause_btn.setMaximumWidth(110)
         self.main_window.play_pause_btn.setEnabled(False)
-        self.main_window.play_pause_btn.setStyleSheet("font-weight: bold;")
+        self.main_window.play_pause_btn.setStyleSheet("QPushButton { font-weight: bold; }")
         self.main_window.play_pause_btn.clicked.connect(self.main_window.toggle_play_pause)
         
         self.main_window.frame_slider = QSlider(Qt.Horizontal)
@@ -471,11 +473,18 @@ class SetupTab(BaseTab):
         self.new_object_radio.setStyleSheet("""
             QRadioButton {
                 font-size: 9pt;
-                padding: 2px;
+                padding: 6px 12px;
+                border-radius: 4px;
             }
             QRadioButton::indicator {
                 width: 14px;
                 height: 14px;
+            }
+            QRadioButton:checked {
+                background-color: #E1F5FE;
+                color: #01579B;
+                border: 2px solid #0D47A1;
+                font-weight: bold;
             }
         """)
         
@@ -484,7 +493,14 @@ class SetupTab(BaseTab):
         self.refine_object_radio.setStyleSheet("""
             QRadioButton {
                 font-size: 9pt;
-                padding: 2px;
+                padding: 6px 12px;
+                border-radius: 4px;
+            }
+            QRadioButton:checked {
+                background-color: #E1F5FE;
+                color: #01579B;
+                border: 2px solid #0D47A1;
+                font-weight: bold;
             }
         """)
         
@@ -554,7 +570,14 @@ class SetupTab(BaseTab):
         self.box_mode_radio.setStyleSheet("""
             QRadioButton {
                 font-size: 9pt;
-                padding: 2px;
+                padding: 6px 12px;
+                border-radius: 4px;
+            }
+            QRadioButton:checked {
+                background-color: #E1F5FE;
+                color: #01579B;
+                border: 2px solid #0D47A1;
+                font-weight: bold;
             }
         """)
         
@@ -563,7 +586,14 @@ class SetupTab(BaseTab):
         self.point_mode_radio.setStyleSheet("""
             QRadioButton {
                 font-size: 9pt;
-                padding: 2px;
+                padding: 6px 12px;
+                border-radius: 4px;
+            }
+            QRadioButton:checked {
+                background-color: #E1F5FE;
+                color: #01579B;
+                border: 2px solid #0D47A1;
+                font-weight: bold;
             }
         """)
         

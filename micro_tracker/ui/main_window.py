@@ -16,7 +16,6 @@ from micro_tracker.config.style import COMPLETE_STYLE
 from micro_tracker.ui.setup_tab import SetupTab
 from micro_tracker.ui.result_preview_tab import ResultPreviewTab
 from micro_tracker.ui.filter_tab import FilterTab
-from micro_tracker.ui.guide_tab import GuideTab
 from micro_tracker.threads.video_processing_threads import VideoThread, ProcessingThread, FilterMaskThread, FilterVideoThread
 from micro_tracker.controllers.processing_controller import ProcessingController
 from micro_tracker.controllers.filter_controller import FilterController
@@ -27,7 +26,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Micro Tracker | 显微视频目标分割和追踪工具")
-        self.setMinimumSize(1200, 900)  # 调整最小窗口大小
+        self.setMinimumSize(1200, 920)  # 调整最小窗口大小
         self.setStyleSheet(COMPLETE_STYLE)  # 应用预组合的完整样式，避免运行时叠加导致的解析问题
         
         # 添加应用图标
@@ -92,13 +91,11 @@ class MainWindow(QMainWindow):
         self.setup_tab = SetupTab(self)
         self.result_tab = ResultPreviewTab(self)
         self.filter_tab = FilterTab(self)
-        self.guide_tab = GuideTab(self)
         
         # 添加标签页
         self.tab_widget.addTab(self.setup_tab, "分割追踪")
         self.tab_widget.addTab(self.result_tab, "结果预览")
         self.tab_widget.addTab(self.filter_tab, "筛选过滤")
-        self.tab_widget.addTab(self.guide_tab, "使用指南")
     
     def get_preview_manager(self):
         """
@@ -603,20 +600,24 @@ class MainWindow(QMainWindow):
         # 如果条件满足，更改按钮样式为突出显示
         if video_ok and model_ok:
             self.setup_tab.start_btn.setStyleSheet("""
-                font-weight: bold; 
-                font-size: 14px; 
-                padding: 12px;
-                background-color: #4CAF50;
-                border-radius: 6px;
+                QPushButton {
+                    font-weight: bold; 
+                    font-size: 14px; 
+                    padding: 12px;
+                    background-color: #4CAF50;
+                    border-radius: 6px;
+                }
             """)
         else:
             self.setup_tab.start_btn.setStyleSheet("""
-                font-weight: bold; 
-                font-size: 14px; 
-                padding: 12px;
-                background-color: #cccccc;
-                color: #888888;
-                border-radius: 6px;
+                QPushButton {
+                    font-weight: bold; 
+                    font-size: 14px; 
+                    padding: 12px;
+                    background-color: #cccccc;
+                    color: #888888;
+                    border-radius: 6px;
+                }
             """)
     
     def update_video_frame(self, frame):

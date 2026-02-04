@@ -8,6 +8,7 @@ from micro_tracker.ui.base_tab import BaseTab
 from micro_tracker.ui.filter_conditions import FilterConditionsGroup
 from micro_tracker.components.video_widgets import ResultVideoLabel
 from micro_tracker.config.style import TEXTEDIT_LOG_STYLE
+from micro_tracker.components.custom_widgets import RippleButton, FocusGlowLineEdit, AnimatedProgressBar
 
 class FilterTab(BaseTab):
     """筛选过滤标签页类"""
@@ -44,39 +45,46 @@ class FilterTab(BaseTab):
         filter_left_panel.setMaximumWidth(500)  # 设置最大宽度
         filter_left_layout = QVBoxLayout(filter_left_panel)
         filter_left_layout.setContentsMargins(0, 0, 0, 0)
-        filter_left_layout.setSpacing(10)  # 增加组件间的垂直间距
+        filter_left_layout.setSpacing(0)  # 使用addSpacing单独控制间距
         
         # 1. 掩膜图片序列选择组件
         mask_select_group = self.create_mask_selection_group()
         filter_left_layout.addWidget(mask_select_group)
+        filter_left_layout.addSpacing(25)  # 25px间距
         
         # 2. 参数设置组件
         param_setting_group = self.create_parameter_settings_group()
         filter_left_layout.addWidget(param_setting_group)
+        filter_left_layout.addSpacing(25)  # 25px间距
         
         # 3. 筛选条件组件（使用独立组件类）
         filter_conditions_component = FilterConditionsGroup(self.main_window)
         filter_conditions_group = filter_conditions_component.create_group()
         filter_left_layout.addWidget(filter_conditions_group)
+        filter_left_layout.addSpacing(20)  # 20px间距
         
         # 4. 排除指定对象组件
         exclude_group = self.create_exclude_objects_group()
         filter_left_layout.addWidget(exclude_group)
+        filter_left_layout.addSpacing(20)  # 20px间距
         
         # 5. 应用筛选按钮
-        self.main_window.apply_filter_btn = QPushButton("应 用 筛 选")
+        self.main_window.apply_filter_btn = RippleButton("应 用 筛 选", "根据设定的条件筛选追踪对象")
         self.main_window.apply_filter_btn.setEnabled(False)
         self.main_window.apply_filter_btn.clicked.connect(self.main_window.apply_mask_filter)
         self.main_window.apply_filter_btn.setStyleSheet("""
-            font-weight: bold; 
-            font-size: 16px; 
-            padding: 5px;
-            background-color: #4CAF50;
-            border-radius: 6px;
+            QPushButton {
+                font-weight: bold; 
+                font-size: 16px; 
+                padding: 5px;
+                background-color: #4CAF50;
+                border-radius: 6px;
+            }
         """)
         self.main_window.apply_filter_btn.setMinimumHeight(40)
         self.main_window.apply_filter_btn.setIcon(QIcon.fromTheme("view-filter"))
         filter_left_layout.addWidget(self.main_window.apply_filter_btn)
+        filter_left_layout.addSpacing(20)  # 20px间距
         
         # 6. 筛选处理进度区域
         filter_progress_group = self.create_filter_progress_group()
@@ -113,12 +121,12 @@ class FilterTab(BaseTab):
         filter_control_layout.setSpacing(15)
         
         # 播放/暂停按钮
-        self.main_window.filter_play_pause_btn = QPushButton("播放")
+        self.main_window.filter_play_pause_btn = RippleButton("播放", "播放或暂停筛选结果预览（快捷键：空格）")
         self.main_window.filter_play_pause_btn.setIcon(QIcon.fromTheme("media-playback-start"))
         self.main_window.filter_play_pause_btn.setMinimumWidth(90)
         self.main_window.filter_play_pause_btn.setMaximumWidth(110)
         self.main_window.filter_play_pause_btn.setEnabled(False)
-        self.main_window.filter_play_pause_btn.setStyleSheet("font-weight: bold;")
+        self.main_window.filter_play_pause_btn.setStyleSheet("QPushButton { font-weight: bold; }")
         self.main_window.filter_play_pause_btn.clicked.connect(self.main_window.toggle_filter_play_pause)
         
         self.main_window.filter_slider = QSlider(Qt.Horizontal)
@@ -131,12 +139,12 @@ class FilterTab(BaseTab):
         self.main_window.filter_info_label.setStyleSheet("font-weight: bold; color: #455a64;")
         
         # 保存按钮
-        self.main_window.save_filter_btn = QPushButton("输出保存")
+        self.main_window.save_filter_btn = RippleButton("输出保存", "将筛选后的结果保存为新视频")
         self.main_window.save_filter_btn.setIcon(QIcon.fromTheme("document-save"))
         self.main_window.save_filter_btn.setMinimumWidth(100)
         self.main_window.save_filter_btn.setMaximumWidth(110)
         self.main_window.save_filter_btn.setEnabled(False)
-        self.main_window.save_filter_btn.setStyleSheet("background-color: #03A9F4;")
+        self.main_window.save_filter_btn.setStyleSheet("QPushButton { background-color: #03A9F4; }")
         self.main_window.save_filter_btn.clicked.connect(self.main_window.save_filter_results)
         
         filter_control_layout.addWidget(self.main_window.filter_play_pause_btn, 0)  # 不伸展
@@ -188,11 +196,11 @@ class FilterTab(BaseTab):
         # 掩膜文件夹选择
         mask_folder_layout = QHBoxLayout()
         mask_folder_layout.setSpacing(8)
-        self.main_window.filter_mask_dir_edit = QLineEdit()
+        self.main_window.filter_mask_dir_edit = FocusGlowLineEdit()
         self.main_window.filter_mask_dir_edit.setReadOnly(True)
         self.main_window.filter_mask_dir_edit.setPlaceholderText("选择掩膜图片文件夹...")
         self.main_window.filter_mask_dir_edit.setMinimumHeight(24)
-        mask_folder_browse_btn = QPushButton("浏览")
+        mask_folder_browse_btn = RippleButton("浏览", "选择包含掩膜图片的文件夹")
         mask_folder_browse_btn.setIcon(QIcon.fromTheme("folder"))
         mask_folder_browse_btn.setMinimumWidth(60)
         mask_folder_browse_btn.setMaximumWidth(60)
@@ -216,13 +224,13 @@ class FilterTab(BaseTab):
         param_setting_layout.setFormAlignment(Qt.AlignLeft | Qt.AlignVCenter)
         
         # 帧率设置
-        self.main_window.fps_input = QLineEdit("1.00000")
+        self.main_window.fps_input = FocusGlowLineEdit("1.00000")
         self.main_window.fps_input.setValidator(QRegExpValidator(QRegExp(r'[0-9]+(\.[0-9]{0,5})?')))
         self.main_window.fps_input.setMinimumHeight(24)
         param_setting_layout.addRow("帧率 (FPS):", self.main_window.fps_input)
         
         # 像素比例系数
-        self.main_window.um_per_pixel_input = QLineEdit("1.00000")
+        self.main_window.um_per_pixel_input = FocusGlowLineEdit("1.00000")
         self.main_window.um_per_pixel_input.setValidator(QRegExpValidator(QRegExp(r'[0-9]+(\.[0-9]{0,5})?')))
         self.main_window.um_per_pixel_input.setMinimumHeight(24)
         param_setting_layout.addRow("比例系数 (" + "<span style='font-family: \"Times New Roman\", Arial, sans-serif;'>μm</span>" + "/pixel):", self.main_window.um_per_pixel_input)
@@ -243,7 +251,7 @@ class FilterTab(BaseTab):
         exclude_layout.addWidget(exclude_label)
         
         # 创建输入框并添加到布局
-        self.main_window.exclude_ids_input = QLineEdit()
+        self.main_window.exclude_ids_input = FocusGlowLineEdit()
         self.main_window.exclude_ids_input.setPlaceholderText("输入要排除的对象ID，用逗号分隔，如: 1,2,3")
         self.main_window.exclude_ids_input.setMinimumHeight(24)
         exclude_layout.addWidget(self.main_window.exclude_ids_input)
@@ -269,7 +277,7 @@ class FilterTab(BaseTab):
         filter_progress_layout.addWidget(self.main_window.filter_log_text, 1)  # 添加伸缩因子1
         
         # 筛选进度条（使用和主界面相同的进度条样式）
-        self.main_window.filter_progress_bar = QProgressBar()
+        self.main_window.filter_progress_bar = AnimatedProgressBar()
         self.main_window.filter_progress_bar.setRange(0, 100)
         self.main_window.filter_progress_bar.setValue(0)
         self.main_window.filter_progress_bar.setTextVisible(True)
@@ -277,7 +285,7 @@ class FilterTab(BaseTab):
         self.main_window.filter_progress_bar.setStyleSheet("""
             QProgressBar {
                 border: 1px solid #e0e0e0;
-                border-radius: 4px;
+                border-radius: 6px;
                 text-align: center;
                 background-color: #f5f5f5;
                 height: 24px;
@@ -287,7 +295,7 @@ class FilterTab(BaseTab):
             }
             QProgressBar::chunk {
                 background-color: #4CAF50;
-                border-radius: 3px;
+                border-radius: 5px;
             }
         """)
         self.main_window.filter_progress_bar.setVisible(False)  # 默认隐藏进度条

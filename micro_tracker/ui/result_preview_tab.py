@@ -8,6 +8,7 @@ import sys
 
 from micro_tracker.ui.base_tab import BaseTab
 from micro_tracker.components.video_widgets import ResultVideoLabel
+from micro_tracker.components.custom_widgets import RippleButton
 
 class ResultPreviewTab(BaseTab):
     """结果预览标签页类"""
@@ -52,12 +53,12 @@ class ResultPreviewTab(BaseTab):
         result_control_layout.setSpacing(15)  # 增加组件间距
         
         # 添加播放/暂停按钮
-        self.main_window.result_play_pause_btn = QPushButton("播放")
+        self.main_window.result_play_pause_btn = RippleButton("播放", "播放或暂停处理结果（快捷键：空格）")
         self.main_window.result_play_pause_btn.setIcon(QIcon.fromTheme("media-playback-start"))
         self.main_window.result_play_pause_btn.setMinimumWidth(90)
         self.main_window.result_play_pause_btn.setMaximumWidth(110)
         self.main_window.result_play_pause_btn.setEnabled(False)
-        self.main_window.result_play_pause_btn.setStyleSheet("font-weight: bold;")
+        self.main_window.result_play_pause_btn.setStyleSheet("QPushButton { font-weight: bold; }")
         self.main_window.result_play_pause_btn.clicked.connect(self.main_window.toggle_result_play_pause)
         
         self.main_window.result_slider = QSlider(Qt.Horizontal)
@@ -69,13 +70,13 @@ class ResultPreviewTab(BaseTab):
         self.main_window.result_info_label.setMinimumWidth(50)  # 增加标签宽度
         self.main_window.result_info_label.setStyleSheet("font-weight: bold; color: #455a64;")  # 添加粗体样式
         
-        open_output_btn = QPushButton("打开输出文件夹")
+        open_output_btn = RippleButton("打开输出文件夹", "在文件管理器中打开输出文件夹")
         open_output_btn.setIcon(QIcon.fromTheme("folder-open"))  # 添加图标
         open_output_btn.clicked.connect(self.main_window.open_output_folder)
         open_output_btn.setMinimumWidth(120)
         open_output_btn.setMaximumWidth(130)
         open_output_btn.setMinimumHeight(36)  # 增加按钮高度
-        open_output_btn.setStyleSheet("background-color: #03A9F4;")  # 使用蓝色突出此按钮
+        open_output_btn.setStyleSheet("QPushButton { background-color: #03A9F4; }")  # 使用蓝色突出此按钮
         
         result_control_layout.addWidget(self.main_window.result_play_pause_btn, 0)  # 不伸展
         result_control_layout.addWidget(self.main_window.result_slider, 1)  # 可伸展

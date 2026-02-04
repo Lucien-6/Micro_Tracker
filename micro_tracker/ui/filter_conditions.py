@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import (QVBoxLayout, QHBoxLayout, QLabel, QCheckBox,
                              QLineEdit, QGroupBox)
 from PyQt5.QtGui import QRegExpValidator
 from PyQt5.QtCore import QRegExp
+from micro_tracker.components.custom_widgets import FocusGlowLineEdit
 
 class FilterConditionsGroup:
     """筛选条件组组件类"""
@@ -61,14 +62,14 @@ class FilterConditionsGroup:
         
         area_range_layout = QHBoxLayout()
         area_range_layout.setSpacing(5)
-        self.main_window.area_min_input = QLineEdit("0")
+        self.main_window.area_min_input = FocusGlowLineEdit("0")
         self.main_window.area_min_input.setValidator(QRegExpValidator(QRegExp(r'[0-9]+(\.[0-9]{0,2})?')))
         self.main_window.area_min_input.setMinimumHeight(24)
         self.main_window.area_min_input.setFixedWidth(80)
         
         area_range_label = QLabel("至")
         
-        self.main_window.area_max_input = QLineEdit("999999")
+        self.main_window.area_max_input = FocusGlowLineEdit("999999")
         self.main_window.area_max_input.setValidator(QRegExpValidator(QRegExp(r'[0-9]+(\.[0-9]{0,2})?')))
         self.main_window.area_max_input.setMinimumHeight(24)
         self.main_window.area_max_input.setFixedWidth(80)
@@ -98,7 +99,7 @@ class FilterConditionsGroup:
         
         area_change_threshold_layout = QHBoxLayout()
         area_change_threshold_layout.setSpacing(5)
-        self.main_window.area_change_input = QLineEdit("0.5")
+        self.main_window.area_change_input = FocusGlowLineEdit("0.5")
         self.main_window.area_change_input.setValidator(QRegExpValidator(QRegExp(r'0(\.[0-9]{0,2})?|1(\.0{0,2})?')))
         self.main_window.area_change_input.setMinimumHeight(24)
         self.main_window.area_change_input.setFixedWidth(80)
@@ -126,14 +127,14 @@ class FilterConditionsGroup:
         
         velocity_range_layout = QHBoxLayout()
         velocity_range_layout.setSpacing(5)
-        self.main_window.velocity_min_input = QLineEdit("0")
+        self.main_window.velocity_min_input = FocusGlowLineEdit("0")
         self.main_window.velocity_min_input.setValidator(QRegExpValidator(QRegExp(r'[0-9]+(\.[0-9]{0,2})?')))
         self.main_window.velocity_min_input.setMinimumHeight(24)
         self.main_window.velocity_min_input.setFixedWidth(80)
         
         velocity_range_label = QLabel("至")
         
-        self.main_window.velocity_max_input = QLineEdit("999999")
+        self.main_window.velocity_max_input = FocusGlowLineEdit("999999")
         self.main_window.velocity_max_input.setValidator(QRegExpValidator(QRegExp(r'[0-9]+(\.[0-9]{0,2})?')))
         self.main_window.velocity_max_input.setMinimumHeight(24)
         self.main_window.velocity_max_input.setFixedWidth(80)
@@ -163,14 +164,14 @@ class FilterConditionsGroup:
         
         displacement_range_layout = QHBoxLayout()
         displacement_range_layout.setSpacing(5)
-        self.main_window.displacement_min_input = QLineEdit("0")
+        self.main_window.displacement_min_input = FocusGlowLineEdit("0")
         self.main_window.displacement_min_input.setValidator(QRegExpValidator(QRegExp(r'[0-9]+(\.[0-9]{0,2})?')))
         self.main_window.displacement_min_input.setMinimumHeight(24)
         self.main_window.displacement_min_input.setFixedWidth(80)
         
         displacement_range_label = QLabel("至")
         
-        self.main_window.displacement_max_input = QLineEdit("999999")
+        self.main_window.displacement_max_input = FocusGlowLineEdit("999999")
         self.main_window.displacement_max_input.setValidator(QRegExpValidator(QRegExp(r'[0-9]+(\.[0-9]{0,2})?')))
         self.main_window.displacement_max_input.setMinimumHeight(24)
         self.main_window.displacement_max_input.setFixedWidth(80)
@@ -215,7 +216,7 @@ class FilterConditionsGroup:
         
         min_distance_threshold_layout = QHBoxLayout()
         min_distance_threshold_layout.setSpacing(5)
-        self.main_window.min_distance_input = QLineEdit("10")
+        self.main_window.min_distance_input = FocusGlowLineEdit("10")
         self.main_window.min_distance_input.setValidator(QRegExpValidator(QRegExp(r'[0-9]+(\.[0-9]{0,2})?')))
         self.main_window.min_distance_input.setMinimumHeight(24)
         self.main_window.min_distance_input.setFixedWidth(80)

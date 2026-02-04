@@ -1,3 +1,9 @@
+# GUI优化 - 学术深蓝配色方案
+PRIMARY_COLOR = "#0D47A1"      # 牛津蓝 - 主色调
+SECONDARY_COLOR = "#1565C0"    # 皇家蓝 - hover状态
+LIGHT_COLOR = "#E1F5FE"        # 冰蓝 - 选中背景
+DARK_COLOR = "#01579B"         # 午夜蓝 - pressed状态和深色文字
+
 STYLE = """
 QMainWindow {
     background-color: #f8f9fa;
@@ -24,7 +30,7 @@ QTabBar::tab {
 QTabBar::tab:selected {
     background-color: #ffffff;
     border-bottom-color: #ffffff;
-    color: #2979ff;
+    color: #0D47A1;
     font-weight: bold;
 }
 
@@ -51,7 +57,7 @@ QGroupBox::title {
 }
 
 QPushButton {
-    background-color: #2979ff;
+    background-color: #0D47A1;
     color: white;
     border: none;
     padding: 3px 10px;
@@ -62,11 +68,11 @@ QPushButton {
 }
 
 QPushButton:hover {
-    background-color: #448aff;
+    background-color: #1565C0;
 }
 
 QPushButton:pressed {
-    background-color: #2962ff;
+    background-color: #01579B;
 }
 
 QPushButton:disabled {
@@ -84,7 +90,7 @@ QLineEdit {
 }
 
 QLineEdit:focus {
-    border: 1px solid #2979ff;
+    border: 1px solid #0D47A1;
 }
 
 QLabel {
@@ -100,18 +106,18 @@ QCheckBox {
 QCheckBox::indicator {
     width: 18px;
     height: 18px;
-    border-radius: 3px;
+    border-radius: 4px;
     border: 1px solid #bdbdbd;
 }
 
 QCheckBox::indicator:checked {
-    background-color: #2979ff;
-    border: 1px solid #2979ff;
+    background-color: #0D47A1;
+    border: 1px solid #0D47A1;
     image: url(icons/check.png);
 }
 
 QCheckBox::indicator:hover {
-    border: 1px solid #2979ff;
+    border: 1px solid #0D47A1;
 }
 
 QSlider::groove:horizontal {
@@ -123,7 +129,7 @@ QSlider::groove:horizontal {
 }
 
 QSlider::handle:horizontal {
-    background: #2979ff;
+    background: #0D47A1;
     border: none;
     width: 18px;
     height: 18px;
@@ -132,12 +138,12 @@ QSlider::handle:horizontal {
 }
 
 QSlider::handle:horizontal:hover {
-    background: #448aff;
+    background: #1565C0;
 }
 
 QProgressBar {
     border: 1px solid #e0e0e0;
-    border-radius: 4px;
+    border-radius: 6px;
     text-align: center;
     background-color: #f5f5f5;
     height: 20px;
@@ -147,7 +153,7 @@ QProgressBar {
 
 QProgressBar::chunk {
     background-color: #4caf50;
-    border-radius: 3px;
+    border-radius: 5px;
 }
 
 QComboBox {
@@ -251,13 +257,23 @@ QSplitter::handle:horizontal {
 QSplitter::handle:vertical {
     height: 2px;
 }
+
+QRadioButton {
+    spacing: 8px;
+    color: #424242;
+}
+
+QRadioButton::indicator {
+    width: 16px;
+    height: 16px;
+}
 """
 
 # 将QTextEdit日志样式直接集成到全局样式中，避免单独应用导致的解析问题
 TEXTEDIT_ENHANCED_STYLE = """
 QTextEdit {
     border: 1px solid #e0e0e0;
-    border-radius: 4px;
+    border-radius: 6px;
     background-color: white;
     selection-background-color: #bbdefb;
     padding: 4px;

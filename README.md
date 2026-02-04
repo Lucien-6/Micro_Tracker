@@ -15,7 +15,7 @@
 </div>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-2.5.1-brightgreen.svg" alt="Version 2.5.1">
+  <img src="https://img.shields.io/badge/Version-2.7.0-brightgreen.svg" alt="Version 2.7.0">
   <img src="https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white" alt="Python 3.10+">
   <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License: Apache 2.0">
   <img src="https://img.shields.io/badge/PyQt5-5.15%2B-green.svg" alt="PyQt5 5.15+">
@@ -85,6 +85,8 @@ Micro_Tracker is a powerful microscopy video analysis tool based on the SAM2 mod
 
 ## ✨ Features
 
+- **🎨 Professional Academic UI**: Modern interface with deep blue academic color scheme, Material Design ripple effects, focus glow for inputs, and animated progress bars for enhanced user experience.
+- **📖 Professional HTML User Guide**: Comprehensive user guide with sidebar navigation, dark mode support, smooth scrolling, and modern documentation layout accessible from within the application.
 - **🎯 Object Segmentation and Tracking**: Utilize SAM2 (Segment Anything Model 2) and SAMRUAI for high-precision object segmentation and tracking. Fully compliant with SAM2 official API best practices.
 - **📂 Flexible Input Sources**: Support both video files and image sequences as input:
   - **Video files**: Common formats like MP4, AVI, MOV
@@ -433,6 +435,8 @@ Micro_Tracker 是一个功能强大的基于 SAM2 模型的显微镜视频分析
 
 ## ✨ 功能特点
 
+- **🎨 专业学术风格界面**：现代化界面设计，采用学术深蓝配色方案，Material Design 波纹效果，输入框焦点发光，进度条波浪动画，提升用户体验。
+- **📖 专业 HTML 使用指南**：完整的使用指南采用 HTML 格式，包含侧边栏导航、暗色模式支持、平滑滚动和现代化文档布局，可从应用程序内直接访问。
 - **🎯 目标分割跟踪**：利用 SAM2（Segment Anything Model 2）和 SAMRUAI 实现高精度的目标分割和跟踪。完全符合 SAM2 官方 API 最佳实践。
 - **📂 灵活的输入源**：同时支持视频文件和图像序列作为输入：
   - **视频文件**：支持 MP4、AVI、MOV 等常见格式
@@ -653,6 +657,8 @@ Micro_Tracker/
 │       ├── checkpoints/     # 模型权重文件目录
 │       ├── sam2/            # SAM2源代码
 │       └── ...              # 其他SAM2相关文件
+├── docs/                    # 文档目录
+│   └── user_guide.html      # 专业使用指南（HTML格式）
 ├── utils/                   # 工具脚本
 ├── scripts/                 # 处理脚本
 ├── assets/                  # 资源文件

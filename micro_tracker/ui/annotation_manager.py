@@ -16,6 +16,8 @@ from PyQt5.QtGui import QColor
 from pathlib import Path
 import json
 import os
+import webbrowser
+from micro_tracker.components.custom_widgets import RippleButton
 
 
 def validate_annotation_data(import_data, video_width=None, video_height=None):
@@ -265,7 +267,7 @@ class AnnotationManagerWidget(QWidget):
                 gridline-color: #e0e0e0;
             }
             QTableWidget::item:selected {
-                background-color: #E3F2FD;
+                background-color: #E1F5FE;
                 color: #000;
             }
         """)
@@ -278,29 +280,26 @@ class AnnotationManagerWidget(QWidget):
         button_layout.setSpacing(30)
         
         # 导入标注按钮
-        self.import_btn = QPushButton("导入标注")
-        self.import_btn.setToolTip("从JSON文件导入标注")
+        self.import_btn = RippleButton("导入标注", "从JSON文件导入标注数据")
         self.import_btn.setMinimumWidth(80)
         self.import_btn.setMinimumHeight(35)
-        self.import_btn.setStyleSheet("margin-top: 15px;")
+        self.import_btn.setStyleSheet("QPushButton { margin-top: 15px; }")
         self.import_btn.clicked.connect(self.import_annotations)
         button_layout.addWidget(self.import_btn)
         
         # 清空所有按钮
-        self.clear_all_btn = QPushButton("清空所有")
-        self.clear_all_btn.setToolTip("清空所有标注")
+        self.clear_all_btn = RippleButton("清空所有", "清空所有帧的标注（不可撤销）")
         self.clear_all_btn.setMinimumWidth(80)
         self.clear_all_btn.setMinimumHeight(35)
-        self.clear_all_btn.setStyleSheet("background-color: #f44336; color: white;")
+        self.clear_all_btn.setStyleSheet("QPushButton { background-color: #f44336; color: white; }")
         self.clear_all_btn.clicked.connect(self.clear_all_annotations)
         button_layout.addWidget(self.clear_all_btn)
         
-        # 标注说明按钮
-        self.help_btn = QPushButton("标注说明")
-        self.help_btn.setToolTip("查看详细的标注操作说明")
+        # 使用指南按钮
+        self.help_btn = RippleButton("使用指南", "打开完整的使用指南（浏览器）")
         self.help_btn.setMinimumWidth(80)
         self.help_btn.setMinimumHeight(35)
-        self.help_btn.clicked.connect(self.show_help_dialog)
+        self.help_btn.clicked.connect(self.open_user_guide)
         button_layout.addWidget(self.help_btn)
         
         # 添加弹簧，将按钮推到顶部
@@ -410,15 +409,15 @@ class AnnotationManagerWidget(QWidget):
             action_layout.setContentsMargins(2, 2, 2, 2)
             action_layout.setSpacing(3)
             
-            jump_btn = QPushButton("跳转")
+            jump_btn = RippleButton("跳转", f"快速跳转到第{frame_idx}帧")
             jump_btn.setMaximumWidth(50)
             jump_btn.setMinimumHeight(22)
             jump_btn.clicked.connect(lambda checked, f=frame_idx: self.jump_to_frame(f))
             
-            delete_btn = QPushButton("删除")
+            delete_btn = RippleButton("删除", "删除该帧的所有标注（不可撤销）")
             delete_btn.setMaximumWidth(50)
             delete_btn.setMinimumHeight(22)
-            delete_btn.setStyleSheet("background-color: #ff5252; color: white;")
+            delete_btn.setStyleSheet("QPushButton { background-color: #ff5252; color: white; }")
             delete_btn.clicked.connect(lambda checked, f=frame_idx: self.delete_frame_annotation(f))
             
             action_layout.addWidget(jump_btn)
@@ -699,259 +698,36 @@ class AnnotationManagerWidget(QWidget):
             self.main_window.log_message(f"导入失败: {str(e)}", "error")
             QMessageBox.critical(self, "导入失败", friendly_msg)
     
-    def show_help_dialog(self):
-        """显示标注说明弹窗（带滚动条的增强版）"""
-        # 创建自定义对话框
-        dialog = QDialog(self)
-        dialog.setWindowTitle("📖 标注操作详细说明")
-        dialog.setMinimumSize(700, 600)  # 设置合适的对话框大小
+    def open_user_guide(self):
+        """打开使用指南HTML文件（在默认浏览器中）"""
+        # 获取项目根目录路径
+        project_root = Path(__file__).parent.parent.parent
         
-        # 创建布局
-        layout = QVBoxLayout(dialog)
-        layout.setContentsMargins(10, 10, 10, 10)
+        # 构建HTML文件的绝对路径
+        html_path = project_root / "docs" / "user_guide.html"
         
-        # 创建文本浏览器（支持滚动和富文本）
-        text_browser = QTextBrowser()
-        text_browser.setOpenExternalLinks(False)
-        text_browser.setStyleSheet("""
-            QTextBrowser {
-                background-color: #ffffff;
-                border: 1px solid #cccccc;
-                border-radius: 4px;
-                padding: 10px;
-                font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
-                font-size: 10pt;
-            }
-        """)
-        
-        # 帮助文本（使用HTML格式以获得更好的排版）
-        help_html = """
-        <style>
-            h2 { color: #2196F3; border-bottom: 2px solid #2196F3; padding-bottom: 5px; margin-top: 15px; }
-            h3 { color: #4CAF50; margin-top: 12px; margin-bottom: 5px; }
-            ul { margin-left: 20px; }
-            li { margin-bottom: 4px; }
-            .emoji { font-size: 14pt; }
-            .note { background-color: #FFF9C4; padding: 8px; border-left: 4px solid #FFC107; margin: 8px 0; }
-            .warning { background-color: #FFEBEE; padding: 8px; border-left: 4px solid #F44336; margin: 8px 0; }
-            .success { background-color: #E8F5E9; padding: 8px; border-left: 4px solid #4CAF50; margin: 8px 0; }
-            kbd { background-color: #f4f4f4; border: 1px solid #ccc; border-radius: 3px; padding: 2px 6px; font-family: monospace; }
-        </style>
-        
-        <h2><span class="emoji">📌</span> 一、标注模式</h2>
-        
-        <h3><span class="emoji">🆕</span> 新对象模式（New Object）</h3>
-        <ul>
-            <li>用于首次标注一个新的对象</li>
-            <li>系统自动分配唯一ID和固定颜色</li>
-            <li>通常在第0帧标注对象首次出现的位置</li>
-        </ul>
-        
-        <h3><span class="emoji">✏️</span> 修正对象模式（Refine Object）</h3>
-        <ul>
-            <li>用于在关键帧补充已有对象的标注</li>
-            <li>需要先从下拉框选择要修正的对象ID</li>
-            <li>正在修正的对象会以金色虚线高亮显示</li>
-            <li><b>⚠️ 重要：</b>修正模式下<b style="color: #F44336;">只能使用点击提示</b>，不能绘制边界框
-                <ul>
-                    <li>符合SAM2官方最佳实践规范</li>
-                    <li>切换到修正模式时会自动切换到点击模式</li>
-                    <li>边界框选项会被禁用</li>
-                </ul>
-            </li>
-            <li><b>适用场景：</b>
-                <ul>
-                    <li>对象形状显著变化</li>
-                    <li>对象被遮挡前后</li>
-                    <li>对象运动方向改变</li>
-                </ul>
-            </li>
-        </ul>
-        
-        <h2><span class="emoji">🎯</span> 二、提示类型</h2>
-        
-        <h3><span class="emoji">▢</span> 边界框模式（Box）</h3>
-        <ul>
-            <li>按住鼠标左键拖动绘制矩形框</li>
-            <li>框选对象的完整轮廓</li>
-            <li>松开鼠标后自动生成实时预览</li>
-        </ul>
-        
-        <h3><span class="emoji">👆</span> 点击模式（Point）</h3>
-        <ul>
-            <li>左键点击：添加正向区域（<span style="color: #4CAF50; font-weight: bold;">➕绿色标记</span>）</li>
-            <li>右键点击：添加负向区域（<span style="color: #F44336; font-weight: bold;">➖红色标记</span>）</li>
-            <li>可以添加多个点击来精细化分割</li>
-            <li>点击后即时生成预览，可立即验证效果</li>
-            <li>按 <kbd>A</kbd> 键保存临时点击</li>
-            <li>按 <kbd>Ctrl+C</kbd> 清除临时点击</li>
-        </ul>
-        
-        <h2><span class="emoji">📂</span> 三、输入源选择</h2>
-        
-        <h3><span class="emoji">🎬</span> 视频文件</h3>
-        <ul>
-            <li>支持格式：MP4、AVI、MOV等常见视频格式</li>
-            <li>选择"视频文件"单选按钮后点击"浏览"</li>
-        </ul>
-        
-        <h3><span class="emoji">🖼️</span> 图像序列 <span style="color: #FF5722; font-size: 9pt;">（v2.1.0 新增）</span></h3>
-        <ul>
-            <li>支持格式：JPEG、PNG、TIFF、BMP</li>
-            <li>选择"图像序列"单选按钮后点击"浏览"选择文件夹</li>
-            <li><b>智能排序：</b>支持多种命名格式
-                <ul>
-                    <li>纯数字：<code>00001.jpg</code>, <code>00002.jpg</code>...</li>
-                    <li>前缀+数字：<code>frame_001.png</code>, <code>img_001.tif</code>...</li>
-                </ul>
-            </li>
-            <li><b>自动转换：</b>非JPEG图像自动转换以兼容SAM2</li>
-            <li><b>默认帧率：</b>10 FPS（可配置）</li>
-        </ul>
-        <div class="note">💡 适用场景：显微镜逐帧采集、时间序列拍摄、已提取的视频帧</div>
-        
-        <h2><span class="emoji">🎬</span> 四、视频浏览</h2>
-        <ul>
-            <li><b>滑块：</b>拖动滑块快速跳转到任意帧</li>
-            <li><b>快捷键：</b>
-                <ul>
-                    <li><kbd>空格</kbd> - 播放/暂停</li>
-                    <li><kbd>F</kbd> - 下一帧</li>
-                    <li><kbd>D</kbd> - 上一帧</li>
-                </ul>
-            </li>
-        </ul>
-        <div class="note">💡 提示：使用快捷键可以更精确地定位关键帧</div>
-        
-        <h2><span class="emoji">⌨️</span> 五、键盘快捷键</h2>
-        
-        <h3>基本操作</h3>
-        <ul>
-            <li><kbd>空格</kbd> - 播放/暂停</li>
-            <li><kbd>F</kbd> - 下一帧</li>
-            <li><kbd>D</kbd> - 上一帧</li>
-            <li><kbd>Ctrl+Q</kbd> - 切换提示类型（边界框/点击模式）</li>
-            <li><kbd>Ctrl+H</kbd> - 隐藏/显示提示标记（便于绘制新提示）</li>
-        </ul>
-        
-        <h3>标注编辑</h3>
-        <ul>
-            <li><kbd>Del</kbd> - 删除选中的边界框</li>
-            <li><kbd>A</kbd> - 应用并保存临时点击</li>
-            <li><kbd>Ctrl+C</kbd> - 清除临时点击</li>
-            <li><kbd>Ctrl+S</kbd> - 保存点击并切换到下一帧 <span style="color: #FF5722;">（新增）</span></li>
-        </ul>
-        
-        <h3>标注管理</h3>
-        <ul>
-            <li>使用表格中的"跳转"按钮快速切换到标注帧</li>
-            <li>使用"删除"按钮移除不需要的标注</li>
-        </ul>
-        
-        <h2><span class="emoji">👁️</span> 六、实时预览功能</h2>
-        <div class="success">
-            <b>✨ 添加标注后自动生成mask预览</b>
-            <ul>
-                <li>可以立即验证标注质量</li>
-                <li>半透明彩色蒙版显示分割结果</li>
-                <li>预览使用对象的固定颜色</li>
-                <li>如果预览效果不理想，可以添加更多点击来优化</li>
-            </ul>
-        </div>
-        
-        <h2><span class="emoji">📋</span> 七、标注管理</h2>
-        
-        <h3>查看与管理</h3>
-        <ul>
-            <li><b>跳转：</b>快速切换到指定标注帧（表格中的按钮）</li>
-            <li><b>删除：</b>移除单帧的所有标注（表格中的按钮）</li>
-            <li><b>清空所有：</b>移除所有帧的标注（右侧按钮，需确认）</li>
-        </ul>
-        
-        <h3>💾 标注保存与导入</h3>
-        <ul>
-            <li><b>自动保存：</b>点击"开始处理"时自动保存
-                <ul>
-                    <li>标注文件自动保存到Results文件夹</li>
-                    <li>文件名格式：<code>{输入名}_annotations.json</code></li>
-                    <li>如果文件已存在，会询问是否覆盖</li>
-                    <li>包含边界框、点击、对象注册等完整信息</li>
-                </ul>
-            </li>
-            <li><b>导入标注：</b>从JSON文件恢复标注（右侧按钮）
-                <ul>
-                    <li>支持新旧格式自动识别</li>
-                    <li>导入前会进行数据验证</li>
-                    <li>可用于恢复之前的标注或在不同会话间迁移</li>
-                </ul>
-            </li>
-        </ul>
-        
-        <div class="note">
-            <b>💡 提示</b><br>
-            标注列表会在标注操作（添加/删除对象、保存点击）后自动更新，无需手动刷新
-        </div>
-        
-        <h2><span class="emoji">✅</span> 八、标注最佳实践</h2>
-        
-        <h3>建议</h3>
-        <ol>
-            <li>在第0帧标注所有对象的初始位置</li>
-            <li>每个对象标注5-10个关键帧即可，不宜过多</li>
-            <li>在以下情况添加修正标注：
-                <ul>
-                    <li>对象形状显著变化</li>
-                    <li>对象被遮挡前后</li>
-                    <li>对象运动方向改变</li>
-                    <li>SAM2追踪出现明显偏差</li>
-                </ul>
-            </li>
-            <li>使用实时预览验证标注质量</li>
-            <li>标注会在开始处理时自动保存，无需手动操作</li>
-        </ol>
-        
-        <div class="warning">
-            <b>⚠️ 注意事项</b>
-            <ul>
-                <li>切换帧前记得保存临时点击（按<kbd>A</kbd>键）</li>
-                <li>未保存的临时点击切换帧后会丢失（有警告提示）</li>
-                <li>标注信息在点击"开始处理"时自动保存</li>
-                <li>导入标注会覆盖当前所有标注</li>
-                <li>删除操作不可撤销，请谨慎操作</li>
-            </ul>
-        </div>
-        
-        <h2><span class="emoji">❓</span> 九、常见问题</h2>
-        
-        <p><b>Q: 标注会自动保存吗？</b><br>
-        A: 是的，点击"开始处理"时会自动保存到Results文件夹，无需手动导出</p>
-        
-        <p><b>Q: 临时点击无法保存？</b><br>
-        A: 检查是否在正确的帧上（临时点击只能在添加它的帧上保存）</p>
-        
-        <p><b>Q: 预览效果不理想？</b><br>
-        A: 尝试添加更多点击（正向或负向）来精细化分割</p>
-        
-        <p><b>Q: 如何修改已有标注？</b><br>
-        A: 切换到对应帧，删除原标注，重新绘制</p>
-        
-        <p><b>Q: 导入失败？</b><br>
-        A: 检查JSON文件格式是否正确，查看错误提示信息</p>
-        
-        <div class="note" style="margin-top: 20px;">
-            <b>💡 小提示</b><br>
-            将鼠标悬停在按钮上可查看功能说明
-        </div>
-        """
-        
-        text_browser.setHtml(help_html)
-        layout.addWidget(text_browser)
-        
-        # 添加关闭按钮
-        button_box = QDialogButtonBox(QDialogButtonBox.Ok)
-        button_box.accepted.connect(dialog.accept)
-        layout.addWidget(button_box)
-        
-        # 显示对话框
-        dialog.exec_()
+        # 检查文件是否存在
+        if html_path.exists():
+            # 转换为绝对路径字符串并使用file://协议
+            file_url = html_path.absolute().as_uri()
+            
+            # 在默认浏览器中打开
+            try:
+                webbrowser.open(file_url)
+                self.main_window.log_message(f"已在浏览器中打开使用指南: {html_path}", "info")
+            except Exception as e:
+                QMessageBox.critical(
+                    self,
+                    "打开失败",
+                    f"无法在浏览器中打开使用指南：\n\n{str(e)}"
+                )
+                self.main_window.log_message(f"打开使用指南失败: {str(e)}", "error")
+        else:
+            # 文件不存在，显示错误对话框
+            QMessageBox.critical(
+                self,
+                "文件未找到",
+                f"使用指南文件不存在：\n\n{html_path}\n\n请确保文件位于正确的位置。"
+            )
+            self.main_window.log_message(f"使用指南文件未找到: {html_path}", "error")
 

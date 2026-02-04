@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Micro Tracker 使用指南 v2.7.0</title>
+    <style>
+        /* ===== 全局样式重置和基础设置 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+            font-size: 15px;
+            line-height: 1.8;
+            color: #2c3e50;
+            background-color: #ffffff;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* ===== 明亮模式颜色变量 ===== */
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #2c3e50;
+            --primary-color: #1976D2;
+            --secondary-color: #2196F3;
+            --border-color: #e0e0e0;
+            --sidebar-bg: #f8f9fa;
+            --link-color: #1976D2;
+            --code-bg: #f5f5f5;
+            --table-header-bg: #E1F5FE;
+            --table-stripe-bg: #f9f9f9;
+            --note-bg: #E1F5FE;
+            --note-border: #0D47A1;
+            --warning-bg: #FFF3E0;
+            --warning-border: #FF9800;
+            --success-bg: #E8F5E9;
+            --success-border: #4CAF50;
+            --kbd-bg: #f4f4f4;
+            --kbd-border: #ccc;
+            --sidebar-hover: #e9ecef;
+            --sidebar-active-bg: #e3f2fd;
+            --sidebar-active-border: #1976D2;
+        }
+
+        /* ===== 暗色模式颜色变量 ===== */
+        body.dark-mode {
+            --bg-color: #1a1d29;
+            --text-color: #e8e8e8;
+            --primary-color: #4A90E2;
+            --secondary-color: #64B5F6;
+            --border-color: #2d3142;
+            --sidebar-bg: #22252f;
+            --link-color: #64B5F6;
+            --code-bg: #2d3142;
+            --table-header-bg: #2d3d4a;
+            --table-stripe-bg: #1f2229;
+            --note-bg: #1e2a3a;
+            --note-border: #4A90E2;
+            --warning-bg: #3a2f1e;
+            --warning-border: #FF9800;
+            --success-bg: #1e2f24;
+            --success-border: #4CAF50;
+            --kbd-bg: #3a3d4a;
+            --kbd-border: #555;
+            --sidebar-hover: #2a2d38;
+            --sidebar-active-bg: #2a3a4a;
+            --sidebar-active-border: #4A90E2;
+        }
+
+        body.dark-mode {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        /* ===== 顶部横幅 ===== */
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 20px 40px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .header .version {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-left: 15px;
+        }
+
+        /* ===== 暗色模式切换按钮 ===== */
+        .theme-toggle {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 24px;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.3s, background 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* ===== 主容器 ===== */
+        .container {
+            display: flex;
+            min-height: calc(100vh - 80px);
+        }
+
+        /* ===== 侧边栏导航 ===== */
+        .sidebar {
+            width: 280px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            padding: 20px;
+            position: fixed;
+            height: calc(100vh - 80px);
+            overflow-y: auto;
+            transition: background-color 0.3s;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        .sidebar nav ul {
+            list-style: none;
+        }
+
+        .sidebar nav > ul > li {
+            margin-bottom: 8px;
+        }
+
+        .sidebar nav a {
+            display: block;
+            color: var(--text-color);
+            text-decoration: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: background-color 0.2s, color 0.2s;
+            font-size: 14px;
+        }
+
+        .sidebar nav a:hover {
+            background-color: var(--sidebar-hover);
+            color: var(--primary-color);
+        }
+
+        .sidebar nav a.active {
+            background-color: var(--sidebar-active-bg);
+            color: var(--primary-color);
+            border-left: 3px solid var(--sidebar-active-border);
+            font-weight: bold;
+        }
+
+        .sidebar .nav-section {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .sidebar .nav-subsection {
+            padding-left: 15px;
+            display: none;
+        }
+
+        .sidebar .nav-subsection.expanded {
+            display: block;
+        }
+
+        .sidebar .section-toggle {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+
+        .sidebar .section-toggle::before {
+            content: '▶';
+            position: absolute;
+            left: -15px;
+            font-size: 10px;
+            transition: transform 0.3s;
+        }
+
+        .sidebar .section-toggle.expanded::before {
+            transform: rotate(90deg);
+        }
+
+        /* ===== 内容区域 ===== */
+        .content {
+            margin-left: 320px;
+            padding: 40px;
+            max-width: 900px;
+            flex-grow: 1;
+        }
+
+        /* ===== 标题样式 ===== */
+        h2 {
+            color: var(--primary-color);
+            font-size: 26px;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            color: var(--secondary-color);
+            font-size: 22px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+        }
+
+        h4 {
+            color: #455A64;
+            font-size: 18px;
+            margin-top: 24px;
+            margin-bottom: 12px;
+        }
+
+        body.dark-mode h4 {
+            color: #90A4AE;
+        }
+
+        /* ===== 段落和列表 ===== */
+        p {
+            margin: 12px 0;
+            text-align: justify;
+        }
+
+        ul, ol {
+            margin: 12px 0;
+            padding-left: 30px;
+        }
+
+        li {
+            margin: 6px 0;
+        }
+
+        b, strong {
+            color: #37474F;
+        }
+
+        body.dark-mode b,
+        body.dark-mode strong {
+            color: #CFD8DC;
+        }
+
+        /* ===== 表格样式 ===== */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            border: 1px solid var(--border-color);
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: var(--table-header-bg);
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) {
+            background-color: var(--table-stripe-bg);
+        }
+
+        /* ===== 信息框样式 ===== */
+        .note, .warning, .success {
+            padding: 16px;
+            margin: 16px 0;
+            border-radius: 6px;
+            border-left: 4px solid;
+        }
+
+        .note {
+            background-color: var(--note-bg);
+            border-left-color: var(--note-border);
+        }
+
+        .warning {
+            background-color: var(--warning-bg);
+            border-left-color: var(--warning-border);
+        }
+
+        .success {
+            background-color: var(--success-bg);
+            border-left-color: var(--success-border);
+        }
+
+        /* ===== 代码和键盘快捷键 ===== */
+        code {
+            background-color: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+        }
+
+        kbd {
+            background-color: var(--kbd-bg);
+            border: 1px solid var(--kbd-border);
+            border-radius: 4px;
+            padding: 3px 8px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        /* ===== 链接 ===== */
+        a {
+            color: var(--link-color);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        /* ===== 响应式设计 ===== */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                position: relative;
+                height: auto;
+            }
+
+            .content {
+                margin-left: 0;
+                padding: 20px;
+            }
+
+            .container {
+                flex-direction: column;
+            }
+        }
+
+        /* ===== 页脚 ===== */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #757575;
+            font-size: 13px;
+            border-top: 1px solid var(--border-color);
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部横幅 -->
+    <div class="header">
+        <div>
+            <h1>Micro Tracker 使用指南 <span class="version">v2.7.0</span></h1>
+        </div>
+        <button class="theme-toggle" id="themeToggle" title="切换暗色模式">🌙</button>
+    </div>
+
+    <!-- 主容器 -->
+    <div class="container">
+        <!-- 侧边栏导航 -->
+        <aside class="sidebar">
+            <nav>
+                <ul>
+                    <li><a href="#section-1" class="nav-section">快速开始</a></li>
+                    <li><a href="#section-2" class="nav-section">文件选择与参数设置</a></li>
+                    <li>
+                        <a href="#section-3" class="nav-section section-toggle">标注教程</a>
+                        <ul class="nav-subsection">
+                            <li><a href="#section-3-1">标注模式详解</a></li>
+                            <li><a href="#section-3-2">提示类型详解</a></li>
+                            <li><a href="#section-3-3">标注操作步骤</a></li>
+                            <li><a href="#section-3-4">标注管理</a></li>
+                            <li><a href="#section-3-5">标注最佳实践</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="#section-4" class="nav-section">视频处理</a></li>
+                    <li><a href="#section-5" class="nav-section">视频预览控制</a></li>
+                    <li><a href="#section-6" class="nav-section">结果预览</a></li>
+                    <li>
+                        <a href="#section-7" class="nav-section section-toggle">筛选过滤功能</a>
+                        <ul class="nav-subsection">
+                            <li><a href="#section-7-1">掩膜图片序列选择</a></li>
+                            <li><a href="#section-7-2">参数设置理解</a></li>
+                            <li><a href="#section-7-3">筛选条件详解</a></li>
+                            <li><a href="#section-7-4">筛选结果理解</a></li>
+                            <li><a href="#section-7-5">可视化元素详解</a></li>
+                            <li><a href="#section-7-6">数据保存与导出</a></li>
+                        </ul>
+                    </li>
+                    <li><a href="#section-8" class="nav-section">键盘快捷键参考</a></li>
+                    <li><a href="#section-9" class="nav-section">后处理工具推荐</a></li>
+                    <li><a href="#section-10" class="nav-section">常见问题与故障排除</a></li>
+                    <li><a href="#section-11" class="nav-section">附录</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- 内容区域 -->
+        <main class="content">
+            <!-- 第1章：快速开始 -->
+            <section id="section-1">
+                <h2>📚 快速开始</h2>
+                
+                <div class="note">
+                    <h4>作者信息</h4>
+                    <p><b>作者：</b>LUCIEN</p>
+                    <p><b>邮箱：</b>lucien-6@qq.com</p>
+                    <p><b>版本：</b>2.7.0</p>
+                    <p><b>发布日期：</b>2026-02-04</p>
+                    <p><b>版权：</b>Copyright © 2026 LUCIEN. 保留所有权利。</p>
+                </div>
+
+                <h3>软件简介</h3>
+                <p>Micro Tracker 是一个基于 SAM2 (Segment Anything Model 2) 的显微视频对象分割和跟踪工具。本工具采用最新的 SAM2 模型，支持多帧智能标注、实时预览和高级数据筛选功能，可以帮助您对显微视频中的多个对象进行高精度自动分割和跟踪，广泛适用于生物医学研究、材料科学、细胞追踪等显微视频分析场景。</p>
+
+                <h3>系统要求</h3>
+                <div class="warning">
+                    <h4>⚠️ 重要提示</h4>
+                    <p>为了获得最佳性能和兼容性，请确保您的系统满足以下要求：</p>
+                    <ul>
+                        <li><b>操作系统：</b>Windows 10/11, Linux, macOS</li>
+                        <li><b>Python版本：</b>3.10+</li>
+                        <li><b>PyTorch版本：</b>1.9.0 或更高版本 (CUDA版本视GPU而定)</li>
+                        <li><b>GPU加速：</b>如果使用GPU加速，请确保已正确安装NVIDIA驱动和CUDA工具包</li>
+                        <li><b>实时预览：</b>实时预览功能需要GPU支持，如果初始化失败会自动降级为仅显示边界框</li>
+                    </ul>
+                    <p>如果遇到任何问题，请首先检查日志输出，并确保所有依赖项已正确安装。您可以通过邮件联系作者获取技术支持。</p>
+                </div>
+
+                <h3>基本使用流程</h3>
+                <ol>
+                    <li><b>选择输入源：</b>点击"浏览"按钮选择要处理的视频文件或图像序列文件夹。支持常见视频格式（MP4、AVI、MOV、MKV）和图像格式（JPG、PNG、TIFF、BMP）。</li>
+                    <li><b>确认模型路径：</b>确保 SAM2 模型路径正确，默认为 <code>models/sam2/checkpoints/sam2.1_hiera_tiny.pt</code>。如需使用其他模型，可从下拉框选择或点击"浏览"按钮选择模型文件。</li>
+                    <li><b>设置输出选项：</b>指定输出视频路径和掩码保存目录（可选）。掩码目录用于保存对象分割的二进制掩码，便于后续处理和分析。</li>
+                    <li><b>多帧智能标注（推荐）：</b>使用新对象模式标注所有对象的初始位置，使用修正对象模式在关键帧（形变、遮挡等）添加修正标注。系统会自动生成实时预览帮助您验证标注质量。详见<a href="#section-3">标注教程</a>章节。</li>
+                    <li><b>开始处理：</b>点击"开始处理"按钮启动视频处理。处理过程中可以实时查看进度和预计完成时间。标注会自动保存到Results文件夹。</li>
+                    <li><b>查看结果：</b>处理完成后自动切换到"结果预览"标签页查看处理结果。您可以播放、暂停并浏览处理后的视频，查看分割和跟踪效果。</li>
+                    <li><b>筛选数据：</b>切换到"筛选过滤"标签页，对掩膜对象进行高级筛选、分析和数据导出。详见<a href="#section-7">筛选过滤功能</a>章节。</li>
+                </ol>
+            </section>
+
+            <!-- 第2章：文件选择与参数设置 -->
+            <section id="section-2">
+                <h2>⚙️ 文件选择与参数设置</h2>
+
+                <h3>输入类型选择</h3>
+                <p>Micro Tracker 支持两种输入类型：</p>
+                <ul>
+                    <li><b>🎬 视频文件：</b>支持 MP4、AVI、MOV、MKV 等常见视频格式。选择"视频文件"单选按钮后点击"浏览"选择文件。</li>
+                    <li><b>🖼️ 图像序列：</b>支持 JPEG、PNG、TIFF、BMP 等图像格式。选择"图像序列"单选按钮后点击"浏览"选择包含图像的文件夹。</li>
+                </ul>
+
+                <div class="note">
+                    <h4>💡 图像序列特性</h4>
+                    <ul>
+                        <li><b>智能排序：</b>支持多种命名格式，如纯数字 <code>00001.jpg</code>、前缀+数字 <code>frame_001.png</code> 等</li>
+                        <li><b>自动转换：</b>非JPEG图像自动转换以兼容SAM2</li>
+                        <li><b>默认帧率：</b>10 FPS（可配置）</li>
+                        <li><b>适用场景：</b>显微镜逐帧采集、时间序列拍摄、已提取的视频帧</li>
+                    </ul>
+                </div>
+
+                <h3>SAM2 模型选择</h3>
+                <p>从下拉框选择预设的SAM2模型或点击"浏览"按钮选择自定义模型文件：</p>
+                <ul>
+                    <li><b>🟢 Tiny：</b>最快速度，适合实时预览和快速测试</li>
+                    <li><b>🟡 Small：</b>平衡速度与精度</li>
+                    <li><b>🟠 Base+：</b>高精度（推荐用于正式分析）</li>
+                    <li><b>🔴 Large：</b>最高精度，处理速度较慢</li>
+                </ul>
+
+                <h3>输出路径设置</h3>
+                <ul>
+                    <li><b>结果视频输出：</b>指定处理后视频的保存位置。留空则系统自动在 <code>Results</code> 文件夹生成。</li>
+                    <li><b>掩码保存目录：</b>指定掩码图像序列的保存目录。留空则系统自动在 <code>Results</code> 文件夹生成。掩码图像为8位灰度PNG图片，每个像素值表示对象ID，背景为0。</li>
+                </ul>
+
+                <h3>处理设备选择</h3>
+                <p>从下拉菜单中选择要使用的处理设备：</p>
+                <ul>
+                    <li><b>CUDA:0 (默认)：</b>使用GPU加速，推荐用于获得最佳性能</li>
+                    <li><b>CPU：</b>使用CPU处理，适用于无GPU环境（速度较慢）</li>
+                    <li><b>CUDA:1, CUDA:2...：</b>如果系统有多个GPU，可选择指定GPU</li>
+                </ul>
+
+                <h3>输出选项</h3>
+                <ul>
+                    <li><b>✅ 保存处理视频：</b>勾选后保存包含分割掩码和对象边界框的视频文件</li>
+                    <li><b>✅ 保存分割掩码：</b>勾选后保存每帧的分割掩码为PNG图像序列，便于后期处理和分析</li>
+                </ul>
+            </section>
+
+            <!-- 第3章：标注教程 -->
+            <section id="section-3">
+                <h2>🎯 标注教程</h2>
+                <p>标注是Micro Tracker的核心功能，通过在关键帧标注对象，SAM2能够自动追踪整个视频中的对象运动。本章详细介绍标注的各个方面。</p>
+
+                <h3 id="section-3-1">3.1 标注模式详解</h3>
+                
+                <h4>🆕 新对象模式 (New Object)</h4>
+                <ul>
+                    <li><b>用途：</b>首次标注一个新的对象</li>
+                    <li><b>系统行为：</b>自动分配唯一ID和固定颜色</li>
+                    <li><b>使用时机：</b>通常在第0帧标注对象首次出现的位置</li>
+                    <li><b>操作：</b>选择"新对象"单选按钮，然后在视频上绘制边界框或添加点击</li>
+                </ul>
+
+                <h4>✏️ 修正对象模式 (Refine Object)</h4>
+                <ul>
+                    <li><b>用途：</b>在关键帧补充已有对象的标注</li>
+                    <li><b>操作流程：</b>
+                        <ol>
+                            <li>选择"修正对象"单选按钮</li>
+                            <li>从下拉框选择要修正的对象ID</li>
+                            <li>浏览到需要修正的关键帧</li>
+                            <li>添加修正标注（使用相同ID和颜色）</li>
+                        </ol>
+                    </li>
+                    <li><b>视觉反馈：</b>正在修正的对象会以金色虚线高亮显示</li>
+                    <li><b>⚠️ 重要限制：</b>修正模式下<b>只能使用点击提示</b>，不能绘制边界框（符合SAM2官方最佳实践规范）。切换到修正模式时会自动切换到点击模式，边界框选项会被禁用。</li>
+                    <li><b>适用场景：</b>
+                        <ul>
+                            <li>对象形状显著变化</li>
+                            <li>对象被遮挡前后</li>
+                            <li>对象运动方向改变</li>
+                            <li>SAM2追踪出现明显偏差</li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <h3 id="section-3-2">3.2 提示类型详解</h3>
+
+                <h4>▢ 边界框模式 (Box)</h4>
+                <ul>
+                    <li><b>操作方法：</b>按住鼠标左键拖动绘制矩形框</li>
+                    <li><b>使用技巧：</b>框选对象的完整轮廓</li>
+                    <li><b>反馈：</b>松开鼠标后自动生成实时预览</li>
+                    <li><b>限制：</b>仅在新对象模式下可用</li>
+                </ul>
+
+                <h4>👆 点击模式 (Point)</h4>
+                <ul>
+                    <li><b>左键点击：</b>添加正向区域（<span style="color: #4CAF50; font-weight: bold;">🟢 绿色标记</span>），表示"这是对象的一部分"</li>
+                    <li><b>右键点击：</b>添加负向区域（<span style="color: #F44336; font-weight: bold;">🔴 红色标记</span>），表示"这不是对象的一部分"</li>
+                    <li><b>多点标注：</b>可以添加多个点击来精细化分割</li>
+                    <li><b>实时预览：</b>点击后即时生成预览，可立即验证效果</li>
+                    <li><b>保存操作：</b>
+                        <ul>
+                            <li>按 <kbd>A</kbd> 键保存临时点击</li>
+                            <li>按 <kbd>Ctrl+C</kbd> 清除临时点击</li>
+                            <li>按 <kbd>Ctrl+S</kbd> 保存点击并切换到下一帧</li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <div class="warning">
+                    <h4>⚠️ 提示类型切换注意事项</h4>
+                    <ul>
+                        <li>可以使用 <kbd>Ctrl+Q</kbd> 快捷键在边界框模式和点击模式之间切换</li>
+                        <li>修正模式下边界框被禁用，不允许切换到边界框模式</li>
+                        <li>切换帧前记得保存临时点击，否则会丢失</li>
+                    </ul>
+                </div>
+
+                <h3 id="section-3-3">3.3 标注操作步骤</h3>
+
+                <h4>标注新对象的完整流程</h4>
+                <ol>
+                    <li>选择"🆕 新对象"模式</li>
+                    <li>浏览到对象首次出现的帧（通常是第0帧）</li>
+                    <li>选择提示类型（边界框或点击模式）</li>
+                    <li>绘制边界框或添加点击：
+                        <ul>
+                            <li><b>边界框：</b>按住鼠标左键并拖动绘制矩形框</li>
+                            <li><b>点击：</b>左键添加正向点击，右键添加负向点击</li>
+                        </ul>
+                    </li>
+                    <li>系统自动分配唯一ID和固定颜色</li>
+                    <li>查看实时预览mask（以半透明彩色覆盖层显示）</li>
+                    <li>如果点击模式，按 <kbd>A</kbd> 键保存临时点击</li>
+                    <li>重复以上步骤标注其他新对象</li>
+                </ol>
+
+                <h4>修正对象的完整流程</h4>
+                <ol>
+                    <li>选择"✏️ 修正对象"模式</li>
+                    <li>从下拉框选择要修正的对象ID</li>
+                    <li>浏览到需要修正的关键帧（例如形变帧、遮挡前后）</li>
+                    <li>系统自动切换到点击模式（边界框被禁用）</li>
+                    <li>正在修正的对象会以金色虚线高亮显示</li>
+                    <li>添加点击标注（左键=正向，右键=负向）</li>
+                    <li>查看实时预览，验证修正效果</li>
+                    <li>按 <kbd>A</kbd> 键保存临时点击</li>
+                    <li>继续浏览到其他关键帧，重复修正操作</li>
+                </ol>
+
+                <h4>👁️ 实时预览功能</h4>
+                <div class="success">
+                    <p><b>✨ 添加标注后自动生成mask预览</b></p>
+                    <ul>
+                        <li>可以立即验证标注质量</li>
+                        <li>半透明彩色蒙版显示分割结果</li>
+                        <li>预览使用对象的固定颜色</li>
+                        <li>如果预览效果不理想，可以添加更多点击来优化</li>
+                        <li>需要GPU支持，如果初始化失败会自动降级为仅显示边界框</li>
+                    </ul>
+                </div>
+
+                <h3 id="section-3-4">3.4 标注管理</h3>
+
+                <h4>📋 查看与管理</h4>
+                <p>标注管理面板位于视频预览下方，显示所有已标注帧的列表：</p>
+                <ul>
+                    <li><b>表格列：</b>帧号、对象数、提示信息、操作</li>
+                    <li><b>当前帧高亮：</b>当前帧在表格中以黄色背景高亮</li>
+                    <li><b>提示信息显示：</b>
+                        <ul>
+                            <li>□ 表示边界框</li>
+                            <li>🟢×3 表示3个正向点击</li>
+                            <li>🔴×2 表示2个负向点击</li>
+                            <li>Obj_1: □ + 🟢×2 表示对象1有边界框和2个正向点击</li>
+                        </ul>
+                    </li>
+                    <li><b>"跳转"按钮：</b>快速切换到指定标注帧（表格中的按钮）</li>
+                    <li><b>"删除"按钮：</b>移除单帧的所有标注（表格中的按钮，不可撤销）</li>
+                    <li><b>"清空所有"按钮：</b>移除所有帧的标注（右侧按钮，需确认，不可撤销）</li>
+                </ul>
+
+                <h4>💾 标注保存与导入</h4>
+                <ul>
+                    <li><b>自动保存：</b>点击"开始处理"时自动保存
+                        <ul>
+                            <li>标注文件自动保存到 <code>Results</code> 文件夹</li>
+                            <li>文件名格式：<code>{输入名}_annotations.json</code></li>
+                            <li>如果文件已存在，会询问是否覆盖</li>
+                            <li>包含边界框、点击、对象注册等完整信息</li>
+                        </ul>
+                    </li>
+                    <li><b>导入标注：</b>从JSON文件恢复标注（右侧"导入标注"按钮）
+                        <ul>
+                            <li>支持新旧格式自动识别</li>
+                            <li>导入前会进行数据验证</li>
+                            <li>可用于恢复之前的标注或在不同会话间迁移</li>
+                            <li>⚠️ 导入会覆盖当前所有标注</li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <div class="note">
+                    <p><b>💡 提示：</b>标注列表会在标注操作（添加/删除对象、保存点击）后自动更新，无需手动刷新。</p>
+                </div>
+
+                <h3 id="section-3-5">3.5 标注最佳实践</h3>
+
+                <h4>✅ 建议</h4>
+                <ol>
+                    <li><b>第0帧标注：</b>在第0帧标注所有对象的初始位置（使用新对象模式）</li>
+                    <li><b>标注数量：</b>每个对象标注5-10个关键帧即可，不宜过多（标注过多可能影响处理性能）</li>
+                    <li><b>关键帧选择：</b>在以下情况添加修正标注
+                        <ul>
+                            <li>对象形状显著变化</li>
+                            <li>对象被遮挡前后</li>
+                            <li>对象运动方向改变</li>
+                            <li>SAM2追踪出现明显偏差</li>
+                        </ul>
+                    </li>
+                    <li><b>实时验证：</b>使用实时预览验证标注质量，及时调整</li>
+                    <li><b>无需手动保存：</b>标注会在开始处理时自动保存，无需手动操作</li>
+                </ol>
+
+                <div class="warning">
+                    <h4>⚠️ 注意事项</h4>
+                    <ul>
+                        <li>切换帧前记得保存临时点击（按<kbd>A</kbd>键）</li>
+                        <li>未保存的临时点击切换帧后会丢失（有警告提示）</li>
+                        <li>标注信息在点击"开始处理"时自动保存</li>
+                        <li>导入标注会覆盖当前所有标注</li>
+                        <li>删除操作不可撤销，请谨慎操作</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- 第4章：视频处理 -->
+            <section id="section-4">
+                <h2>🎬 视频处理</h2>
+
+                <h3>多帧处理模式</h3>
+                <p>系统自动检测标注模式。如果检测到多帧标注（多个帧有标注或单个帧有多个对象），会在每个标注帧调用SAM2提示，采用分段前向传播策略，显著提升追踪质量。</p>
+
+                <h3>处理进度监控</h3>
+                <p>点击"开始处理"按钮后，处理进度区域会显示：</p>
+                <ul>
+                    <li><b>实时日志：</b>显示初始化信息、处理速度和预计剩余时间</li>
+                    <li><b>进度条：</b>显示当前处理进度百分比</li>
+                    <li><b>日志颜色：</b>不同类型的信息以不同颜色显示（信息=蓝色，警告=橙色，错误=红色，成功=绿色）</li>
+                </ul>
+
+                <h3>日志查看</h3>
+                <p>处理进度区域的日志文本框记录所有操作信息：</p>
+                <ul>
+                    <li>蓝色信息：常规操作和状态更新</li>
+                    <li>橙色警告：需要注意的信息</li>
+                    <li>红色错误：处理失败或异常</li>
+                    <li>绿色成功：操作成功完成</li>
+                    <li>紫色高亮：重要提示信息</li>
+                </ul>
+            </section>
+
+            <!-- 第5章：视频预览控制 -->
+            <section id="section-5">
+                <h2>🎮 视频预览控制</h2>
+
+                <h3>播放/暂停</h3>
+                <p>点击"播放"按钮或按<kbd>空格</kbd>键控制视频的播放和暂停。播放时按钮文字变为"暂停"。</p>
+
+                <h3>帧滑块操作</h3>
+                <ul>
+                    <li>拖动滑块可以精确导航到视频的特定帧</li>
+                    <li>点击滑块两侧可以快速前进/后退</li>
+                    <li>使用<kbd>F</kbd>键前进一帧，<kbd>D</kbd>键后退一帧</li>
+                </ul>
+
+                <h3>图像缩放与拖拽</h3>
+                <ul>
+                    <li><b>鼠标滚轮缩放：</b>按住<kbd>Ctrl</kbd>键并滚动鼠标滚轮可缩放图像（100%-1000%），缩放中心始终为鼠标位置</li>
+                    <li><b>拖拽平移：</b>图像放大后，按住<kbd>Ctrl</kbd>+左键拖拽可平移查看不同区域</li>
+                    <li><b>重置缩放：</b>点击鼠标中键或按<kbd>Home</kbd>键可重置缩放至自适应状态</li>
+                    <li><b>悬浮提示：</b>缩放时会在右上角显示当前缩放百分比，2秒后自动隐藏</li>
+                    <li><b>独立控制：</b>三个视频视图（标注、结果预览、筛选预览）各自独立缩放</li>
+                    <li><b>注意事项：</b>拖拽平移期间会自动禁用标注功能，释放鼠标后恢复</li>
+                </ul>
+
+                <h3>视频控制快捷键</h3>
+                <p>聚焦视频控件时，可以使用以下快捷键：</p>
+                <ul>
+                    <li><kbd>空格</kbd> - 播放/暂停</li>
+                    <li><kbd>F</kbd> - 下一帧</li>
+                    <li><kbd>D</kbd> - 上一帧</li>
+                    <li><kbd>Home</kbd> - 重置缩放</li>
+                </ul>
+            </section>
+
+            <!-- 第6章：结果预览 -->
+            <section id="section-6">
+                <h2>📊 结果预览</h2>
+
+                <h3>结果视频查看</h3>
+                <p>处理完成后自动切换到"结果预览"标签页，显示处理后的视频：</p>
+                <ul>
+                    <li>视频包含分割掩码（半透明彩色覆盖层）</li>
+                    <li>每个对象以唯一颜色显示</li>
+                    <li>对象边界框和ID标签清晰可见</li>
+                </ul>
+
+                <h3>视频控制</h3>
+                <p>结果预览标签页提供与标注页面类似的视频控制功能：</p>
+                <ul>
+                    <li>播放/暂停按钮</li>
+                    <li>帧滑块</li>
+                    <li>图像缩放与拖拽</li>
+                    <li>快捷键支持</li>
+                </ul>
+
+                <h3>文件夹访问</h3>
+                <p>点击"打开输出文件夹"按钮可以直接访问输出视频和掩码所在的文件夹。</p>
+
+                <div class="note">
+                    <p><b>💡 提示：</b>处理完成后，您可以使用筛选过滤功能对掩膜进行高级分析。使用滑块查看不同帧的结果并确保追踪质量。</p>
+                </div>
+            </section>
+
+            <!-- 第7章：筛选过滤功能 -->
+            <section id="section-7">
+                <h2>🔍 筛选过滤功能</h2>
+                <p>筛选过滤模块是本软件的关键高级功能，提供了对分割轨迹数据的深度分析和筛选能力。以下是详细的使用流程和功能解释。</p>
+
+                <h3 id="section-7-1">7.1 掩膜图片序列选择</h3>
+                <p>选择包含掩膜图像的文件夹（通常是处理步骤自动生成的）。掩膜图像是8位灰度PNG图片，每个像素值表示对象ID，背景为0。</p>
+
+                <h3 id="section-7-2">7.2 参数设置理解</h3>
+                <ul>
+                    <li><b>帧率 (FPS)：</b>定义每秒帧数，对计算对象速度和时间关系至关重要。例如，如果实际视频以1帧/秒拍摄，应设置为1.0；如果是每20秒一帧，则应设置为0.05。帧率调整会影响瞬时速度的计算，以及时间相关的数据分析。</li>
+                    <li><b>比例系数 (μm/pixel)：</b>将像素单位转换为实际物理单位的系数。这个值应根据您的显微镜和摄像设置确定。例如，如果1个像素代表2.5微米，则设置为2.5。此系数会影响所有空间测量，包括面积、距离和速度。</li>
+                </ul>
+
+                <h3 id="section-7-3">7.3 筛选条件详解</h3>
+                <p>可以设置六种不同的筛选条件：</p>
+
+                <h4>1. 面积区间筛选</h4>
+                <ul>
+                    <li><b>功能：</b>筛选出面积在指定范围内的对象</li>
+                    <li><b>单位：</b>μm²（平方微米）</li>
+                    <li><b>应用场景：</b>去除过小的噪点或过大的聚合体/背景残留</li>
+                    <li><b>工作原理：</b>计算每个对象的像素面积，并乘以比例系数的平方转换为实际面积</li>
+                </ul>
+
+                <h4>2. 面积变化率筛选</h4>
+                <ul>
+                    <li><b>功能：</b>当对象面积变化超过阈值时截断其轨迹</li>
+                    <li><b>取值范围：</b>0到1（比例值），表示小面积/大面积的比值</li>
+                    <li><b>应用场景：</b>检测对象融合、分裂或跟踪错误</li>
+                    <li><b>工作原理：</b>计算相邻帧之间面积比（较小值/较大值），低于阈值时判定为显著变化</li>
+                </ul>
+
+                <h4>3. 瞬时速度区间</h4>
+                <ul>
+                    <li><b>功能：</b>根据对象的瞬时移动速度筛选</li>
+                    <li><b>单位：</b>μm/s（微米每秒）</li>
+                    <li><b>应用场景：</b>区分不同运动状态的对象，或识别跟踪跳变</li>
+                    <li><b>工作原理：</b>计算相邻帧之间质心位移除以时间间隔</li>
+                </ul>
+
+                <h4>4. 总位移区间</h4>
+                <ul>
+                    <li><b>功能：</b>根据对象从起点到终点的直线距离筛选</li>
+                    <li><b>单位：</b>μm（微米）</li>
+                    <li><b>应用场景：</b>区分迁移和非迁移对象</li>
+                    <li><b>工作原理：</b>计算对象第一帧与最后一帧质心之间的直线距离</li>
+                </ul>
+
+                <h4>5. 边界截断排除</h4>
+                <ul>
+                    <li><b>功能：</b>当对象接触图像边界时，截断其轨迹</li>
+                    <li><b>应用场景：</b>确保分析的是完整对象，避免部分截断的对象干扰分析</li>
+                    <li><b>工作原理：</b>检测掩膜像素是否接触图像四边</li>
+                </ul>
+
+                <h4>6. 相互最短距离阈值</h4>
+                <ul>
+                    <li><b>功能：</b>当两个对象距离小于阈值时截断轨迹</li>
+                    <li><b>单位：</b>μm（微米）</li>
+                    <li><b>应用场景：</b>避免对象交互或拥挤状态的干扰</li>
+                    <li><b>工作原理：</b>计算对象轮廓间的最短距离，低于阈值时截断</li>
+                </ul>
+
+                <h3 id="section-7-4">7.4 筛选结果理解</h3>
+                <ul>
+                    <li><b>完全通过：</b>对象的整个轨迹都满足所有筛选条件</li>
+                    <li><b>部分截断：</b>对象轨迹在某个时间点不满足条件，轨迹被截断但保留有效部分</li>
+                    <li><b>完全过滤：</b>对象完全不满足筛选条件，或满足条件的帧数不足以形成有效轨迹</li>
+                </ul>
+
+                <h3 id="section-7-5">7.5 可视化元素详解</h3>
+                <p>筛选结果预览显示筛选后的对象可视化，包括：</p>
+                <ul>
+                    <li><b>彩色对象：</b>每个对象以唯一颜色显示，便于区分</li>
+                    <li><b>对象ID：</b>显示在对象中心，与处理阶段的ID一致</li>
+                    <li><b>椭圆主轴和次轴：</b>对象经过椭圆拟合后的长轴（红色）和短轴（蓝色），用于分析对象形状和方向</li>
+                    <li><b>轨迹线：</b>显示对象从出现到当前帧的移动路径</li>
+                </ul>
+
+                <h3 id="section-7-6">7.6 数据保存与导出</h3>
+                <p>点击"输出保存"按钮可以保存两类数据：</p>
+                <ul>
+                    <li><b>筛选后的掩膜图像：</b>保存为 <code>Filtered_Masks</code> 文件夹下的PNG序列，仅包含通过筛选的对象</li>
+                    <li><b>轨迹数据表格：</b>保存为Excel（优先）或CSV格式，包含每个通过筛选的对象在各帧的详细属性数据：
+                        <ul>
+                            <li><b>时间 (time)：</b>以秒为单位</li>
+                            <li><b>面积 (area)：</b>以μm²为单位</li>
+                            <li><b>质心坐标 (center_x, center_y)：</b>以μm为单位</li>
+                            <li><b>主轴长度 (major axis length)：</b>椭圆长轴长度，以μm为单位</li>
+                            <li><b>次轴长度 (minor axis length)：</b>椭圆短轴长度，以μm为单位</li>
+                            <li><b>姿态角度 (posture angle)：</b>cv2.fitEllipse返回的原始角度值，表示椭圆方向，以度为单位</li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <div class="note">
+                    <h4>关于姿态角度 (posture angle) 的理解</h4>
+                    <p>导出的轨迹数据中的姿态角度是OpenCV的 <code>cv2.fitEllipse</code> 函数直接返回的原始角度值，表示椭圆的方向。这个角度测量的是椭圆宽度方向（可能是长轴或短轴）与水平线的夹角，范围为0-180度。</p>
+                    <p><b>注意：</b>在可视化显示中，系统会自动确定哪个是主轴（长轴）并用红色显示，哪个是次轴（短轴）并用蓝色显示。但保存的角度数据始终是 <code>cv2.fitEllipse</code> 的原始返回值，没有经过调整。</p>
+                </div>
+            </section>
+
+            <!-- 第8章：键盘快捷键参考 -->
+            <section id="section-8">
+                <h2>⌨️ 键盘快捷键参考</h2>
+
+                <h3>视频控制</h3>
+                <table>
+                    <tr>
+                        <th style="width: 30%;">快捷键</th>
+                        <th>功能</th>
+                    </tr>
+                    <tr>
+                        <td><kbd>空格</kbd></td>
+                        <td>播放/暂停视频</td>
+                    </tr>
+                    <tr>
+                        <td><kbd>F</kbd></td>
+                        <td>下一帧</td>
+                    </tr>
+                    <tr>
+                        <td><kbd>D</kbd></td>
+                        <td>上一帧</td>
+                    </tr>
+                    <tr>
+                        <td><kbd>Home</kbd></td>
+                        <td>重置缩放</td>
+                    </tr>
+                </table>
+
+                <h3>标注编辑</h3>
+                <table>
+                    <tr>
+                        <th style="width: 30%;">快捷键</th>
+                        <th>功能</th>
+                    </tr>
+                    <tr>
+                        <td><kbd>Delete</kbd></td>
+                        <td>删除选中的边界框</td>
+                    </tr>
+                    <tr>
+                        <td><kbd>A</kbd></td>
+                        <td>保存临时点击到标注</td>
+                    </tr>
+                    <tr>
+                        <td><kbd>Ctrl+C</kbd></td>
+                        <td>清除临时点击</td>
+                    </tr>
+                    <tr>
+                        <td><kbd>Ctrl+S</kbd></td>
+                        <td>保存临时点击并切换到下一帧</td>
+                    </tr>
+                </table>
+
+                <h3>模式切换</h3>
+                <table>
+                    <tr>
+                        <th style="width: 30%;">快捷键</th>
+                        <th>功能</th>
+                    </tr>
+                    <tr>
+                        <td><kbd>Ctrl+Q</kbd></td>
+                        <td>切换提示类型（边界框/点击模式）</td>
+                    </tr>
+                    <tr>
+                        <td><kbd>Ctrl+H</kbd></td>
+                        <td>隐藏/显示提示标记（便于绘制新提示）</td>
+                    </tr>
+                </table>
+
+                <h3>鼠标操作</h3>
+                <table>
+                    <tr>
+                        <th style="width: 30%;">操作</th>
+                        <th>功能</th>
+                    </tr>
+                    <tr>
+                        <td><b>左键拖拽</b></td>
+                        <td>绘制边界框（新对象模式）</td>
+                    </tr>
+                    <tr>
+                        <td><b>左键点击</b></td>
+                        <td>添加正向点击 - 绿色标记（点击模式）</td>
+                    </tr>
+                    <tr>
+                        <td><b>右键点击</b></td>
+                        <td>添加负向点击 - 红色标记（点击模式）</td>
+                    </tr>
+                    <tr>
+                        <td><b>单击边界框</b></td>
+                        <td>选中边界框</td>
+                    </tr>
+                    <tr>
+                        <td><kbd>Ctrl</kbd> + <b>滚轮</b></td>
+                        <td>缩放图像（100%-1000%，以鼠标位置为中心）</td>
+                    </tr>
+                    <tr>
+                        <td><kbd>Ctrl</kbd> + <b>左键拖拽</b></td>
+                        <td>拖拽平移图像（缩放后）</td>
+                    </tr>
+                    <tr>
+                        <td><b>中键点击</b> / <kbd>Home</kbd></td>
+                        <td>重置缩放至自适应状态</td>
+                    </tr>
+                </table>
+            </section>
+
+            <!-- 第9章：后处理工具推荐 -->
+            <section id="section-9">
+                <h2>🔬 后处理工具推荐</h2>
+
+                <div class="success">
+                    <h3>Micro Post - 细菌轨迹运动分析器</h3>
+                    <p><b>仓库地址：</b><a href="https://github.com/Lucien-6/Micro-Post" target="_blank">https://github.com/Lucien-6/Micro-Post</a></p>
+                    <p>在通过 Micro Tracker 获得追踪结果后，强烈推荐使用 <b>Micro Post</b> 进行深度运动分析。该工具专为处理 Micro Tracker 输出的 Excel 数据而设计，提供：</p>
+                    
+                    <h4>主要功能</h4>
+                    <ul>
+                        <li><b>交互式轨迹可视化：</b>支持缩放、平移和悬停交互，直观展示对象运动轨迹</li>
+                        <li><b>高级运动分析：</b>
+                            <ul>
+                                <li>位移分析（X/Y 和总位移）</li>
+                                <li>角位移分析（处理 180° 对称性）</li>
+                                <li>均方位移 (MSD) 和均方角位移 (MSAD)</li>
+                                <li>轨迹椭圆拟合和振荡指数计算</li>
+                            </ul>
+                        </li>
+                        <li><b>数据过滤：</b>按最小追踪时长筛选对象，确保数据质量</li>
+                        <li><b>统计分析：</b>提供均值和标准差的综合统计信息</li>
+                        <li><b>MSD/MSAD 曲线拟合：</b>支持恒定速度漂移模型和主动扩散模型</li>
+                        <li><b>Excel 导出：</b>自动调整列宽的格式化输出</li>
+                    </ul>
+                    
+                    <h4>使用建议</h4>
+                    <p>在 Micro Tracker 完成数据导出后，直接使用 Micro Post 加载导出的 Excel 文件进行后续分析。两个工具的数据格式完全兼容，无需手动转换。</p>
+                </div>
+            </section>
+
+            <!-- 第10章：常见问题与故障排除 -->
+            <section id="section-10">
+                <h2>❓ 常见问题与故障排除</h2>
+
+                <h3>标注相关问题</h3>
+                
+                <h4>Q: 标注会自动保存吗？</h4>
+                <p>A: 是的，点击"开始处理"时会自动保存到Results文件夹，无需手动导出。文件名格式为 <code>{输入名}_annotations.json</code>。</p>
+
+                <h4>Q: 临时点击无法保存？</h4>
+                <p>A: 检查是否在正确的帧上（临时点击只能在添加它的帧上保存）。确保按 <kbd>A</kbd> 键保存临时点击后再切换帧。</p>
+
+                <h4>Q: 预览效果不理想？</h4>
+                <p>A: 尝试添加更多点击（正向或负向）来精细化分割。如果是边界框，尝试调整框的大小和位置。如果实时预览完全失败，可能是GPU不支持，系统会自动降级为仅显示边界框。</p>
+
+                <h4>Q: 如何修改已有标注？</h4>
+                <p>A: 切换到对应帧，删除原标注（选中后按<kbd>Delete</kbd>键或使用标注管理面板的"删除"按钮），然后重新绘制。</p>
+
+                <h4>Q: 导入标注失败？</h4>
+                <p>A: 检查JSON文件格式是否正确，查看错误提示信息。确保文件是由Micro Tracker导出或符合规定格式的标注文件。</p>
+
+                <h3>处理相关问题</h3>
+
+                <h4>Q: 处理速度很慢？</h4>
+                <p>A: 
+                    <ul>
+                        <li>确保选择了GPU设备（CUDA:0）而非CPU</li>
+                        <li>考虑使用更小的模型（Tiny或Small）</li>
+                        <li>减少标注帧数（5-10个关键帧通常已足够）</li>
+                    </ul>
+                </p>
+
+                <h4>Q: GPU内存不足？</h4>
+                <p>A: 
+                    <ul>
+                        <li>关闭其他占用GPU的应用程序</li>
+                        <li>使用更小的模型（Tiny）</li>
+                        <li>降低视频分辨率</li>
+                    </ul>
+                </p>
+
+                <h4>Q: 追踪质量不佳？</h4>
+                <p>A: 
+                    <ul>
+                        <li>在更多关键帧添加修正标注</li>
+                        <li>使用更大的模型（Base+或Large）</li>
+                        <li>确保第0帧的初始标注准确</li>
+                        <li>在对象发生显著变化的帧添加修正</li>
+                    </ul>
+                </p>
+
+                <h3>筛选过滤问题</h3>
+
+                <h4>Q: 所有对象都被过滤掉了？</h4>
+                <p>A: 检查筛选条件是否过于严格。尝试逐个启用筛选条件，找出导致过滤的具体原因。查看筛选日志了解详细信息。</p>
+
+                <h4>Q: 如何选择合适的参数？</h4>
+                <p>A: 
+                    <ul>
+                        <li>FPS：根据实际拍摄帧率设置</li>
+                        <li>比例系数：咨询显微镜设备文档或技术人员</li>
+                        <li>筛选阈值：先用默认值，根据结果逐步调整</li>
+                    </ul>
+                </p>
+
+                <h3>性能优化建议</h3>
+                <ul>
+                    <li>使用GPU加速（CUDA设备）</li>
+                    <li>根据需求选择合适的模型（速度 vs 精度）</li>
+                    <li>标注关键帧（5-10个），避免过度标注</li>
+                    <li>处理前关闭不必要的应用程序</li>
+                    <li>确保有足够的磁盘空间保存结果</li>
+                </ul>
+            </section>
+
+            <!-- 第11章：附录 -->
+            <section id="section-11">
+                <h2>📎 附录</h2>
+
+                <h3>关于姿态角度的理解</h3>
+                <p>导出的轨迹数据中的姿态角度是OpenCV的 <code>cv2.fitEllipse</code> 函数直接返回的原始角度值，表示椭圆的方向。这个角度测量的是椭圆宽度方向（可能是长轴或短轴）与水平线的夹角，范围为0-180度。</p>
+                <p><b>注意：</b>在可视化显示中，系统会自动确定哪个是主轴（长轴）并用红色显示，哪个是次轴（短轴）并用蓝色显示。但保存的角度数据始终是 <code>cv2.fitEllipse</code> 的原始返回值，没有经过调整。</p>
+
+                <h3>技术支持</h3>
+                <p>如果您在使用过程中遇到问题或有任何建议，欢迎通过以下方式联系作者：</p>
+                <ul>
+                    <li><b>邮箱：</b>lucien-6@qq.com</li>
+                    <li><b>GitHub：</b><a href="https://github.com/Lucien-6/Micro-Post" target="_blank">Micro Post 仓库</a>（后处理工具）</li>
+                </ul>
+
+                <h3>版权声明</h3>
+                <p>Copyright © 2026 LUCIEN. 保留所有权利。</p>
+                <p>本软件采用 MIT 许可证。您可以自由使用、修改和分发本软件，但必须保留版权声明和许可证声明。</p>
+            </section>
+
+            <!-- 页脚 -->
+            <div class="footer">
+                <p>Micro Tracker v2.7.0 | Copyright © 2026 LUCIEN | 2026-02-04
+                <p>基于 SAM2 (Segment Anything Model 2) 构建</p>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // ===== DOMContentLoaded事件监听器 =====
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化主题
+            initTheme();
+            
+            // 初始化侧边栏导航
+            initSidebar();
+            
+            // 初始化平滑滚动
+            initSmoothScroll();
+            
+            // 初始化滚动同步
+            initScrollSync();
+        });
+
+        // ===== 暗色模式切换 =====
+        function initTheme() {
+            const themeToggle = document.getElementById('themeToggle');
+            const body = document.body;
+            
+            // 从localStorage读取主题偏好
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                body.classList.add('dark-mode');
+                themeToggle.textContent = '☀️';
+            }
+            
+            // 切换按钮点击事件
+            themeToggle.addEventListener('click', function() {
+                body.classList.toggle('dark-mode');
+                
+                if (body.classList.contains('dark-mode')) {
+                    themeToggle.textContent = '☀️';
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    themeToggle.textContent = '🌙';
+                    localStorage.setItem('theme', 'light');
+                }
+            });
+        }
+
+        // ===== 侧边栏导航交互 =====
+        function initSidebar() {
+            const sectionToggles = document.querySelectorAll('.section-toggle');
+            
+            sectionToggles.forEach(toggle => {
+                toggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // 切换展开/折叠
+                    this.classList.toggle('expanded');
+                    
+                    // 获取下一个兄弟元素（子菜单）
+                    const subsection = this.nextElementSibling;
+                    if (subsection && subsection.classList.contains('nav-subsection')) {
+                        subsection.classList.toggle('expanded');
+                    }
+                });
+            });
+        }
+
+        // ===== 平滑滚动跳转 =====
+        function initSmoothScroll() {
+            const links = document.querySelectorAll('.sidebar a[href^="#"]');
+            
+            links.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const targetId = this.getAttribute('href').substring(1);
+                    const targetElement = document.getElementById(targetId);
+                    
+                    if (targetElement) {
+                        targetElement.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                        
+                        // 更新URL hash（不触发页面跳转）
+                        history.pushState(null, null, '#' + targetId);
+                    }
+                });
+            });
+        }
+
+        // ===== 滚动同步高亮 =====
+        function initScrollSync() {
+            const sections = document.querySelectorAll('section[id]');
+            const navLinks = document.querySelectorAll('.sidebar a[href^="#"]');
+            
+            // 使用Intersection Observer API
+            const observerOptions = {
+                root: null,
+                rootMargin: '-20% 0px -70% 0px',
+                threshold: 0
+            };
+            
+            const observer = new IntersectionObserver(function(entries) {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const id = entry.target.getAttribute('id');
+                        
+                        // 移除所有active类
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                        });
+                        
+                        // 添加当前章节的active类
+                        const activeLink = document.querySelector(`.sidebar a[href="#${id}"]`);
+                        if (activeLink) {
+                            activeLink.classList.add('active');
+                            
+                            // 自动展开父级章节
+                            const parentToggle = activeLink.closest('.nav-subsection')?.previousElementSibling;
+                            if (parentToggle && parentToggle.classList.contains('section-toggle')) {
+                                if (!parentToggle.classList.contains('expanded')) {
+                                    parentToggle.classList.add('expanded');
+                                    parentToggle.nextElementSibling.classList.add('expanded');
+                                }
+                            }
+                        }
+                    }
+                });
+            }, observerOptions);
+            
+            // 观察所有章节
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+        }
+    </script>
+</body>
+</html>

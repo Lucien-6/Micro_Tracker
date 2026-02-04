@@ -370,6 +370,16 @@ class MainWindow(QMainWindow):
         self._update_annotation_status_display()
         
         self.log_message("已重置所有标注状态", "info")
+        
+        # 重置所有视图的缩放状态
+        if hasattr(self, 'video_label') and self.video_label:
+            self.video_label.reset_zoom()
+        
+        if hasattr(self, 'result_label') and self.result_label:
+            self.result_label.reset_zoom()
+        
+        if hasattr(self, 'filter_video_label') and self.filter_video_label:
+            self.filter_video_label.reset_zoom()
     
     def load_input_source(self):
         """加载输入源（视频或图像序列）并显示第一帧"""

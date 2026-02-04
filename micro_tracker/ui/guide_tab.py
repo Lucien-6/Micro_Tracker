@@ -53,8 +53,8 @@ class GuideTab(BaseTab):
             <h3 style="margin-top: 15px;">作者信息</h3>
             <p style="margin: 5px 0;">作者：LUCIEN</p>
             <p style="margin: 5px 0;">邮箱：lucien-6@qq.com</p>
-            <p style="margin: 5px 0;">版本：2.4.1</p>
-            <p style="margin: 5px 0;">发布日期：2026年1月28日</p>
+            <p style="margin: 5px 0;">版本：2.5.0</p>
+            <p style="margin: 5px 0;">发布日期：2026年2月4日</p>
             <p style="margin: 5px 0;">Copyright © 2026 LUCIEN. 保留所有权利。</p>
         </div>
         <p>Micro Tracker 是一个基于 SAM2 (Segment Anything Model 2) 的显微视频对象分割和跟踪工具。本工具采用最新的 SAM2 模型，支持多帧智能标注、实时预览和高级数据筛选功能，可以帮助您对显微视频中的多个对象进行高精度自动分割和跟踪，广泛适用于生物医学研究、材料科学、细胞追踪等显微视频分析场景。</p>
@@ -338,11 +338,22 @@ class GuideTab(BaseTab):
             <li><b>播放/暂停：</b> 控制视频的播放和暂停。</li>
             <li><b>帧滑块：</b> 拖动滑块或点击滑块两侧的箭头可以精确导航到视频的特定帧。</li>
             <li><b>帧信息显示：</b> 显示当前帧号和总帧数。</li>
+            <li><b>图像缩放与拖拽：</b> 
+                <ul>
+                    <li><b>鼠标滚轮缩放：</b> 按住Ctrl键并滚动鼠标滚轮可缩放图像（100%-1000%），缩放中心始终为鼠标位置</li>
+                    <li><b>拖拽平移：</b> 图像放大后，按住Ctrl+左键拖拽可平移查看不同区域</li>
+                    <li><b>重置缩放：</b> 点击鼠标中键或按Home键可重置缩放至自适应状态</li>
+                    <li><b>悬浮提示：</b> 缩放时会在右上角显示当前缩放百分比，2秒后自动隐藏</li>
+                    <li><b>独立控制：</b> 三个视频视图（标注、结果预览、筛选预览）各自独立缩放</li>
+                    <li><b>注意事项：</b> 拖拽平移期间会自动禁用标注功能，释放鼠标后恢复</li>
+                </ul>
+            </li>
             <li><b>键盘快捷键 (聚焦视频控件时)：</b>
                 <ul>
                     <li>空格键：播放/暂停</li>
                     <li>F 键：下一帧</li>
                     <li>D 键：上一帧</li>
+                    <li>Home 键：重置缩放</li>
                 </ul>
             </li>
         </ul>
@@ -379,6 +390,9 @@ class GuideTab(BaseTab):
             <tr><td><b>左键点击</b></td><td>添加正向点击 - 绿色标记（点击模式）</td></tr>
             <tr><td><b>右键点击</b></td><td>添加负向点击 - 红色标记（点击模式）</td></tr>
             <tr><td><b>单击边界框</b></td><td>选中边界框</td></tr>
+            <tr><td><b>Ctrl+滚轮</b></td><td>缩放图像（100%-1000%，以鼠标位置为中心）</td></tr>
+            <tr><td><b>Ctrl+左键拖拽</b></td><td>拖拽平移图像（缩放后）</td></tr>
+            <tr><td><b>中键点击 / Home键</b></td><td>重置缩放至自适应状态</td></tr>
         </table>
         
         <div class="warning">
@@ -396,5 +410,5 @@ class GuideTab(BaseTab):
             <p>如果遇到任何问题，请首先检查日志输出，并确保所有依赖项已正确安装。您可以通过邮件联系作者获取技术支持。</p>
         </div>
         
-        <div class="note">\n            <p style="text-align: center; font-size: 9pt; color: #757575;">Micro Tracker v2.4.1 | Copyright © 2026 LUCIEN</p>\n        </div>
+        <div class="note">\n            <p style="text-align: center; font-size: 9pt; color: #757575;">Micro Tracker v2.5.0 | Copyright © 2026 LUCIEN | 2026-02-04</p>\n        </div>
         """ 

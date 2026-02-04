@@ -15,7 +15,7 @@
 </div>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-2.4.1-brightgreen.svg" alt="Version 2.4.1">
+  <img src="https://img.shields.io/badge/Version-2.5.0-brightgreen.svg" alt="Version 2.5.0">
   <img src="https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white" alt="Python 3.10+">
   <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License: Apache 2.0">
   <img src="https://img.shields.io/badge/PyQt5-5.15%2B-green.svg" alt="PyQt5 5.15+">
@@ -98,6 +98,12 @@ Micro_Tracker is a powerful microscopy video analysis tool based on the SAM2 mod
   - Ensures optimal refinement quality and temporal consistency
 - **📋 Annotation Management**: Comprehensive annotation management panel with frame list, quick jump, delete, and import functionality (JSON format). Annotations are automatically saved when processing starts.
 - **💾 Auto-Save Annotations**: Annotations are automatically saved to the Results folder when you start processing, ensuring your work is always preserved without manual intervention.
+- **🔍 Image Zoom & Pan**: Interactive canvas controls for detailed inspection:
+  - Mouse wheel zoom with Ctrl (100%-1000%, centered on cursor position)
+  - Drag to pan with Ctrl+Left-click
+  - Reset view with Middle-click or Home key
+  - Independent zoom for all three video views
+  - Real-time zoom percentage tooltip
 - **🎬 Video Analysis**: Process microscopy videos and generate output videos with markers and trajectories using segmented forward propagation strategy.
 - **📊 Data Extraction**: Extract key parameters such as position, size, and shape of target objects.
 - **🎭 Mask Export**: Save segmentation results as mask images for subsequent analysis.
@@ -167,6 +173,7 @@ pip install -e ".[notebooks]"
 SAM2 model weights need to be downloaded separately:
 
 1. Visit the [SAM2 official repository](https://github.com/facebookresearch/segment-anything) to download model files, or click the following links directly:
+
    - [sam2.1_hiera_tiny.pt](https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_tiny.pt)
    - [sam2.1_hiera_small.pt](https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_small.pt)
    - [sam2.1_hiera_base_plus.pt](https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_base_plus.pt)
@@ -187,6 +194,7 @@ python -m main
 #### 1. Video Tracking 🎞️
 
 1. **Select Input Source**:
+
    - **Video File**: Select "Video File" radio button, then click "Browse" to select a video file (MP4, AVI, MOV, etc.)
    - **Image Sequence**: Select "Image Sequence" radio button, then click "Browse" to select a folder containing image files
      - Supported formats: JPEG, PNG, TIFF, BMP
@@ -198,6 +206,7 @@ python -m main
 3. **Multi-Frame Intelligent Annotation**:
 
    **New Object Annotation**:
+
    - Select "🆕 New Object" mode
    - Browse to the frame where the object first appears (usually frame 0)
    - Hold left mouse button and drag to draw bounding box
@@ -205,6 +214,7 @@ python -m main
    - Real-time preview mask will be automatically generated and displayed
 
    **Refine Object Annotation**:
+
    - Select "✏️ Refine Object" mode
    - Choose the object ID to refine from dropdown
    - Browse to key frames (deformation, occlusion, etc.)
@@ -213,12 +223,14 @@ python -m main
    - The object being refined will be highlighted with golden dashed line
 
    **Best Practices**:
+
    - Annotate at frame 0 when object first appears
    - Add annotations when object shape changes significantly
    - Add annotations before and after occlusion
    - Recommend 5-10 key frames, not too many
 
    **Annotation Management**:
+
    - View all annotated frames in the annotation panel
    - Click "Jump" to quickly navigate to specific frames
    - Click "Delete" to remove unwanted annotations
@@ -267,12 +279,15 @@ python -m main
 
 #### Mouse Operations
 
-| Action       | Function                            |
-| ------------ | ----------------------------------- |
-| Left drag    | Draw bounding box (New Object mode) |
-| Left click   | Add positive point (Point mode)     |
-| Right click  | Add negative point (Point mode)     |
-| Click on box | Select bounding box                 |
+| Action                | Function                            |
+| --------------------- | ----------------------------------- |
+| Left drag             | Draw bounding box (New Object mode) |
+| Left click            | Add positive point (Point mode)     |
+| Right click           | Add negative point (Point mode)     |
+| Click on box          | Select bounding box                 |
+| Ctrl+Scroll           | Zoom in/out (100%-1000%)            |
+| Ctrl+Left drag        | Pan image (when zoomed)             |
+| Middle-click / `Home` | Reset zoom to fit view              |
 
 ## 📁 Project Structure
 
@@ -305,14 +320,17 @@ Micro_Tracker/
 ### Common Issues ❓
 
 1. **Startup Failure**
+
    - Check if the Python version is 3.10+.
    - Ensure all dependencies are correctly installed (refer to [Install Dependencies](#3-install-dependencies)).
 
 2. **GPU Memory Insufficient**
+
    - Try reducing the resolution of the processing video.
    - Reduce the number of targets being tracked simultaneously.
 
 3. **Tracking Inaccurate**
+
    - Ensure the accuracy of initial framing.
    - Try using higher quality or clearer videos.
 
@@ -428,6 +446,12 @@ Micro_Tracker 是一个功能强大的基于 SAM2 模型的显微镜视频分析
   - 确保最优的 refinement 质量和时序一致性
 - **📋 标注管理功能**：完善的标注管理面板，支持帧列表查看、快速跳转、删除和导入（JSON 格式）。开始处理时自动保存标注数据。
 - **💾 标注自动保存**：点击"开始处理"时，标注数据会自动保存到 Results 文件夹，无需手动操作，确保数据安全。
+- **🔍 图像缩放与拖拽**：交互式画布控制，便于细节检查：
+  - Ctrl+鼠标滚轮缩放（100%-1000%，以鼠标位置为中心）
+  - Ctrl+左键拖拽平移
+  - 中键或 Home 键重置视图
+  - 三个视频视图独立缩放
+  - 实时缩放百分比悬浮提示
 - **🎬 视频分析**：处理显微镜视频并生成带有标记和轨迹的输出视频，采用分段前向传播策略。
 - **📊 数据提取**：提取目标物体的位置、大小、形状等关键参数。
 - **🎭 掩膜导出**：将分割结果保存为掩膜图像，便于后续分析。
@@ -497,6 +521,7 @@ pip install -e ".[notebooks]"
 SAM2 模型权重文件需要单独下载：
 
 1.  访问 [SAM2 官方仓库](https://github.com/facebookresearch/segment-anything) 下载模型文件，或直接点击以下链接下载：
+
     - [sam2.1_hiera_tiny.pt](https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_tiny.pt)
     - [sam2.1_hiera_small.pt](https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_small.pt)
     - [sam2.1_hiera_base_plus.pt](https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_base_plus.pt)
@@ -517,6 +542,7 @@ python -m main
 #### 1. 视频跟踪 🎞️
 
 1.  **选择输入源**：
+
     - **视频文件**：选择"视频文件"单选按钮，点击"浏览"选择视频文件（MP4、AVI、MOV 等）
     - **图像序列**：选择"图像序列"单选按钮，点击"浏览"选择包含图像文件的文件夹
       - 支持格式：JPEG、PNG、TIFF、BMP
@@ -528,6 +554,7 @@ python -m main
 3.  **多帧智能标注**（推荐使用以获得最佳追踪效果）:
 
     **新对象标注**:
+
     - 选择"🆕 新对象"模式
     - 浏览到对象首次出现的帧（通常是第 0 帧）
     - 按住鼠标左键拖动绘制边界框
@@ -535,6 +562,7 @@ python -m main
     - 实时预览 mask 会自动生成并显示
 
     **修正对象标注**:
+
     - 选择"✏️ 修正对象"模式
     - 从下拉框选择要修正的对象 ID
     - 浏览到关键帧（对象形变、遮挡前后等）
@@ -543,6 +571,7 @@ python -m main
     - 正在修正的对象会以金色虚线高亮显示
 
     **标注最佳实践**:
+
     - 在第 0 帧标注对象首次出现位置
     - 在对象形状显著变化时添加标注
     - 在对象被遮挡前后添加标注
@@ -598,12 +627,15 @@ python -m main
 
 #### 鼠标操作
 
-| 操作       | 功能                     |
-| ---------- | ------------------------ |
-| 左键拖拽   | 绘制边界框（新对象模式） |
-| 左键点击   | 添加正向点击（点击模式） |
-| 右键点击   | 添加负向点击（点击模式） |
-| 单击边界框 | 选中边界框               |
+| 操作                 | 功能                     |
+| -------------------- | ------------------------ |
+| 左键拖拽             | 绘制边界框（新对象模式） |
+| 左键点击             | 添加正向点击（点击模式） |
+| 右键点击             | 添加负向点击（点击模式） |
+| 单击边界框           | 选中边界框               |
+| Ctrl+滚轮            | 缩放图像（100%-1000%）   |
+| Ctrl+左键拖拽        | 拖拽平移图像（缩放后）   |
+| 中键点击 / `Home` 键 | 重置缩放至自适应         |
 
 ## 📁 项目结构
 
@@ -636,14 +668,17 @@ Micro_Tracker/
 ### 常见问题 ❓
 
 1.  **启动失败**
+
     - 检查 Python 版本是否为 3.10+。
     - 确保所有依赖项已正确安装 (参照 [安装依赖](#3-安装依赖))。
 
 2.  **GPU 内存不足**
+
     - 尝试降低处理视频的分辨率。
     - 减少同时跟踪的目标数量。
 
 3.  **跟踪不准确**
+
     - 确保初始框选的准确性。
     - 尝试使用更高质量或更清晰的视频。
 

@@ -1,7 +1,7 @@
 import numpy as np
-from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene, QGraphicsPixmapItem, QGraphicsItem, QSizePolicy, QMainWindow
+from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene, QGraphicsPixmapItem, QGraphicsItem, QSizePolicy, QMainWindow, QLabel
 from PyQt5.QtGui import QPixmap, QImage, QPainter, QPen, QColor, QFont
-from PyQt5.QtCore import Qt, pyqtSignal, QRectF
+from PyQt5.QtCore import Qt, pyqtSignal, QRectF, QTimer, QPropertyAnimation, QEasingCurve
 
 # Placeholder for 'from utils.color import COLOR' - this will be addressed later if utils.color is moved
 # For now, define a default COLOR list if the import fails, as in the original code.
@@ -118,6 +118,7 @@ class OverlayLayer(QGraphicsItem):
             qcolor = QColor(color[0], color[1], color[2])
             pen = QPen(qcolor)
             pen.setWidth(2)
+            pen.setCosmetic(True)
             if i == self.selected_bbox:
                 pen.setStyle(Qt.DashLine)
                 pen.setWidth(3)
@@ -144,6 +145,7 @@ class OverlayLayer(QGraphicsItem):
             return
         pen = QPen(QColor(255, 255, 0))
         pen.setWidth(2)
+        pen.setCosmetic(True)
         painter.setPen(pen)
         painter.setBrush(Qt.NoBrush)
         painter.drawRect(
@@ -162,6 +164,7 @@ class OverlayLayer(QGraphicsItem):
             qcolor = QColor(color[0], color[1], color[2])
             pen = QPen(qcolor)
             pen.setWidth(2)
+            pen.setCosmetic(True)
             painter.setPen(pen)
             for i in range(1, len(points)):
                 painter.drawLine(
@@ -180,6 +183,7 @@ class OverlayLayer(QGraphicsItem):
                 angle = features['angle']
                 pen = QPen(QColor(255, 0, 0)) # Red for major axis
                 pen.setWidth(2)
+                pen.setCosmetic(True)
                 painter.setPen(pen)
                 angle_rad = np.deg2rad(angle)
                 dx_major = major_axis * np.cos(angle_rad)
@@ -190,6 +194,7 @@ class OverlayLayer(QGraphicsItem):
                 )
                 pen = QPen(QColor(0, 0, 255)) # Blue for minor axis
                 pen.setWidth(2)
+                pen.setCosmetic(True)
                 painter.setPen(pen)
                 minor_angle_rad = angle_rad + np.pi/2
                 dx_minor = minor_axis * np.cos(minor_angle_rad)
@@ -229,12 +234,16 @@ class OverlayLayer(QGraphicsItem):
                         label = prompts["labels"][i] if "labels" in prompts and i < len(prompts["labels"]) else 1
                         # 绘制不同颜色的点：绿色=正向，红色=负向
                         color = QColor(0, 255, 0) if label == 1 else QColor(255, 0, 0)
-                        painter.setPen(QPen(color, 1))
+                        pen = QPen(color, 1)
+                        pen.setCosmetic(True)
+                        painter.setPen(pen)
                         painter.setBrush(Qt.NoBrush)
                         # 绘制圆形标记（修复：移除错误的resolution_factor缩放）
                         painter.drawEllipse(int(x - 4), int(y - 4), 8, 8)
                         # 绘制中心点
-                        painter.setPen(QPen(color, 3))
+                        pen = QPen(color, 3)
+                        pen.setCosmetic(True)
+                        painter.setPen(pen)
                         painter.drawPoint(int(x), int(y))
         
         # 绘制临时点击（还未保存的）- 只在所属帧显示
@@ -1031,11 +1040,24 @@ class MultiLayerVideoView(QGraphicsView):
         self.scene.addItem(self.frame_layer)
         self.overlay_layer = OverlayLayer()
         self.scene.addItem(self.overlay_layer)
+        self.overlay_layer.setCacheMode(QGraphicsItem.DeviceCoordinateCache)
         self.setRenderHint(QPainter.Antialiasing)
         self.setRenderHint(QPainter.SmoothPixmapTransform)
-        self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
-        self.setResizeAnchor(QGraphicsView.AnchorViewCenter)
+        # 禁用自动锚点，手动控制缩放中心
+        self.setTransformationAnchor(QGraphicsView.NoAnchor)
+        self.setResizeAnchor(QGraphicsView.NoAnchor)
+        # 启用滚动条以支持拖拽功能
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.scale_factor = 1.0
+        self.manual_zoom_active = False
+        self.is_panning = False
+        self.last_pan_pos = None
+        self.min_scale = 1.0
+        self.max_scale = 10.0
+        self.zoom_step = 1.15
+        self.zoom_tip_timer = None
+        self.zoom_tip_label = None
         self.frame = None
         self.original_pixmap = None
     
@@ -1054,18 +1076,86 @@ class MultiLayerVideoView(QGraphicsView):
         self.original_pixmap = pixmap
         self.frame_layer.setPixmap(pixmap)
         self.overlay_layer.update_frame_size(w, h)
-        self.fitInView(self.scene.sceneRect(), Qt.KeepAspectRatio)
-        self.scale_factor = 1.0
+        if not self.manual_zoom_active:
+            self.fitInView(self.scene.sceneRect(), Qt.KeepAspectRatio)
+            self.scale_factor = 1.0
     
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        if self.frame is not None:
+        if self.frame is not None and not self.manual_zoom_active:
             self.fitInView(self.scene.sceneRect(), Qt.KeepAspectRatio)
+    
+    def wheelEvent(self, event):
+        """鼠标滚轮事件处理：Ctrl+滚轮缩放"""
+        if event.modifiers() == Qt.ControlModifier:
+            if self.frame is None:
+                event.ignore()
+                return
+            
+            delta = event.angleDelta().y()
+            if delta > 0:
+                zoom_factor = self.zoom_step
+            else:
+                zoom_factor = 1.0 / self.zoom_step
+            
+            new_scale = self.scale_factor * zoom_factor
+            
+            if self.min_scale <= new_scale <= self.max_scale:
+                # 手动实现以鼠标为中心的缩放
+                # 1. 获取鼠标在视图中的位置（像素坐标）
+                view_pos = event.pos()
+                
+                # 2. 获取鼠标对应的场景位置（缩放前）
+                scene_pos = self.mapToScene(view_pos)
+                
+                # 3. 执行缩放
+                self.scale(zoom_factor, zoom_factor)
+                self.scale_factor = new_scale
+                self.manual_zoom_active = True
+                
+                # 4. 缩放后，计算同一场景点在视图中的新位置
+                new_view_pos = self.mapFromScene(scene_pos)
+                
+                # 5. 计算视图坐标的偏移（像素）
+                # 这是场景点在视图中"漂移"的距离
+                delta_x = new_view_pos.x() - view_pos.x()
+                delta_y = new_view_pos.y() - view_pos.y()
+                
+                # 6. 调整滚动条补偿这个偏移，使场景点回到鼠标位置
+                self.horizontalScrollBar().setValue(
+                    self.horizontalScrollBar().value() + int(delta_x)
+                )
+                self.verticalScrollBar().setValue(
+                    self.verticalScrollBar().value() + int(delta_y)
+                )
+                
+                self.show_zoom_tip()
+                event.accept()
+            else:
+                self.show_zoom_boundary_feedback(new_scale)
+                event.accept()
+        else:
+            super().wheelEvent(event)
     
     def mousePressEvent(self, event):
         if self.frame is None:
             return
         self.setFocus()
+        
+        # 优先级1：Ctrl+左键拖拽
+        if event.modifiers() == Qt.ControlModifier and event.button() == Qt.LeftButton:
+            self.is_panning = True
+            self.last_pan_pos = event.pos()
+            self.viewport().setCursor(Qt.ClosedHandCursor)
+            event.accept()
+            return
+        
+        # 优先级2：中键重置缩放
+        if event.button() == Qt.MiddleButton:
+            self.reset_zoom()
+            event.accept()
+            return
+        
         scene_pos = self.mapToScene(event.pos())
         x, y = scene_pos.x(), scene_pos.y()
         
@@ -1101,6 +1191,24 @@ class MultiLayerVideoView(QGraphicsView):
     def mouseMoveEvent(self, event):
         if self.frame is None:
             return
+        
+        # 处理拖拽平移
+        if self.is_panning and self.last_pan_pos is not None:
+            # 计算鼠标移动的距离（视图坐标）
+            delta = event.pos() - self.last_pan_pos
+            self.last_pan_pos = event.pos()
+            
+            # 更新滚动条（注意方向相反）
+            self.horizontalScrollBar().setValue(
+                self.horizontalScrollBar().value() - delta.x()
+            )
+            self.verticalScrollBar().setValue(
+                self.verticalScrollBar().value() - delta.y()
+            )
+            event.accept()
+            return
+        
+        # 原有的标注更新逻辑
         scene_pos = self.mapToScene(event.pos())
         x, y = scene_pos.x(), scene_pos.y()
         self.overlay_layer.update_drawing(x, y)
@@ -1108,6 +1216,15 @@ class MultiLayerVideoView(QGraphicsView):
     def mouseReleaseEvent(self, event):
         if self.frame is None:
             return
+        
+        # 检查是否在拖拽状态
+        if self.is_panning:
+            self.is_panning = False
+            self.last_pan_pos = None
+            self.viewport().setCursor(Qt.ArrowCursor)
+            event.accept()
+            return
+        
         # scene_pos = self.mapToScene(event.pos()) # x, y not used from here
         # x, y = scene_pos.x(), scene_pos.y()
         new_bbox = self.overlay_layer.finish_drawing()
@@ -1160,7 +1277,11 @@ class MultiLayerVideoView(QGraphicsView):
             self.window()._generate_preview_for_object(obj_id)
             
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key_Delete:
+        if event.key() == Qt.Key_Home:
+            self.reset_zoom()
+            event.accept()
+            return
+        elif event.key() == Qt.Key_Delete:
             deleted_id = self.overlay_layer.delete_selected_bbox()
             if deleted_id >= 0:
                 self.bbox_deleted.emit(deleted_id)
@@ -1225,6 +1346,117 @@ class MultiLayerVideoView(QGraphicsView):
                 event.accept()
                 return
         super().keyPressEvent(event)
+    
+    def reset_zoom(self):
+        """重置缩放到自适应状态"""
+        self.resetTransform()
+        self.fitInView(self.scene.sceneRect(), Qt.KeepAspectRatio)
+        self.scale_factor = 1.0
+        self.manual_zoom_active = False
+        self.show_zoom_tip()
+    
+    def show_zoom_tip(self):
+        """显示缩放倍数悬浮提示"""
+        if self.zoom_tip_label is None:
+            self.zoom_tip_label = QLabel(self.viewport())
+            self.zoom_tip_label.setStyleSheet("""
+                background-color: rgba(0, 0, 0, 180);
+                color: white;
+                padding: 8px 16px;
+                border-radius: 6px;
+                font-size: 14pt;
+                font-weight: bold;
+            """)
+            self.zoom_tip_label.setAlignment(Qt.AlignCenter)
+            self.zoom_tip_label.hide()
+        
+        if self.manual_zoom_active:
+            text = f"{int(self.scale_factor * 100)}%"
+        else:
+            text = "自适应"
+        
+        self.zoom_tip_label.setText(text)
+        self.zoom_tip_label.adjustSize()
+        
+        # 定位到右上角
+        x = self.viewport().width() - self.zoom_tip_label.width() - 15
+        y = 15
+        self.zoom_tip_label.move(x, y)
+        self.zoom_tip_label.raise_()
+        self.zoom_tip_label.show()
+        
+        if self.zoom_tip_timer is None:
+            self.zoom_tip_timer = QTimer()
+            self.zoom_tip_timer.timeout.connect(self.hide_zoom_tip)
+        
+        self.zoom_tip_timer.stop()
+        self.zoom_tip_timer.start(2000)
+    
+    def hide_zoom_tip(self):
+        """隐藏缩放提示"""
+        if self.zoom_tip_label is not None and self.zoom_tip_label.isVisible():
+            self.zoom_tip_label.hide()
+    
+    def show_zoom_boundary_feedback(self, attempted_scale=None):
+        """显示缩放边界反馈
+        
+        Args:
+            attempted_scale: 尝试达到的缩放倍数，用于判断是最小还是最大边界
+        """
+        original_geometry = self.geometry()
+        
+        # 如果没有传入attempted_scale，使用当前scale_factor判断
+        check_scale = attempted_scale if attempted_scale is not None else self.scale_factor
+        
+        if check_scale < self.min_scale:
+            tip_text = "已达到最小缩放 (100%)"
+        else:
+            tip_text = "已达到最大缩放 (1000%)"
+        
+        # 创建抖动动画
+        animation = QPropertyAnimation(self, b"geometry")
+        animation.setDuration(100)
+        animation.setStartValue(original_geometry)
+        
+        # 向上移动3像素
+        shake_up = original_geometry.adjusted(0, -3, 0, -3)
+        animation.setKeyValueAt(0.5, shake_up)
+        animation.setEndValue(original_geometry)
+        animation.setEasingCurve(QEasingCurve.OutBounce)
+        
+        # 临时显示边界提示
+        if self.zoom_tip_label is None:
+            self.show_zoom_tip()
+        
+        original_text = self.zoom_tip_label.text() if self.zoom_tip_label else ""
+        self.zoom_tip_label.setText(tip_text)
+        self.zoom_tip_label.adjustSize()
+        x = self.viewport().width() - self.zoom_tip_label.width() - 15
+        y = 15
+        self.zoom_tip_label.move(x, y)
+        self.zoom_tip_label.show()
+        
+        # 动画结束后恢复原始文本
+        def restore_text():
+            if self.manual_zoom_active:
+                self.zoom_tip_label.setText(f"{int(self.scale_factor * 100)}%")
+            else:
+                self.zoom_tip_label.setText("自适应")
+            self.zoom_tip_label.adjustSize()
+            x = self.viewport().width() - self.zoom_tip_label.width() - 15
+            self.zoom_tip_label.move(x, 15)
+        
+        animation.finished.connect(restore_text)
+        animation.start()
+    
+    def get_manual_zoom_state(self):
+        """获取当前手动缩放状态"""
+        center_point = self.mapToScene(self.viewport().rect().center())
+        return {
+            'manual_zoom_active': self.manual_zoom_active,
+            'scale_factor': self.scale_factor,
+            'center_point': center_point
+        }
         
     def get_bbox_list(self):
         """获取边界框列表（保持原有接口）"""

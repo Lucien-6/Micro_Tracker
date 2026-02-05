@@ -3,9 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Micro Tracker 使用指南 v2.7.0</title>
+    <title>Micro Tracker 使用指南 / User Guide v2.7.0</title>
     <style>
         /* ===== 全局样式重置和基础设置 ===== */
+        :root {
+            /* 现代配色方案 (Slate + Blue) */
+            --bg-color: #ffffff;
+            --text-color: #334155; /* Slate 700 */
+            --heading-color: #1e293b; /* Slate 800 */
+            --primary-color: #2563eb; /* Blue 600 */
+            --primary-light: #eff6ff; /* Blue 50 */
+            --secondary-color: #475569; /* Slate 600 */
+            
+            --border-color: #e2e8f0; /* Slate 200 */
+            --sidebar-bg: #f8fafc; /* Slate 50 */
+            --sidebar-border: #e2e8f0;
+            
+            --link-color: #2563eb;
+            --link-hover: #1d4ed8;
+            
+            --code-bg: #f1f5f9; /* Slate 100 */
+            --code-text: #0f172a; /* Slate 900 */
+            
+            --table-header-bg: #f8fafc;
+            --table-stripe-bg: #fafbfc;
+            
+            --note-bg: #eff6ff;
+            --note-border: #3b82f6;
+            --note-text: #1e40af;
+            
+            --warning-bg: #fff7ed;
+            --warning-border: #f97316;
+            --warning-text: #9a3412;
+            
+            --success-bg: #f0fdf4;
+            --success-border: #22c55e;
+            --success-text: #166534;
+            
+            --kbd-bg: #ffffff;
+            --kbd-border: #cbd5e1;
+            --kbd-shadow: #94a3b8;
+            
+            --radius: 8px;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            
+            /* 侧边栏交互 */
+            --sidebar-hover: #e2e8f0;
+            --sidebar-active-bg: #2563eb;
+            --sidebar-active-text: #ffffff;
+        }
+
+        /* ===== 暗色模式 ===== */
+        body.dark-mode {
+            --bg-color: #0f172a; /* Slate 900 */
+            --text-color: #cbd5e1; /* Slate 300 */
+            --heading-color: #f1f5f9; /* Slate 100 */
+            --primary-color: #60a5fa; /* Blue 400 */
+            --primary-light: #1e293b; /* Slate 800 */
+            --secondary-color: #94a3b8; /* Slate 400 */
+            
+            --border-color: #1e293b;
+            --sidebar-bg: #020617; /* Slate 950 */
+            --sidebar-border: #1e293b;
+            
+            --link-color: #60a5fa;
+            --link-hover: #93c5fd;
+            
+            --code-bg: #1e293b;
+            --code-text: #e2e8f0;
+            
+            --table-header-bg: #1e293b;
+            --table-stripe-bg: #162032;
+            
+            --note-bg: #172554;
+            --note-border: #3b82f6;
+            --note-text: #dbeafe;
+            
+            --warning-bg: #431407;
+            --warning-border: #f97316;
+            --warning-text: #ffedd5;
+            
+            --success-bg: #064e3b;
+            --success-border: #22c55e;
+            --success-text: #dcfce7;
+            
+            --kbd-bg: #1e293b;
+            --kbd-border: #475569;
+            --kbd-shadow: #020617;
+            
+            --sidebar-hover: #1e293b;
+            --sidebar-active-bg: #3b82f6;
+            --sidebar-active-text: #ffffff;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -17,371 +108,415 @@
         }
 
         body {
-            font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
-            font-size: 15px;
-            line-height: 1.8;
-            color: #2c3e50;
-            background-color: #ffffff;
-            transition: background-color 0.3s, color 0.3s;
-        }
-
-        /* ===== 明亮模式颜色变量 ===== */
-        :root {
-            --bg-color: #ffffff;
-            --text-color: #2c3e50;
-            --primary-color: #1976D2;
-            --secondary-color: #2196F3;
-            --border-color: #e0e0e0;
-            --sidebar-bg: #f8f9fa;
-            --link-color: #1976D2;
-            --code-bg: #f5f5f5;
-            --table-header-bg: #E1F5FE;
-            --table-stripe-bg: #f9f9f9;
-            --note-bg: #E1F5FE;
-            --note-border: #0D47A1;
-            --warning-bg: #FFF3E0;
-            --warning-border: #FF9800;
-            --success-bg: #E8F5E9;
-            --success-border: #4CAF50;
-            --kbd-bg: #f4f4f4;
-            --kbd-border: #ccc;
-            --sidebar-hover: #e9ecef;
-            --sidebar-active-bg: #e3f2fd;
-            --sidebar-active-border: #1976D2;
-        }
-
-        /* ===== 暗色模式颜色变量 ===== */
-        body.dark-mode {
-            --bg-color: #1a1d29;
-            --text-color: #e8e8e8;
-            --primary-color: #4A90E2;
-            --secondary-color: #64B5F6;
-            --border-color: #2d3142;
-            --sidebar-bg: #22252f;
-            --link-color: #64B5F6;
-            --code-bg: #2d3142;
-            --table-header-bg: #2d3d4a;
-            --table-stripe-bg: #1f2229;
-            --note-bg: #1e2a3a;
-            --note-border: #4A90E2;
-            --warning-bg: #3a2f1e;
-            --warning-border: #FF9800;
-            --success-bg: #1e2f24;
-            --success-border: #4CAF50;
-            --kbd-bg: #3a3d4a;
-            --kbd-border: #555;
-            --sidebar-hover: #2a2d38;
-            --sidebar-active-bg: #2a3a4a;
-            --sidebar-active-border: #4A90E2;
-        }
-
-        body.dark-mode {
-            background-color: var(--bg-color);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Microsoft YaHei", sans-serif;
+            font-size: 16px;
+            line-height: 1.75;
             color: var(--text-color);
+            background-color: var(--bg-color);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            -webkit-font-smoothing: antialiased;
         }
 
         /* ===== 顶部横幅 ===== */
         .header {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            padding: 20px 40px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 40px;
+            height: 70px;
             position: sticky;
             top: 0;
             z-index: 100;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        body.dark-mode .header {
+            background: rgba(15, 23, 42, 0.9);
         }
 
         .header h1 {
-            font-size: 28px;
-            font-weight: bold;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--heading-color);
+            display: flex;
+            align-items: center;
         }
 
         .header .version {
-            font-size: 14px;
-            opacity: 0.9;
-            margin-left: 15px;
+            font-size: 12px;
+            background: var(--primary-color);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-left: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
         }
 
-        /* ===== 暗色模式切换按钮 ===== */
-        .theme-toggle {
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            color: white;
-            font-size: 24px;
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
+        .header-controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        /* ===== 按钮样式 (语言切换 & 主题切换) ===== */
+        .icon-btn {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            font-size: 16px;
+            height: 40px;
+            padding: 0 12px;
+            border-radius: var(--radius);
             cursor: pointer;
-            transition: transform 0.3s, background 0.3s;
+            transition: all 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-weight: 600;
+            font-family: inherit;
         }
 
-        .theme-toggle:hover {
-            transform: scale(1.1);
-            background: rgba(255, 255, 255, 0.3);
+        .icon-btn.theme-toggle {
+            font-size: 20px;
+            width: 40px;
+            padding: 0;
         }
+
+        .icon-btn:hover {
+            background: var(--sidebar-bg);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            transform: translateY(-1px);
+        }
+
+        /* ===== 语言切换逻辑 ===== */
+        /* 默认显示中文，隐藏英文 */
+        body:not(.lang-en) .lang-en { display: none !important; }
+        body:not(.lang-en) span.lang-en { display: none !important; }
+        
+        /* 英文模式下隐藏中文，显示英文 */
+        body.lang-en .lang-cn { display: none !important; }
+        body.lang-en span.lang-cn { display: none !important; }
+        body.lang-en .lang-en { display: inherit !important; }
+        /* 修复块级元素的显示 */
+        body.lang-en div.lang-en, 
+        body.lang-en p.lang-en, 
+        body.lang-en h1.lang-en,
+        body.lang-en h2.lang-en,
+        body.lang-en h3.lang-en,
+        body.lang-en h4.lang-en,
+        body.lang-en ul.lang-en,
+        body.lang-en ol.lang-en,
+        body.lang-en li.lang-en,
+        body.lang-en table.lang-en { 
+            display: block !important; 
+        }
+        body.lang-en li.lang-en { display: list-item !important; }
+        body.lang-en table.lang-en { display: table !important; }
+        body.lang-en a.lang-en { display: inline !important; } /* 侧边栏链接通常是block或flex，需要特别处理 */
+        body.lang-en .sidebar nav a.lang-en { display: flex !important; }
 
         /* ===== 主容器 ===== */
         .container {
             display: flex;
-            min-height: calc(100vh - 80px);
+            max-width: 1600px;
+            margin: 0 auto;
+            min-height: calc(100vh - 70px);
         }
 
         /* ===== 侧边栏导航 ===== */
         .sidebar {
-            width: 280px;
+            width: 320px;
             background-color: var(--sidebar-bg);
-            border-right: 1px solid var(--border-color);
-            padding: 20px;
-            position: fixed;
-            height: calc(100vh - 80px);
+            border-right: 1px solid var(--sidebar-border);
+            padding: 30px 20px;
+            position: sticky;
+            top: 70px;
+            height: calc(100vh - 70px);
             overflow-y: auto;
-            transition: background-color 0.3s;
+            flex-shrink: 0;
         }
 
-        .sidebar::-webkit-scrollbar {
-            width: 6px;
-        }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-track { background: transparent; }
+        .sidebar::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 2px; }
 
-        .sidebar::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .sidebar::-webkit-scrollbar-thumb {
-            background: var(--border-color);
-            border-radius: 3px;
-        }
-
-        .sidebar nav ul {
-            list-style: none;
-        }
-
-        .sidebar nav > ul > li {
-            margin-bottom: 8px;
-        }
+        .sidebar nav ul { list-style: none; }
+        .sidebar nav > ul > li { margin-bottom: 4px; }
 
         .sidebar nav a {
-            display: block;
+            display: flex;
+            align-items: center;
             color: var(--text-color);
             text-decoration: none;
-            padding: 8px 12px;
-            border-radius: 6px;
-            transition: background-color 0.2s, color 0.2s;
+            padding: 10px 14px;
+            border-radius: var(--radius);
+            transition: all 0.2s;
             font-size: 14px;
+            font-weight: 500;
         }
 
         .sidebar nav a:hover {
             background-color: var(--sidebar-hover);
-            color: var(--primary-color);
+            color: var(--heading-color);
         }
 
         .sidebar nav a.active {
             background-color: var(--sidebar-active-bg);
-            color: var(--primary-color);
-            border-left: 3px solid var(--sidebar-active-border);
-            font-weight: bold;
+            color: var(--sidebar-active-text);
+            box-shadow: var(--shadow-sm);
         }
 
         .sidebar .nav-section {
-            font-weight: bold;
-            color: var(--primary-color);
+            font-weight: 600;
         }
 
         .sidebar .nav-subsection {
-            padding-left: 15px;
+            margin-left: 20px;
+            padding-left: 10px;
+            border-left: 1px solid var(--border-color);
             display: none;
+            margin-top: 4px;
+            margin-bottom: 8px;
         }
 
-        .sidebar .nav-subsection.expanded {
-            display: block;
+        .sidebar .nav-subsection.expanded { display: block; }
+        
+        .sidebar .nav-subsection li a {
+            padding: 8px 12px;
+            font-size: 13px;
+            color: var(--secondary-color);
+        }
+        
+        .sidebar .nav-subsection li a:hover {
+            color: var(--heading-color);
+        }
+        
+        .sidebar .nav-subsection li a.active {
+            color: var(--primary-color);
+            background: var(--primary-light);
+            font-weight: 600;
+            box-shadow: none;
         }
 
+        /* 侧边栏折叠箭头 */
         .sidebar .section-toggle {
-            cursor: pointer;
-            user-select: none;
-            position: relative;
+            justify-content: space-between;
+        }
+        
+        .sidebar .section-toggle::after {
+            content: '›';
+            font-size: 16px;
+            transition: transform 0.2s;
+            margin-left: 8px;
+            color: var(--secondary-color);
+        }
+        
+        .sidebar .section-toggle.active::after {
+            color: white;
         }
 
-        .sidebar .section-toggle::before {
-            content: '▶';
-            position: absolute;
-            left: -15px;
-            font-size: 10px;
-            transition: transform 0.3s;
-        }
-
-        .sidebar .section-toggle.expanded::before {
+        .sidebar .section-toggle.expanded::after {
             transform: rotate(90deg);
         }
+        
+        /* 移除原本的左侧箭头 */
+        .sidebar .section-toggle::before { content: none; }
 
         /* ===== 内容区域 ===== */
         .content {
-            margin-left: 320px;
-            padding: 40px;
-            max-width: 900px;
             flex-grow: 1;
+            padding: 60px 80px;
+            max-width: 1000px; /* 限制内容宽度以提高阅读体验 */
+            margin: 0 auto;
         }
 
         /* ===== 标题样式 ===== */
         h2 {
-            color: var(--primary-color);
-            font-size: 26px;
-            margin-top: 40px;
-            margin-bottom: 20px;
-            border-bottom: 2px solid var(--primary-color);
-            padding-bottom: 10px;
+            color: var(--heading-color);
+            font-size: 32px;
+            margin-top: 60px;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+            letter-spacing: -0.5px;
+            line-height: 1.3;
         }
+        
+        section:first-child h2 { margin-top: 0; }
 
         h3 {
-            color: var(--secondary-color);
-            font-size: 22px;
-            margin-top: 30px;
-            margin-bottom: 15px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 8px;
+            color: var(--heading-color);
+            font-size: 24px;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            font-weight: 600;
+            line-height: 1.4;
         }
 
         h4 {
-            color: #455A64;
+            color: var(--heading-color);
             font-size: 18px;
             margin-top: 24px;
             margin-bottom: 12px;
-        }
-
-        body.dark-mode h4 {
-            color: #90A4AE;
+            font-weight: 600;
         }
 
         /* ===== 段落和列表 ===== */
         p {
-            margin: 12px 0;
+            margin-bottom: 20px;
+            color: var(--text-color);
             text-align: justify;
         }
 
         ul, ol {
-            margin: 12px 0;
-            padding-left: 30px;
+            margin: 20px 0;
+            padding-left: 24px;
+            color: var(--text-color);
         }
 
-        li {
-            margin: 6px 0;
-        }
+        li { margin-bottom: 8px; }
 
         b, strong {
-            color: #37474F;
-        }
-
-        body.dark-mode b,
-        body.dark-mode strong {
-            color: #CFD8DC;
+            color: var(--heading-color);
+            font-weight: 600;
         }
 
         /* ===== 表格样式 ===== */
         table {
             width: 100%;
             border-collapse: collapse;
-            margin: 16px 0;
+            margin: 30px 0;
+            border-radius: var(--radius);
+            overflow: hidden;
             border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
         }
 
         th, td {
-            padding: 12px;
+            padding: 16px;
             text-align: left;
-            border: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
         }
 
         th {
             background-color: var(--table-header-bg);
-            font-weight: bold;
+            font-weight: 600;
+            color: var(--heading-color);
         }
 
-        tr:nth-child(even) {
-            background-color: var(--table-stripe-bg);
-        }
+        tr:last-child td { border-bottom: none; }
+        tr:nth-child(even) { background-color: var(--table-stripe-bg); }
+        tr:hover { background-color: var(--primary-light); }
+        body.dark-mode tr:hover { background-color: rgba(255,255,255,0.03); }
 
         /* ===== 信息框样式 ===== */
         .note, .warning, .success {
-            padding: 16px;
-            margin: 16px 0;
-            border-radius: 6px;
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: var(--radius);
             border-left: 4px solid;
+            position: relative;
+            box-shadow: var(--shadow-sm);
         }
 
         .note {
             background-color: var(--note-bg);
             border-left-color: var(--note-border);
+            color: var(--note-text);
         }
 
         .warning {
             background-color: var(--warning-bg);
             border-left-color: var(--warning-border);
+            color: var(--warning-text);
         }
 
         .success {
             background-color: var(--success-bg);
             border-left-color: var(--success-border);
+            color: var(--success-text);
+        }
+        
+        .note h4, .warning h4, .success h4 {
+            margin-top: 0;
+            color: inherit;
         }
 
         /* ===== 代码和键盘快捷键 ===== */
         code {
             background-color: var(--code-bg);
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 14px;
+            color: var(--code-text);
+            padding: 3px 6px;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', 'Consolas', monospace;
+            font-size: 0.9em;
+            vertical-align: middle;
         }
 
         kbd {
             background-color: var(--kbd-bg);
             border: 1px solid var(--kbd-border);
-            border-radius: 4px;
-            padding: 3px 8px;
-            font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 13px;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            border-bottom-width: 3px;
+            border-radius: 6px;
+            padding: 2px 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.85em;
+            font-weight: 600;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            color: var(--heading-color);
+            white-space: nowrap;
         }
 
         /* ===== 链接 ===== */
         a {
             color: var(--link-color);
             text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
         }
 
-        a:hover {
+        .content a:hover {
+            color: var(--link-hover);
             text-decoration: underline;
+            text-underline-offset: 4px;
         }
 
         /* ===== 响应式设计 ===== */
+        @media (max-width: 1024px) {
+            .content { padding: 40px; }
+            .sidebar { width: 280px; }
+        }
+
         @media (max-width: 768px) {
+            .container { flex-direction: column; }
             .sidebar {
                 width: 100%;
-                position: relative;
                 height: auto;
+                max-height: 300px; /* 限制手机上侧边栏高度 */
+                position: relative;
+                top: 0;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+                padding: 10px;
             }
-
-            .content {
-                margin-left: 0;
-                padding: 20px;
-            }
-
-            .container {
-                flex-direction: column;
-            }
+            .content { padding: 20px; }
+            .header { padding: 0 20px; height: 60px; }
+            .header h1 { font-size: 18px; }
         }
 
         /* ===== 页脚 ===== */
         .footer {
             text-align: center;
-            padding: 20px;
-            color: #757575;
-            font-size: 13px;
+            padding: 40px 0;
+            color: var(--secondary-color);
+            font-size: 14px;
             border-top: 1px solid var(--border-color);
-            margin-top: 40px;
+            margin-top: 80px;
         }
     </style>
 </head>
@@ -389,9 +524,16 @@
     <!-- 顶部横幅 -->
     <div class="header">
         <div>
-            <h1>Micro Tracker 使用指南 <span class="version">v2.7.0</span></h1>
+            <h1>
+                <span class="lang-cn">Micro Tracker 使用指南</span>
+                <span class="lang-en">Micro Tracker User Guide</span>
+                <span class="version">v2.7.0</span>
+            </h1>
         </div>
-        <button class="theme-toggle" id="themeToggle" title="切换暗色模式">🌙</button>
+        <div class="header-controls">
+            <button class="icon-btn" id="langToggle" title="切换语言 / Switch Language">En/中</button>
+            <button class="icon-btn theme-toggle" id="themeToggle" title="切换暗色模式 / Toggle Dark Mode">🌙</button>
+        </div>
     </div>
 
     <!-- 主容器 -->
@@ -400,36 +542,98 @@
         <aside class="sidebar">
             <nav>
                 <ul>
-                    <li><a href="#section-1" class="nav-section">快速开始</a></li>
-                    <li><a href="#section-2" class="nav-section">文件选择与参数设置</a></li>
                     <li>
-                        <a href="#section-3" class="nav-section section-toggle">标注教程</a>
+                        <a href="#section-1" class="nav-section lang-cn">快速开始</a>
+                        <a href="#section-1" class="nav-section lang-en">Quick Start</a>
+                    </li>
+                    <li>
+                        <a href="#section-2" class="nav-section lang-cn">文件选择与参数设置</a>
+                        <a href="#section-2" class="nav-section lang-en">File Selection & Parameters</a>
+                    </li>
+                    <li>
+                        <a href="#section-3" class="nav-section section-toggle lang-cn">标注教程</a>
+                        <a href="#section-3" class="nav-section section-toggle lang-en">Annotation Tutorial</a>
                         <ul class="nav-subsection">
-                            <li><a href="#section-3-1">标注模式详解</a></li>
-                            <li><a href="#section-3-2">提示类型详解</a></li>
-                            <li><a href="#section-3-3">标注操作步骤</a></li>
-                            <li><a href="#section-3-4">标注管理</a></li>
-                            <li><a href="#section-3-5">标注最佳实践</a></li>
+                            <li>
+                                <a href="#section-3-1" class="lang-cn">标注模式详解</a>
+                                <a href="#section-3-1" class="lang-en">Annotation Modes</a>
+                            </li>
+                            <li>
+                                <a href="#section-3-2" class="lang-cn">提示类型详解</a>
+                                <a href="#section-3-2" class="lang-en">Prompt Types</a>
+                            </li>
+                            <li>
+                                <a href="#section-3-3" class="lang-cn">标注操作步骤</a>
+                                <a href="#section-3-3" class="lang-en">Step-by-Step Guide</a>
+                            </li>
+                            <li>
+                                <a href="#section-3-4" class="lang-cn">标注管理</a>
+                                <a href="#section-3-4" class="lang-en">Management</a>
+                            </li>
+                            <li>
+                                <a href="#section-3-5" class="lang-cn">标注最佳实践</a>
+                                <a href="#section-3-5" class="lang-en">Best Practices</a>
+                            </li>
                         </ul>
                     </li>
-                    <li><a href="#section-4" class="nav-section">视频处理</a></li>
-                    <li><a href="#section-5" class="nav-section">视频预览控制</a></li>
-                    <li><a href="#section-6" class="nav-section">结果预览</a></li>
                     <li>
-                        <a href="#section-7" class="nav-section section-toggle">筛选过滤功能</a>
+                        <a href="#section-4" class="nav-section lang-cn">视频处理</a>
+                        <a href="#section-4" class="nav-section lang-en">Video Processing</a>
+                    </li>
+                    <li>
+                        <a href="#section-5" class="nav-section lang-cn">视频预览控制</a>
+                        <a href="#section-5" class="nav-section lang-en">Video Preview Controls</a>
+                    </li>
+                    <li>
+                        <a href="#section-6" class="nav-section lang-cn">结果预览</a>
+                        <a href="#section-6" class="nav-section lang-en">Result Preview</a>
+                    </li>
+                    <li>
+                        <a href="#section-7" class="nav-section section-toggle lang-cn">筛选过滤功能</a>
+                        <a href="#section-7" class="nav-section section-toggle lang-en">Filtering Functions</a>
                         <ul class="nav-subsection">
-                            <li><a href="#section-7-1">掩膜图片序列选择</a></li>
-                            <li><a href="#section-7-2">参数设置理解</a></li>
-                            <li><a href="#section-7-3">筛选条件详解</a></li>
-                            <li><a href="#section-7-4">筛选结果理解</a></li>
-                            <li><a href="#section-7-5">可视化元素详解</a></li>
-                            <li><a href="#section-7-6">数据保存与导出</a></li>
+                            <li>
+                                <a href="#section-7-1" class="lang-cn">掩膜图片序列选择</a>
+                                <a href="#section-7-1" class="lang-en">Mask Selection</a>
+                            </li>
+                            <li>
+                                <a href="#section-7-2" class="lang-cn">参数设置理解</a>
+                                <a href="#section-7-2" class="lang-en">Parameters</a>
+                            </li>
+                            <li>
+                                <a href="#section-7-3" class="lang-cn">筛选条件详解</a>
+                                <a href="#section-7-3" class="lang-en">Filter Conditions</a>
+                            </li>
+                            <li>
+                                <a href="#section-7-4" class="lang-cn">筛选结果理解</a>
+                                <a href="#section-7-4" class="lang-en">Understanding Results</a>
+                            </li>
+                            <li>
+                                <a href="#section-7-5" class="lang-cn">可视化元素详解</a>
+                                <a href="#section-7-5" class="lang-en">Visualization</a>
+                            </li>
+                            <li>
+                                <a href="#section-7-6" class="lang-cn">数据保存与导出</a>
+                                <a href="#section-7-6" class="lang-en">Data Export</a>
+                            </li>
                         </ul>
                     </li>
-                    <li><a href="#section-8" class="nav-section">键盘快捷键参考</a></li>
-                    <li><a href="#section-9" class="nav-section">后处理工具推荐</a></li>
-                    <li><a href="#section-10" class="nav-section">常见问题与故障排除</a></li>
-                    <li><a href="#section-11" class="nav-section">附录</a></li>
+                    <li>
+                        <a href="#section-8" class="nav-section lang-cn">键盘快捷键参考</a>
+                        <a href="#section-8" class="nav-section lang-en">Keyboard Shortcuts</a>
+                    </li>
+                    <li>
+                        <a href="#section-9" class="nav-section lang-cn">后处理工具推荐</a>
+                        <a href="#section-9" class="nav-section lang-en">Post-processing Tools</a>
+                    </li>
+                    <li>
+                        <a href="#section-10" class="nav-section lang-cn">常见问题与故障排除</a>
+                        <a href="#section-10" class="nav-section lang-en">FAQ & Troubleshooting</a>
+                    </li>
+                    <li>
+                        <a href="#section-11" class="nav-section lang-cn">附录</a>
+                        <a href="#section-11" class="nav-section lang-en">Appendix</a>
+                    </li>
                 </ul>
             </nav>
         </aside>
@@ -438,36 +642,57 @@
         <main class="content">
             <!-- 第1章：快速开始 -->
             <section id="section-1">
-                <h2>📚 快速开始</h2>
+                <h2 class="lang-cn">📚 快速开始</h2>
+                <h2 class="lang-en">📚 Quick Start</h2>
                 
                 <div class="note">
-                    <h4>作者信息</h4>
-                    <p><b>作者：</b>LUCIEN</p>
-                    <p><b>邮箱：</b>lucien-6@qq.com</p>
-                    <p><b>版本：</b>2.7.0</p>
-                    <p><b>发布日期：</b>2026-02-04</p>
-                    <p><b>版权：</b>Copyright © 2026 LUCIEN. 保留所有权利。</p>
+                    <h4 class="lang-cn">作者信息</h4>
+                    <h4 class="lang-en">Author Information</h4>
+                    <p class="lang-cn"><b>作者：</b>LUCIEN</p>
+                    <p class="lang-en"><b>Author:</b> LUCIEN</p>
+                    <p class="lang-cn"><b>邮箱：</b>lucien-6@qq.com</p>
+                    <p class="lang-en"><b>Email:</b> lucien-6@qq.com</p>
+                    <p class="lang-cn"><b>版本：</b>2.7.0</p>
+                    <p class="lang-en"><b>Version:</b> 2.7.0</p>
+                    <p class="lang-cn"><b>发布日期：</b>2026-02-04</p>
+                    <p class="lang-en"><b>Release Date:</b> 2026-02-04</p>
+                    <p class="lang-cn"><b>版权：</b>Copyright © 2026 LUCIEN. 保留所有权利。</p>
+                    <p class="lang-en"><b>Copyright:</b> Copyright © 2026 LUCIEN. All rights reserved.</p>
                 </div>
 
-                <h3>软件简介</h3>
-                <p>Micro Tracker 是一个基于 SAM2 (Segment Anything Model 2) 的显微视频对象分割和跟踪工具。本工具采用最新的 SAM2 模型，支持多帧智能标注、实时预览和高级数据筛选功能，可以帮助您对显微视频中的多个对象进行高精度自动分割和跟踪，广泛适用于生物医学研究、材料科学、细胞追踪等显微视频分析场景。</p>
+                <h3 class="lang-cn">软件简介</h3>
+                <h3 class="lang-en">Introduction</h3>
+                <p class="lang-cn">Micro Tracker 是一个基于 SAM2 (Segment Anything Model 2) 的显微视频对象分割和跟踪工具。本工具采用最新的 SAM2 模型，支持多帧智能标注、实时预览和高级数据筛选功能，可以帮助您对显微视频中的多个对象进行高精度自动分割和跟踪，广泛适用于生物医学研究、材料科学、细胞追踪等显微视频分析场景。</p>
+                <p class="lang-en">Micro Tracker is a microscopic video object segmentation and tracking tool based on SAM2 (Segment Anything Model 2). Utilizing the latest SAM2 model, it supports multi-frame intelligent annotation, real-time preview, and advanced data filtering. It assists in high-precision automatic segmentation and tracking of multiple objects in microscopic videos, widely suitable for biomedical research, materials science, cell tracking, and other microscopic video analysis scenarios.</p>
 
-                <h3>系统要求</h3>
+                <h3 class="lang-cn">系统要求</h3>
+                <h3 class="lang-en">System Requirements</h3>
                 <div class="warning">
-                    <h4>⚠️ 重要提示</h4>
-                    <p>为了获得最佳性能和兼容性，请确保您的系统满足以下要求：</p>
-                    <ul>
+                    <h4 class="lang-cn">⚠️ 重要提示</h4>
+                    <h4 class="lang-en">⚠️ Important</h4>
+                    <p class="lang-cn">为了获得最佳性能和兼容性，请确保您的系统满足以下要求：</p>
+                    <p class="lang-en">To ensure optimal performance and compatibility, please ensure your system meets the following requirements:</p>
+                    <ul class="lang-cn">
                         <li><b>操作系统：</b>Windows 10/11, Linux, macOS</li>
                         <li><b>Python版本：</b>3.10+</li>
                         <li><b>PyTorch版本：</b>1.9.0 或更高版本 (CUDA版本视GPU而定)</li>
                         <li><b>GPU加速：</b>如果使用GPU加速，请确保已正确安装NVIDIA驱动和CUDA工具包</li>
                         <li><b>实时预览：</b>实时预览功能需要GPU支持，如果初始化失败会自动降级为仅显示边界框</li>
                     </ul>
-                    <p>如果遇到任何问题，请首先检查日志输出，并确保所有依赖项已正确安装。您可以通过邮件联系作者获取技术支持。</p>
+                    <ul class="lang-en">
+                        <li><b>OS:</b> Windows 10/11, Linux, macOS</li>
+                        <li><b>Python Version:</b> 3.10+</li>
+                        <li><b>PyTorch Version:</b> 1.9.0 or higher (CUDA version depends on GPU)</li>
+                        <li><b>GPU Acceleration:</b> Ensure NVIDIA drivers and CUDA toolkit are correctly installed for GPU acceleration.</li>
+                        <li><b>Real-time Preview:</b> Requires GPU support. Will automatically downgrade to bounding box only if initialization fails.</li>
+                    </ul>
+                    <p class="lang-cn">如果遇到任何问题，请首先检查日志输出，并确保所有依赖项已正确安装。您可以通过邮件联系作者获取技术支持。</p>
+                    <p class="lang-en">If you encounter any issues, please check the log output first and ensure all dependencies are installed correctly. You can contact the author for technical support via email.</p>
                 </div>
 
-                <h3>基本使用流程</h3>
-                <ol>
+                <h3 class="lang-cn">基本使用流程</h3>
+                <h3 class="lang-en">Basic Workflow</h3>
+                <ol class="lang-cn">
                     <li><b>选择输入源：</b>点击"浏览"按钮选择要处理的视频文件或图像序列文件夹。支持常见视频格式（MP4、AVI、MOV、MKV）和图像格式（JPG、PNG、TIFF、BMP）。</li>
                     <li><b>确认模型路径：</b>确保 SAM2 模型路径正确，默认为 <code>models/sam2/checkpoints/sam2.1_hiera_tiny.pt</code>。如需使用其他模型，可从下拉框选择或点击"浏览"按钮选择模型文件。</li>
                     <li><b>设置输出选项：</b>指定输出视频路径和掩码保存目录（可选）。掩码目录用于保存对象分割的二进制掩码，便于后续处理和分析。</li>
@@ -476,76 +701,135 @@
                     <li><b>查看结果：</b>处理完成后自动切换到"结果预览"标签页查看处理结果。您可以播放、暂停并浏览处理后的视频，查看分割和跟踪效果。</li>
                     <li><b>筛选数据：</b>切换到"筛选过滤"标签页，对掩膜对象进行高级筛选、分析和数据导出。详见<a href="#section-7">筛选过滤功能</a>章节。</li>
                 </ol>
+                <ol class="lang-en">
+                    <li><b>Select Input:</b> Click "Browse" to select the video file or image sequence folder. Supports common video formats (MP4, AVI, MOV, MKV) and image formats (JPG, PNG, TIFF, BMP).</li>
+                    <li><b>Confirm Model:</b> Ensure the SAM2 model path is correct (default: <code>models/sam2/checkpoints/sam2.1_hiera_tiny.pt</code>). Select from the dropdown or browse for a custom model if needed.</li>
+                    <li><b>Output Settings:</b> Specify output paths for the result video and mask directory (optional). Masks are binary segmentation images useful for further analysis.</li>
+                    <li><b>Smart Annotation (Recommended):</b> Use "New Object" mode for initial positions. Use "Refine Object" mode for keyframes (deformations, occlusions). The system generates real-time previews to verify annotation quality. See <a href="#section-3">Annotation Tutorial</a>.</li>
+                    <li><b>Start Processing:</b> Click "Start Processing". Monitor progress and estimated time. Annotations are automatically saved to the Results folder.</li>
+                    <li><b>View Results:</b> Automatically switches to the "Result Preview" tab upon completion. Play, pause, and browse the processed video to check segmentation and tracking.</li>
+                    <li><b>Filter Data:</b> Switch to "Filtering" tab for advanced screening, analysis, and data export. See <a href="#section-7">Filtering Functions</a>.</li>
+                </ol>
             </section>
 
             <!-- 第2章：文件选择与参数设置 -->
             <section id="section-2">
-                <h2>⚙️ 文件选择与参数设置</h2>
+                <h2 class="lang-cn">⚙️ 文件选择与参数设置</h2>
+                <h2 class="lang-en">⚙️ File Selection & Parameters</h2>
 
-                <h3>输入类型选择</h3>
-                <p>Micro Tracker 支持两种输入类型：</p>
-                <ul>
+                <h3 class="lang-cn">输入类型选择</h3>
+                <h3 class="lang-en">Input Type Selection</h3>
+                <p class="lang-cn">Micro Tracker 支持两种输入类型：</p>
+                <p class="lang-en">Micro Tracker supports two input types:</p>
+                <ul class="lang-cn">
                     <li><b>🎬 视频文件：</b>支持 MP4、AVI、MOV、MKV 等常见视频格式。选择"视频文件"单选按钮后点击"浏览"选择文件。</li>
                     <li><b>🖼️ 图像序列：</b>支持 JPEG、PNG、TIFF、BMP 等图像格式。选择"图像序列"单选按钮后点击"浏览"选择包含图像的文件夹。</li>
                 </ul>
+                <ul class="lang-en">
+                    <li><b>🎬 Video File:</b> MP4, AVI, MOV, MKV, etc. Select "Video File" and click "Browse".</li>
+                    <li><b>🖼️ Image Sequence:</b> JPEG, PNG, TIFF, BMP, etc. Select "Image Sequence" and browse to the folder containing images.</li>
+                </ul>
 
                 <div class="note">
-                    <h4>💡 图像序列特性</h4>
-                    <ul>
+                    <h4 class="lang-cn">💡 图像序列特性</h4>
+                    <h4 class="lang-en">💡 Image Sequence Features</h4>
+                    <ul class="lang-cn">
                         <li><b>智能排序：</b>支持多种命名格式，如纯数字 <code>00001.jpg</code>、前缀+数字 <code>frame_001.png</code> 等</li>
                         <li><b>自动转换：</b>非JPEG图像自动转换以兼容SAM2</li>
                         <li><b>默认帧率：</b>10 FPS（可配置）</li>
                         <li><b>适用场景：</b>显微镜逐帧采集、时间序列拍摄、已提取的视频帧</li>
                     </ul>
+                    <ul class="lang-en">
+                        <li><b>Smart Sorting:</b> Supports various naming formats (e.g., <code>00001.jpg</code>, <code>frame_001.png</code>).</li>
+                        <li><b>Auto Conversion:</b> Non-JPEG images are automatically converted for SAM2 compatibility.</li>
+                        <li><b>Default FPS:</b> 10 FPS (configurable).</li>
+                        <li><b>Use Cases:</b> Frame-by-frame microscopy, time-lapse, extracted video frames.</li>
+                    </ul>
                 </div>
 
-                <h3>SAM2 模型选择</h3>
-                <p>从下拉框选择预设的SAM2模型或点击"浏览"按钮选择自定义模型文件：</p>
-                <ul>
+                <h3 class="lang-cn">SAM2 模型选择</h3>
+                <h3 class="lang-en">SAM2 Model Selection</h3>
+                <p class="lang-cn">从下拉框选择预设的SAM2模型或点击"浏览"按钮选择自定义模型文件：</p>
+                <p class="lang-en">Select a preset SAM2 model from the dropdown or browse for a custom file:</p>
+                <ul class="lang-cn">
                     <li><b>🟢 Tiny：</b>最快速度，适合实时预览和快速测试</li>
                     <li><b>🟡 Small：</b>平衡速度与精度</li>
                     <li><b>🟠 Base+：</b>高精度（推荐用于正式分析）</li>
                     <li><b>🔴 Large：</b>最高精度，处理速度较慢</li>
                 </ul>
+                <ul class="lang-en">
+                    <li><b>🟢 Tiny:</b> Fastest, best for real-time preview and quick testing.</li>
+                    <li><b>🟡 Small:</b> Balance between speed and precision.</li>
+                    <li><b>🟠 Base+:</b> High precision (recommended for formal analysis).</li>
+                    <li><b>🔴 Large:</b> Highest precision, slower processing speed.</li>
+                </ul>
 
-                <h3>输出路径设置</h3>
-                <ul>
+                <h3 class="lang-cn">输出路径设置</h3>
+                <h3 class="lang-en">Output Path Settings</h3>
+                <ul class="lang-cn">
                     <li><b>结果视频输出：</b>指定处理后视频的保存位置。留空则系统自动在 <code>Results</code> 文件夹生成。</li>
                     <li><b>掩码保存目录：</b>指定掩码图像序列的保存目录。留空则系统自动在 <code>Results</code> 文件夹生成。掩码图像为8位灰度PNG图片，每个像素值表示对象ID，背景为0。</li>
                 </ul>
+                <ul class="lang-en">
+                    <li><b>Result Video Output:</b> Path for the processed video. Defaults to <code>Results</code> folder if left empty.</li>
+                    <li><b>Mask Save Directory:</b> Directory for mask image sequences. Defaults to <code>Results</code> folder if left empty. Masks are 8-bit grayscale PNGs where pixel values represent object IDs (background=0).</li>
+                </ul>
 
-                <h3>处理设备选择</h3>
-                <p>从下拉菜单中选择要使用的处理设备：</p>
-                <ul>
+                <h3 class="lang-cn">处理设备选择</h3>
+                <h3 class="lang-en">Processing Device</h3>
+                <p class="lang-cn">从下拉菜单中选择要使用的处理设备：</p>
+                <p class="lang-en">Select the device to use for processing:</p>
+                <ul class="lang-cn">
                     <li><b>CUDA:0 (默认)：</b>使用GPU加速，推荐用于获得最佳性能</li>
                     <li><b>CPU：</b>使用CPU处理，适用于无GPU环境（速度较慢）</li>
                     <li><b>CUDA:1, CUDA:2...：</b>如果系统有多个GPU，可选择指定GPU</li>
                 </ul>
+                <ul class="lang-en">
+                    <li><b>CUDA:0 (Default):</b> GPU acceleration. Recommended for best performance.</li>
+                    <li><b>CPU:</b> CPU processing. Suitable for environments without GPU (slower).</li>
+                    <li><b>CUDA:1, CUDA:2...:</b> Select specific GPU if multiple are available.</li>
+                </ul>
 
-                <h3>输出选项</h3>
-                <ul>
+                <h3 class="lang-cn">输出选项</h3>
+                <h3 class="lang-en">Output Options</h3>
+                <ul class="lang-cn">
                     <li><b>✅ 保存处理视频：</b>勾选后保存包含分割掩码和对象边界框的视频文件</li>
                     <li><b>✅ 保存分割掩码：</b>勾选后保存每帧的分割掩码为PNG图像序列，便于后期处理和分析</li>
+                </ul>
+                <ul class="lang-en">
+                    <li><b>✅ Save Processed Video:</b> Save video file with segmentation masks and bounding boxes.</li>
+                    <li><b>✅ Save Segmentation Masks:</b> Save frame-by-frame segmentation masks as PNG sequences for post-processing.</li>
                 </ul>
             </section>
 
             <!-- 第3章：标注教程 -->
             <section id="section-3">
-                <h2>🎯 标注教程</h2>
-                <p>标注是Micro Tracker的核心功能，通过在关键帧标注对象，SAM2能够自动追踪整个视频中的对象运动。本章详细介绍标注的各个方面。</p>
+                <h2 class="lang-cn">🎯 标注教程</h2>
+                <h2 class="lang-en">🎯 Annotation Tutorial</h2>
+                <p class="lang-cn">标注是Micro Tracker的核心功能，通过在关键帧标注对象，SAM2能够自动追踪整个视频中的对象运动。本章详细介绍标注的各个方面。</p>
+                <p class="lang-en">Annotation is the core feature of Micro Tracker. By annotating objects in keyframes, SAM2 can automatically track object movement throughout the video. This section details the annotation process.</p>
 
-                <h3 id="section-3-1">3.1 标注模式详解</h3>
+                <h3 class="lang-cn" id="section-3-1">3.1 标注模式详解</h3>
+                <h3 class="lang-en" id="section-3-1">3.1 Annotation Modes</h3>
                 
-                <h4>🆕 新对象模式 (New Object)</h4>
-                <ul>
+                <h4 class="lang-cn">🆕 新对象模式 (New Object)</h4>
+                <h4 class="lang-en">🆕 New Object Mode</h4>
+                <ul class="lang-cn">
                     <li><b>用途：</b>首次标注一个新的对象</li>
                     <li><b>系统行为：</b>自动分配唯一ID和固定颜色</li>
                     <li><b>使用时机：</b>通常在第0帧标注对象首次出现的位置</li>
                     <li><b>操作：</b>选择"新对象"单选按钮，然后在视频上绘制边界框或添加点击</li>
                 </ul>
+                <ul class="lang-en">
+                    <li><b>Purpose:</b> Annotating a new object for the first time.</li>
+                    <li><b>System Behavior:</b> Automatically assigns a unique ID and fixed color.</li>
+                    <li><b>When to Use:</b> Usually at frame 0 or where the object first appears.</li>
+                    <li><b>Action:</b> Select "New Object", then draw a bounding box or add clicks on the video.</li>
+                </ul>
 
-                <h4>✏️ 修正对象模式 (Refine Object)</h4>
-                <ul>
+                <h4 class="lang-cn">✏️ 修正对象模式 (Refine Object)</h4>
+                <h4 class="lang-en">✏️ Refine Object Mode</h4>
+                <ul class="lang-cn">
                     <li><b>用途：</b>在关键帧补充已有对象的标注</li>
                     <li><b>操作流程：</b>
                         <ol>
@@ -566,19 +850,42 @@
                         </ul>
                     </li>
                 </ul>
+                <ul class="lang-en">
+                    <li><b>Purpose:</b> Supplementing annotation for an existing object at keyframes.</li>
+                    <li><b>Workflow:</b>
+                        <ol>
+                            <li>Select "Refine Object" radio button.</li>
+                            <li>Select the Object ID from the dropdown.</li>
+                            <li>Navigate to the keyframe needing correction.</li>
+                            <li>Add refinement annotations (uses same ID and color).</li>
+                        </ol>
+                    </li>
+                    <li><b>Visual Feedback:</b> The object being refined is highlighted with a dashed gold line.</li>
+                    <li><b>⚠️ Important Limit:</b> Only <b>Click Prompts</b> are allowed in Refine Mode (per SAM2 best practices). Bounding box options are disabled automatically.</li>
+                    <li><b>Use Cases:</b> Significant shape changes, occlusions, direction changes, or tracking deviations.</li>
+                </ul>
 
-                <h3 id="section-3-2">3.2 提示类型详解</h3>
+                <h3 class="lang-cn" id="section-3-2">3.2 提示类型详解</h3>
+                <h3 class="lang-en" id="section-3-2">3.2 Prompt Types</h3>
 
-                <h4>▢ 边界框模式 (Box)</h4>
-                <ul>
+                <h4 class="lang-cn">▢ 边界框模式 (Box)</h4>
+                <h4 class="lang-en">▢ Bounding Box Mode (Box)</h4>
+                <ul class="lang-cn">
                     <li><b>操作方法：</b>按住鼠标左键拖动绘制矩形框</li>
                     <li><b>使用技巧：</b>框选对象的完整轮廓</li>
                     <li><b>反馈：</b>松开鼠标后自动生成实时预览</li>
                     <li><b>限制：</b>仅在新对象模式下可用</li>
                 </ul>
+                <ul class="lang-en">
+                    <li><b>Action:</b> Drag with left mouse button to draw a rectangle.</li>
+                    <li><b>Tip:</b> Enclose the entire object contour.</li>
+                    <li><b>Feedback:</b> Real-time preview generates upon release.</li>
+                    <li><b>Limit:</b> Available only in New Object mode.</li>
+                </ul>
 
-                <h4>👆 点击模式 (Point)</h4>
-                <ul>
+                <h4 class="lang-cn">👆 点击模式 (Point)</h4>
+                <h4 class="lang-en">👆 Click Mode (Point)</h4>
+                <ul class="lang-cn">
                     <li><b>左键点击：</b>添加正向区域（<span style="color: #4CAF50; font-weight: bold;">🟢 绿色标记</span>），表示"这是对象的一部分"</li>
                     <li><b>右键点击：</b>添加负向区域（<span style="color: #F44336; font-weight: bold;">🔴 红色标记</span>），表示"这不是对象的一部分"</li>
                     <li><b>多点标注：</b>可以添加多个点击来精细化分割</li>
@@ -591,20 +898,41 @@
                         </ul>
                     </li>
                 </ul>
+                <ul class="lang-en">
+                    <li><b>Left Click:</b> Add positive point (<span style="color: #4CAF50; font-weight: bold;">🟢 Green</span>) - "This is part of the object".</li>
+                    <li><b>Right Click:</b> Add negative point (<span style="color: #F44336; font-weight: bold;">🔴 Red</span>) - "This is NOT part of the object".</li>
+                    <li><b>Multi-point:</b> Add multiple clicks to refine segmentation.</li>
+                    <li><b>Preview:</b> Instant preview after each click.</li>
+                    <li><b>Save Actions:</b>
+                        <ul>
+                            <li>Press <kbd>A</kbd> to save temporary clicks.</li>
+                            <li>Press <kbd>Ctrl+C</kbd> to clear temporary clicks.</li>
+                            <li>Press <kbd>Ctrl+S</kbd> to save and go to next frame.</li>
+                        </ul>
+                    </li>
+                </ul>
 
                 <div class="warning">
-                    <h4>⚠️ 提示类型切换注意事项</h4>
-                    <ul>
+                    <h4 class="lang-cn">⚠️ 提示类型切换注意事项</h4>
+                    <h4 class="lang-en">⚠️ Switching Prompt Types</h4>
+                    <ul class="lang-cn">
                         <li>可以使用 <kbd>Ctrl+Q</kbd> 快捷键在边界框模式和点击模式之间切换</li>
                         <li>修正模式下边界框被禁用，不允许切换到边界框模式</li>
                         <li>切换帧前记得保存临时点击，否则会丢失</li>
                     </ul>
+                    <ul class="lang-en">
+                        <li>Use <kbd>Ctrl+Q</kbd> to toggle between Box and Point modes.</li>
+                        <li>Box mode is disabled in Refine Object mode.</li>
+                        <li>Remember to save temporary clicks before switching frames to avoid data loss.</li>
+                    </ul>
                 </div>
 
-                <h3 id="section-3-3">3.3 标注操作步骤</h3>
+                <h3 class="lang-cn" id="section-3-3">3.3 标注操作步骤</h3>
+                <h3 class="lang-en" id="section-3-3">3.3 Step-by-Step Guide</h3>
 
-                <h4>标注新对象的完整流程</h4>
-                <ol>
+                <h4 class="lang-cn">标注新对象的完整流程</h4>
+                <h4 class="lang-en">Annotating New Objects</h4>
+                <ol class="lang-cn">
                     <li>选择"🆕 新对象"模式</li>
                     <li>浏览到对象首次出现的帧（通常是第0帧）</li>
                     <li>选择提示类型（边界框或点击模式）</li>
@@ -619,9 +947,25 @@
                     <li>如果点击模式，按 <kbd>A</kbd> 键保存临时点击</li>
                     <li>重复以上步骤标注其他新对象</li>
                 </ol>
+                <ol class="lang-en">
+                    <li>Select "🆕 New Object" mode.</li>
+                    <li>Go to the frame where the object first appears (usually frame 0).</li>
+                    <li>Select prompt type (Box or Point).</li>
+                    <li>Draw box or add clicks:
+                        <ul>
+                            <li><b>Box:</b> Drag left mouse button.</li>
+                            <li><b>Click:</b> Left click for positive, right click for negative.</li>
+                        </ul>
+                    </li>
+                    <li>System assigns a unique ID and color.</li>
+                    <li>Check the real-time preview mask (translucent overlay).</li>
+                    <li>If using points, press <kbd>A</kbd> to save.</li>
+                    <li>Repeat for other new objects.</li>
+                </ol>
 
-                <h4>修正对象的完整流程</h4>
-                <ol>
+                <h4 class="lang-cn">修正对象的完整流程</h4>
+                <h4 class="lang-en">Refining Objects</h4>
+                <ol class="lang-cn">
                     <li>选择"✏️ 修正对象"模式</li>
                     <li>从下拉框选择要修正的对象ID</li>
                     <li>浏览到需要修正的关键帧（例如形变帧、遮挡前后）</li>
@@ -632,24 +976,47 @@
                     <li>按 <kbd>A</kbd> 键保存临时点击</li>
                     <li>继续浏览到其他关键帧，重复修正操作</li>
                 </ol>
+                <ol class="lang-en">
+                    <li>Select "✏️ Refine Object" mode.</li>
+                    <li>Select the Object ID from the dropdown.</li>
+                    <li>Navigate to a keyframe needing correction.</li>
+                    <li>System switches to Point mode (Box disabled).</li>
+                    <li>The target object is highlighted in gold.</li>
+                    <li>Add click prompts (Left=Pos, Right=Neg).</li>
+                    <li>Verify with real-time preview.</li>
+                    <li>Press <kbd>A</kbd> to save.</li>
+                    <li>Repeat for other keyframes.</li>
+                </ol>
 
-                <h4>👁️ 实时预览功能</h4>
+                <h4 class="lang-cn">👁️ 实时预览功能</h4>
+                <h4 class="lang-en">👁️ Real-time Preview</h4>
                 <div class="success">
-                    <p><b>✨ 添加标注后自动生成mask预览</b></p>
-                    <ul>
+                    <p class="lang-cn"><b>✨ 添加标注后自动生成mask预览</b></p>
+                    <p class="lang-en"><b>✨ Auto-generated mask preview upon annotation</b></p>
+                    <ul class="lang-cn">
                         <li>可以立即验证标注质量</li>
                         <li>半透明彩色蒙版显示分割结果</li>
                         <li>预览使用对象的固定颜色</li>
                         <li>如果预览效果不理想，可以添加更多点击来优化</li>
                         <li>需要GPU支持，如果初始化失败会自动降级为仅显示边界框</li>
                     </ul>
+                    <ul class="lang-en">
+                        <li>Instant verification of annotation quality.</li>
+                        <li>Translucent colored overlay shows segmentation.</li>
+                        <li>Uses the object's fixed color.</li>
+                        <li>Add more clicks to optimize if needed.</li>
+                        <li>Requires GPU. Downgrades to bounding box if initialization fails.</li>
+                    </ul>
                 </div>
 
-                <h3 id="section-3-4">3.4 标注管理</h3>
+                <h3 class="lang-cn" id="section-3-4">3.4 标注管理</h3>
+                <h3 class="lang-en" id="section-3-4">3.4 Annotation Management</h3>
 
-                <h4>📋 查看与管理</h4>
-                <p>标注管理面板位于视频预览下方，显示所有已标注帧的列表：</p>
-                <ul>
+                <h4 class="lang-cn">📋 查看与管理</h4>
+                <h4 class="lang-en">📋 View & Manage</h4>
+                <p class="lang-cn">标注管理面板位于视频预览下方，显示所有已标注帧的列表：</p>
+                <p class="lang-en">The management panel is below the video preview, listing all annotated frames:</p>
+                <ul class="lang-cn">
                     <li><b>表格列：</b>帧号、对象数、提示信息、操作</li>
                     <li><b>当前帧高亮：</b>当前帧在表格中以黄色背景高亮</li>
                     <li><b>提示信息显示：</b>
@@ -664,9 +1031,25 @@
                     <li><b>"删除"按钮：</b>移除单帧的所有标注（表格中的按钮，不可撤销）</li>
                     <li><b>"清空所有"按钮：</b>移除所有帧的标注（右侧按钮，需确认，不可撤销）</li>
                 </ul>
+                <ul class="lang-en">
+                    <li><b>Columns:</b> Frame, Object Count, Prompts, Actions.</li>
+                    <li><b>Highlight:</b> Current frame is highlighted in yellow.</li>
+                    <li><b>Prompt Info:</b>
+                        <ul>
+                            <li>□ = Bounding Box</li>
+                            <li>🟢×3 = 3 Positive Clicks</li>
+                            <li>🔴×2 = 2 Negative Clicks</li>
+                            <li>Obj_1: □ + 🟢×2 = Object 1 has a box and 2 pos clicks.</li>
+                        </ul>
+                    </li>
+                    <li><b>Jump:</b> Go to the specific annotated frame.</li>
+                    <li><b>Delete:</b> Remove all annotations for a single frame (Irreversible).</li>
+                    <li><b>Clear All:</b> Remove annotations for ALL frames (Requires confirmation).</li>
+                </ul>
 
-                <h4>💾 标注保存与导入</h4>
-                <ul>
+                <h4 class="lang-cn">💾 标注保存与导入</h4>
+                <h4 class="lang-en">💾 Save & Import</h4>
+                <ul class="lang-cn">
                     <li><b>自动保存：</b>点击"开始处理"时自动保存
                         <ul>
                             <li>标注文件自动保存到 <code>Results</code> 文件夹</li>
@@ -684,15 +1067,36 @@
                         </ul>
                     </li>
                 </ul>
+                <ul class="lang-en">
+                    <li><b>Auto Save:</b> Occurs when clicking "Start Processing".
+                        <ul>
+                            <li>Saved to <code>Results</code> folder.</li>
+                            <li>Filename: <code>{input_name}_annotations.json</code>.</li>
+                            <li>Prompts to overwrite if exists.</li>
+                            <li>Includes boxes, clicks, and object registry.</li>
+                        </ul>
+                    </li>
+                    <li><b>Import:</b> Load from JSON (Right-side "Import" button).
+                        <ul>
+                            <li>Supports legacy formats.</li>
+                            <li>Validates data before loading.</li>
+                            <li>Useful for restoring sessions.</li>
+                            <li>⚠️ Import overwrites ALL current annotations.</li>
+                        </ul>
+                    </li>
+                </ul>
 
                 <div class="note">
-                    <p><b>💡 提示：</b>标注列表会在标注操作（添加/删除对象、保存点击）后自动更新，无需手动刷新。</p>
+                    <p class="lang-cn"><b>💡 提示：</b>标注列表会在标注操作（添加/删除对象、保存点击）后自动更新，无需手动刷新。</p>
+                    <p class="lang-en"><b>💡 Tip:</b> The annotation list updates automatically after any operation. No manual refresh needed.</p>
                 </div>
 
-                <h3 id="section-3-5">3.5 标注最佳实践</h3>
+                <h3 class="lang-cn" id="section-3-5">3.5 标注最佳实践</h3>
+                <h3 class="lang-en" id="section-3-5">3.5 Best Practices</h3>
 
-                <h4>✅ 建议</h4>
-                <ol>
+                <h4 class="lang-cn">✅ 建议</h4>
+                <h4 class="lang-en">✅ Recommendations</h4>
+                <ol class="lang-cn">
                     <li><b>第0帧标注：</b>在第0帧标注所有对象的初始位置（使用新对象模式）</li>
                     <li><b>标注数量：</b>每个对象标注5-10个关键帧即可，不宜过多（标注过多可能影响处理性能）</li>
                     <li><b>关键帧选择：</b>在以下情况添加修正标注
@@ -706,61 +1110,112 @@
                     <li><b>实时验证：</b>使用实时预览验证标注质量，及时调整</li>
                     <li><b>无需手动保存：</b>标注会在开始处理时自动保存，无需手动操作</li>
                 </ol>
+                <ol class="lang-en">
+                    <li><b>Frame 0:</b> Annotate initial positions of all objects at Frame 0.</li>
+                    <li><b>Quantity:</b> 5-10 keyframes per object is usually sufficient. Too many can slow down processing.</li>
+                    <li><b>Keyframes:</b> Add refinement when:
+                        <ul>
+                            <li>Shape changes significantly.</li>
+                            <li>Before/After occlusion.</li>
+                            <li>Direction changes.</li>
+                            <li>Tracking deviates.</li>
+                        </ul>
+                    </li>
+                    <li><b>Verify:</b> Use real-time preview to check quality.</li>
+                    <li><b>Auto-save:</b> No need to manually save; it happens on processing start.</li>
+                </ol>
 
                 <div class="warning">
-                    <h4>⚠️ 注意事项</h4>
-                    <ul>
+                    <h4 class="lang-cn">⚠️ 注意事项</h4>
+                    <h4 class="lang-en">⚠️ Cautions</h4>
+                    <ul class="lang-cn">
                         <li>切换帧前记得保存临时点击（按<kbd>A</kbd>键）</li>
                         <li>未保存的临时点击切换帧后会丢失（有警告提示）</li>
                         <li>标注信息在点击"开始处理"时自动保存</li>
                         <li>导入标注会覆盖当前所有标注</li>
                         <li>删除操作不可撤销，请谨慎操作</li>
                     </ul>
+                    <ul class="lang-en">
+                        <li>Save temporary clicks (<kbd>A</kbd>) before switching frames.</li>
+                        <li>Unsaved clicks are lost upon frame switch (warning provided).</li>
+                        <li>Annotations save automatically on "Start Processing".</li>
+                        <li>Importing overwrites current annotations.</li>
+                        <li>Deletion is irreversible.</li>
+                    </ul>
                 </div>
             </section>
 
             <!-- 第4章：视频处理 -->
             <section id="section-4">
-                <h2>🎬 视频处理</h2>
+                <h2 class="lang-cn">🎬 视频处理</h2>
+                <h2 class="lang-en">🎬 Video Processing</h2>
 
-                <h3>多帧处理模式</h3>
-                <p>系统自动检测标注模式。如果检测到多帧标注（多个帧有标注或单个帧有多个对象），会在每个标注帧调用SAM2提示，采用分段前向传播策略，显著提升追踪质量。</p>
+                <h3 class="lang-cn">多帧处理模式</h3>
+                <h3 class="lang-en">Multi-frame Processing</h3>
+                <p class="lang-cn">系统自动检测标注模式。如果检测到多帧标注（多个帧有标注或单个帧有多个对象），会在每个标注帧调用SAM2提示，采用分段前向传播策略，显著提升追踪质量。</p>
+                <p class="lang-en">The system detects annotation patterns automatically. If multi-frame annotations are found, it applies SAM2 prompts at each annotated frame using a segmented forward propagation strategy, significantly improving tracking quality.</p>
 
-                <h3>处理进度监控</h3>
-                <p>点击"开始处理"按钮后，处理进度区域会显示：</p>
-                <ul>
+                <h3 class="lang-cn">处理进度监控</h3>
+                <h3 class="lang-en">Progress Monitoring</h3>
+                <p class="lang-cn">点击"开始处理"按钮后，处理进度区域会显示：</p>
+                <p class="lang-en">After clicking "Start Processing":</p>
+                <ul class="lang-cn">
                     <li><b>实时日志：</b>显示初始化信息、处理速度和预计剩余时间</li>
                     <li><b>进度条：</b>显示当前处理进度百分比</li>
                     <li><b>日志颜色：</b>不同类型的信息以不同颜色显示（信息=蓝色，警告=橙色，错误=红色，成功=绿色）</li>
                 </ul>
+                <ul class="lang-en">
+                    <li><b>Live Log:</b> Initialization info, speed, and ETA.</li>
+                    <li><b>Progress Bar:</b> Current percentage.</li>
+                    <li><b>Colors:</b> Blue=Info, Orange=Warning, Red=Error, Green=Success.</li>
+                </ul>
 
-                <h3>日志查看</h3>
-                <p>处理进度区域的日志文本框记录所有操作信息：</p>
-                <ul>
+                <h3 class="lang-cn">日志查看</h3>
+                <h3 class="lang-en">Log View</h3>
+                <p class="lang-cn">处理进度区域的日志文本框记录所有操作信息：</p>
+                <p class="lang-en">The log text box records all operations:</p>
+                <ul class="lang-cn">
                     <li>蓝色信息：常规操作和状态更新</li>
                     <li>橙色警告：需要注意的信息</li>
                     <li>红色错误：处理失败或异常</li>
                     <li>绿色成功：操作成功完成</li>
                     <li>紫色高亮：重要提示信息</li>
                 </ul>
+                <ul class="lang-en">
+                    <li>Blue: General info and status.</li>
+                    <li>Orange: Warnings.</li>
+                    <li>Red: Failures or exceptions.</li>
+                    <li>Green: Successful operations.</li>
+                    <li>Purple: Important highlights.</li>
+                </ul>
             </section>
 
             <!-- 第5章：视频预览控制 -->
             <section id="section-5">
-                <h2>🎮 视频预览控制</h2>
+                <h2 class="lang-cn">🎮 视频预览控制</h2>
+                <h2 class="lang-en">🎮 Video Preview Controls</h2>
 
-                <h3>播放/暂停</h3>
-                <p>点击"播放"按钮或按<kbd>空格</kbd>键控制视频的播放和暂停。播放时按钮文字变为"暂停"。</p>
+                <h3 class="lang-cn">播放/暂停</h3>
+                <h3 class="lang-en">Play/Pause</h3>
+                <p class="lang-cn">点击"播放"按钮或按<kbd>空格</kbd>键控制视频的播放和暂停。播放时按钮文字变为"暂停"。</p>
+                <p class="lang-en">Click "Play" or press <kbd>Space</kbd> to toggle playback.</p>
 
-                <h3>帧滑块操作</h3>
-                <ul>
+                <h3 class="lang-cn">帧滑块操作</h3>
+                <h3 class="lang-en">Frame Slider</h3>
+                <ul class="lang-cn">
                     <li>拖动滑块可以精确导航到视频的特定帧</li>
                     <li>点击滑块两侧可以快速前进/后退</li>
                     <li>使用<kbd>F</kbd>键前进一帧，<kbd>D</kbd>键后退一帧</li>
                 </ul>
+                <ul class="lang-en">
+                    <li>Drag slider to navigate to a specific frame.</li>
+                    <li>Click sides for fast forward/rewind.</li>
+                    <li><kbd>F</kbd> for next frame, <kbd>D</kbd> for previous frame.</li>
+                </ul>
 
-                <h3>图像缩放与拖拽</h3>
-                <ul>
+                <h3 class="lang-cn">图像缩放与拖拽</h3>
+                <h3 class="lang-en">Zoom & Pan</h3>
+                <ul class="lang-cn">
                     <li><b>鼠标滚轮缩放：</b>按住<kbd>Ctrl</kbd>键并滚动鼠标滚轮可缩放图像（100%-1000%），缩放中心始终为鼠标位置</li>
                     <li><b>拖拽平移：</b>图像放大后，按住<kbd>Ctrl</kbd>+左键拖拽可平移查看不同区域</li>
                     <li><b>重置缩放：</b>点击鼠标中键或按<kbd>Home</kbd>键可重置缩放至自适应状态</li>
@@ -768,129 +1223,226 @@
                     <li><b>独立控制：</b>三个视频视图（标注、结果预览、筛选预览）各自独立缩放</li>
                     <li><b>注意事项：</b>拖拽平移期间会自动禁用标注功能，释放鼠标后恢复</li>
                 </ul>
+                <ul class="lang-en">
+                    <li><b>Zoom:</b> <kbd>Ctrl</kbd> + Scroll (100%-1000% around mouse pointer).</li>
+                    <li><b>Pan:</b> <kbd>Ctrl</kbd> + Left Click Drag (when zoomed in).</li>
+                    <li><b>Reset:</b> Middle Click or <kbd>Home</kbd>.</li>
+                    <li><b>Tooltip:</b> Shows zoom percentage temporarily.</li>
+                    <li><b>Independent:</b> Zoom states are independent across tabs.</li>
+                    <li><b>Note:</b> Annotation is disabled while panning.</li>
+                </ul>
 
-                <h3>视频控制快捷键</h3>
-                <p>聚焦视频控件时，可以使用以下快捷键：</p>
-                <ul>
+                <h3 class="lang-cn">视频控制快捷键</h3>
+                <h3 class="lang-en">Shortcuts</h3>
+                <p class="lang-cn">聚焦视频控件时，可以使用以下快捷键：</p>
+                <p class="lang-en">When video control is focused:</p>
+                <ul class="lang-cn">
                     <li><kbd>空格</kbd> - 播放/暂停</li>
                     <li><kbd>F</kbd> - 下一帧</li>
                     <li><kbd>D</kbd> - 上一帧</li>
                     <li><kbd>Home</kbd> - 重置缩放</li>
                 </ul>
+                <ul class="lang-en">
+                    <li><kbd>Space</kbd> - Play/Pause</li>
+                    <li><kbd>F</kbd> - Next Frame</li>
+                    <li><kbd>D</kbd> - Previous Frame</li>
+                    <li><kbd>Home</kbd> - Reset Zoom</li>
+                </ul>
             </section>
 
             <!-- 第6章：结果预览 -->
             <section id="section-6">
-                <h2>📊 结果预览</h2>
+                <h2 class="lang-cn">📊 结果预览</h2>
+                <h2 class="lang-en">📊 Result Preview</h2>
 
-                <h3>结果视频查看</h3>
-                <p>处理完成后自动切换到"结果预览"标签页，显示处理后的视频：</p>
-                <ul>
+                <h3 class="lang-cn">结果视频查看</h3>
+                <h3 class="lang-en">Viewing Results</h3>
+                <p class="lang-cn">处理完成后自动切换到"结果预览"标签页，显示处理后的视频：</p>
+                <p class="lang-en">The tab switches automatically upon completion:</p>
+                <ul class="lang-cn">
                     <li>视频包含分割掩码（半透明彩色覆盖层）</li>
                     <li>每个对象以唯一颜色显示</li>
                     <li>对象边界框和ID标签清晰可见</li>
                 </ul>
+                <ul class="lang-en">
+                    <li>Video includes translucent segmentation masks.</li>
+                    <li>Each object has a unique color.</li>
+                    <li>Bounding boxes and ID labels are visible.</li>
+                </ul>
 
-                <h3>视频控制</h3>
-                <p>结果预览标签页提供与标注页面类似的视频控制功能：</p>
-                <ul>
+                <h3 class="lang-cn">视频控制</h3>
+                <h3 class="lang-en">Controls</h3>
+                <p class="lang-cn">结果预览标签页提供与标注页面类似的视频控制功能：</p>
+                <p class="lang-en">Controls are similar to the annotation page:</p>
+                <ul class="lang-cn">
                     <li>播放/暂停按钮</li>
                     <li>帧滑块</li>
                     <li>图像缩放与拖拽</li>
                     <li>快捷键支持</li>
                 </ul>
+                <ul class="lang-en">
+                    <li>Play/Pause</li>
+                    <li>Frame Slider</li>
+                    <li>Zoom & Pan</li>
+                    <li>Shortcuts</li>
+                </ul>
 
-                <h3>文件夹访问</h3>
-                <p>点击"打开输出文件夹"按钮可以直接访问输出视频和掩码所在的文件夹。</p>
+                <h3 class="lang-cn">文件夹访问</h3>
+                <h3 class="lang-en">Folder Access</h3>
+                <p class="lang-cn">点击"打开输出文件夹"按钮可以直接访问输出视频和掩码所在的文件夹。</p>
+                <p class="lang-en">Click "Open Output Folder" to access results directly.</p>
 
                 <div class="note">
-                    <p><b>💡 提示：</b>处理完成后，您可以使用筛选过滤功能对掩膜进行高级分析。使用滑块查看不同帧的结果并确保追踪质量。</p>
+                    <p class="lang-cn"><b>💡 提示：</b>处理完成后，您可以使用筛选过滤功能对掩膜进行高级分析。使用滑块查看不同帧的结果并确保追踪质量。</p>
+                    <p class="lang-en"><b>💡 Tip:</b> Use Filtering Functions for advanced analysis after processing. Check different frames to ensure tracking quality.</p>
                 </div>
             </section>
 
             <!-- 第7章：筛选过滤功能 -->
             <section id="section-7">
-                <h2>🔍 筛选过滤功能</h2>
-                <p>筛选过滤模块是本软件的关键高级功能，提供了对分割轨迹数据的深度分析和筛选能力。以下是详细的使用流程和功能解释。</p>
+                <h2 class="lang-cn">🔍 筛选过滤功能</h2>
+                <h2 class="lang-en">🔍 Filtering Functions</h2>
+                <p class="lang-cn">筛选过滤模块是本软件的关键高级功能，提供了对分割轨迹数据的深度分析和筛选能力。以下是详细的使用流程和功能解释。</p>
+                <p class="lang-en">The filtering module provides in-depth analysis and screening of segmentation trajectory data.</p>
 
-                <h3 id="section-7-1">7.1 掩膜图片序列选择</h3>
-                <p>选择包含掩膜图像的文件夹（通常是处理步骤自动生成的）。掩膜图像是8位灰度PNG图片，每个像素值表示对象ID，背景为0。</p>
+                <h3 class="lang-cn" id="section-7-1">7.1 掩膜图片序列选择</h3>
+                <h3 class="lang-en" id="section-7-1">7.1 Mask Sequence Selection</h3>
+                <p class="lang-cn">选择包含掩膜图像的文件夹（通常是处理步骤自动生成的）。掩膜图像是8位灰度PNG图片，每个像素值表示对象ID，背景为0。</p>
+                <p class="lang-en">Select the folder containing mask images (usually generated automatically). Masks are 8-bit grayscale PNGs (Pixel value = ID, Background = 0).</p>
 
-                <h3 id="section-7-2">7.2 参数设置理解</h3>
-                <ul>
+                <h3 class="lang-cn" id="section-7-2">7.2 参数设置理解</h3>
+                <h3 class="lang-en" id="section-7-2">7.2 Parameter Settings</h3>
+                <ul class="lang-cn">
                     <li><b>帧率 (FPS)：</b>定义每秒帧数，对计算对象速度和时间关系至关重要。例如，如果实际视频以1帧/秒拍摄，应设置为1.0；如果是每20秒一帧，则应设置为0.05。帧率调整会影响瞬时速度的计算，以及时间相关的数据分析。</li>
                     <li><b>比例系数 (μm/pixel)：</b>将像素单位转换为实际物理单位的系数。这个值应根据您的显微镜和摄像设置确定。例如，如果1个像素代表2.5微米，则设置为2.5。此系数会影响所有空间测量，包括面积、距离和速度。</li>
                 </ul>
+                <ul class="lang-en">
+                    <li><b>FPS:</b> Frames per second. Critical for velocity and time calculations. (e.g., set to 0.05 for 1 frame every 20s).</li>
+                    <li><b>Scale (μm/pixel):</b> Conversion factor from pixels to physical units. Determined by microscope settings. Affects area, distance, and speed.</li>
+                </ul>
 
-                <h3 id="section-7-3">7.3 筛选条件详解</h3>
-                <p>可以设置六种不同的筛选条件：</p>
+                <h3 class="lang-cn" id="section-7-3">7.3 筛选条件详解</h3>
+                <h3 class="lang-en" id="section-7-3">7.3 Filter Conditions</h3>
+                <p class="lang-cn">可以设置六种不同的筛选条件：</p>
+                <p class="lang-en">Six filter conditions are available:</p>
 
-                <h4>1. 面积区间筛选</h4>
-                <ul>
+                <h4 class="lang-cn">1. 面积区间筛选</h4>
+                <h4 class="lang-en">1. Area Range</h4>
+                <ul class="lang-cn">
                     <li><b>功能：</b>筛选出面积在指定范围内的对象</li>
                     <li><b>单位：</b>μm²（平方微米）</li>
                     <li><b>应用场景：</b>去除过小的噪点或过大的聚合体/背景残留</li>
                     <li><b>工作原理：</b>计算每个对象的像素面积，并乘以比例系数的平方转换为实际面积</li>
                 </ul>
+                <ul class="lang-en">
+                    <li><b>Function:</b> Filter objects within specific area range.</li>
+                    <li><b>Unit:</b> μm²</li>
+                    <li><b>Use Case:</b> Remove noise or large aggregates.</li>
+                </ul>
 
-                <h4>2. 面积变化率筛选</h4>
-                <ul>
+                <h4 class="lang-cn">2. 面积变化率筛选</h4>
+                <h4 class="lang-en">2. Area Change Rate</h4>
+                <ul class="lang-cn">
                     <li><b>功能：</b>当对象面积变化超过阈值时截断其轨迹</li>
                     <li><b>取值范围：</b>0到1（比例值），表示小面积/大面积的比值</li>
                     <li><b>应用场景：</b>检测对象融合、分裂或跟踪错误</li>
                     <li><b>工作原理：</b>计算相邻帧之间面积比（较小值/较大值），低于阈值时判定为显著变化</li>
                 </ul>
+                <ul class="lang-en">
+                    <li><b>Function:</b> Truncate trajectory if area changes drastically.</li>
+                    <li><b>Range:</b> 0-1 (Ratio of smaller/larger area).</li>
+                    <li><b>Use Case:</b> Detect fusion, fission, or tracking errors.</li>
+                </ul>
 
-                <h4>3. 瞬时速度区间</h4>
-                <ul>
+                <h4 class="lang-cn">3. 瞬时速度区间</h4>
+                <h4 class="lang-en">3. Instantaneous Velocity</h4>
+                <ul class="lang-cn">
                     <li><b>功能：</b>根据对象的瞬时移动速度筛选</li>
                     <li><b>单位：</b>μm/s（微米每秒）</li>
                     <li><b>应用场景：</b>区分不同运动状态的对象，或识别跟踪跳变</li>
                     <li><b>工作原理：</b>计算相邻帧之间质心位移除以时间间隔</li>
                 </ul>
+                <ul class="lang-en">
+                    <li><b>Function:</b> Filter by movement speed between frames.</li>
+                    <li><b>Unit:</b> μm/s</li>
+                    <li><b>Use Case:</b> Distinguish motion states or jumpy tracking.</li>
+                </ul>
 
-                <h4>4. 总位移区间</h4>
-                <ul>
+                <h4 class="lang-cn">4. 总位移区间</h4>
+                <h4 class="lang-en">4. Total Displacement</h4>
+                <ul class="lang-cn">
                     <li><b>功能：</b>根据对象从起点到终点的直线距离筛选</li>
                     <li><b>单位：</b>μm（微米）</li>
                     <li><b>应用场景：</b>区分迁移和非迁移对象</li>
                     <li><b>工作原理：</b>计算对象第一帧与最后一帧质心之间的直线距离</li>
                 </ul>
+                <ul class="lang-en">
+                    <li><b>Function:</b> Filter by straight-line distance from start to end.</li>
+                    <li><b>Unit:</b> μm</li>
+                    <li><b>Use Case:</b> Distinguish migrating from non-migrating objects.</li>
+                </ul>
 
-                <h4>5. 边界截断排除</h4>
-                <ul>
+                <h4 class="lang-cn">5. 边界截断排除</h4>
+                <h4 class="lang-en">5. Boundary Exclusion</h4>
+                <ul class="lang-cn">
                     <li><b>功能：</b>当对象接触图像边界时，截断其轨迹</li>
                     <li><b>应用场景：</b>确保分析的是完整对象，避免部分截断的对象干扰分析</li>
                     <li><b>工作原理：</b>检测掩膜像素是否接触图像四边</li>
                 </ul>
+                <ul class="lang-en">
+                    <li><b>Function:</b> Truncate trajectory if object touches image borders.</li>
+                    <li><b>Use Case:</b> Ensure analysis of complete objects only.</li>
+                </ul>
 
-                <h4>6. 相互最短距离阈值</h4>
-                <ul>
+                <h4 class="lang-cn">6. 相互最短距离阈值</h4>
+                <h4 class="lang-en">6. Min Mutual Distance</h4>
+                <ul class="lang-cn">
                     <li><b>功能：</b>当两个对象距离小于阈值时截断轨迹</li>
                     <li><b>单位：</b>μm（微米）</li>
                     <li><b>应用场景：</b>避免对象交互或拥挤状态的干扰</li>
                     <li><b>工作原理：</b>计算对象轮廓间的最短距离，低于阈值时截断</li>
                 </ul>
+                <ul class="lang-en">
+                    <li><b>Function:</b> Truncate if objects get too close to each other.</li>
+                    <li><b>Unit:</b> μm</li>
+                    <li><b>Use Case:</b> Avoid interaction/crowding interference.</li>
+                </ul>
 
-                <h3 id="section-7-4">7.4 筛选结果理解</h3>
-                <ul>
+                <h3 class="lang-cn" id="section-7-4">7.4 筛选结果理解</h3>
+                <h3 class="lang-en" id="section-7-4">7.4 Understanding Results</h3>
+                <ul class="lang-cn">
                     <li><b>完全通过：</b>对象的整个轨迹都满足所有筛选条件</li>
                     <li><b>部分截断：</b>对象轨迹在某个时间点不满足条件，轨迹被截断但保留有效部分</li>
                     <li><b>完全过滤：</b>对象完全不满足筛选条件，或满足条件的帧数不足以形成有效轨迹</li>
                 </ul>
+                <ul class="lang-en">
+                    <li><b>Passed:</b> Entire trajectory meets all conditions.</li>
+                    <li><b>Truncated:</b> Trajectory cut at point of failure; valid part retained.</li>
+                    <li><b>Filtered:</b> Object completely removed or remaining trajectory is too short.</li>
+                </ul>
 
-                <h3 id="section-7-5">7.5 可视化元素详解</h3>
-                <p>筛选结果预览显示筛选后的对象可视化，包括：</p>
-                <ul>
+                <h3 class="lang-cn" id="section-7-5">7.5 可视化元素详解</h3>
+                <h3 class="lang-en" id="section-7-5">7.5 Visualization</h3>
+                <p class="lang-cn">筛选结果预览显示筛选后的对象可视化，包括：</p>
+                <p class="lang-en">Visual elements in filtered preview:</p>
+                <ul class="lang-cn">
                     <li><b>彩色对象：</b>每个对象以唯一颜色显示，便于区分</li>
                     <li><b>对象ID：</b>显示在对象中心，与处理阶段的ID一致</li>
                     <li><b>椭圆主轴和次轴：</b>对象经过椭圆拟合后的长轴（红色）和短轴（蓝色），用于分析对象形状和方向</li>
                     <li><b>轨迹线：</b>显示对象从出现到当前帧的移动路径</li>
                 </ul>
+                <ul class="lang-en">
+                    <li><b>Colored Objects:</b> Unique colors for distinction.</li>
+                    <li><b>Object ID:</b> Center label, consistent with processing ID.</li>
+                    <li><b>Axes:</b> Fitted ellipse major (Red) and minor (Blue) axes.</li>
+                    <li><b>Trajectory:</b> Movement path line.</li>
+                </ul>
 
-                <h3 id="section-7-6">7.6 数据保存与导出</h3>
-                <p>点击"输出保存"按钮可以保存两类数据：</p>
-                <ul>
+                <h3 class="lang-cn" id="section-7-6">7.6 数据保存与导出</h3>
+                <h3 class="lang-en" id="section-7-6">7.6 Data Export</h3>
+                <p class="lang-cn">点击"输出保存"按钮可以保存两类数据：</p>
+                <p class="lang-en">Click "Output Save" to export:</p>
+                <ul class="lang-cn">
                     <li><b>筛选后的掩膜图像：</b>保存为 <code>Filtered_Masks</code> 文件夹下的PNG序列，仅包含通过筛选的对象</li>
                     <li><b>轨迹数据表格：</b>保存为Excel（优先）或CSV格式，包含每个通过筛选的对象在各帧的详细属性数据：
                         <ul>
@@ -903,130 +1455,201 @@
                         </ul>
                     </li>
                 </ul>
+                <ul class="lang-en">
+                    <li><b>Filtered Masks:</b> PNG sequence in <code>Filtered_Masks</code> folder.</li>
+                    <li><b>Trajectory Data:</b> Excel/CSV with frame-by-frame attributes:
+                        <ul>
+                            <li><b>time:</b> seconds</li>
+                            <li><b>area:</b> μm²</li>
+                            <li><b>center_x, center_y:</b> μm</li>
+                            <li><b>major/minor axis length:</b> μm</li>
+                            <li><b>posture angle:</b> degrees (raw cv2.fitEllipse value)</li>
+                        </ul>
+                    </li>
+                </ul>
 
                 <div class="note">
-                    <h4>关于姿态角度 (posture angle) 的理解</h4>
-                    <p>导出的轨迹数据中的姿态角度是OpenCV的 <code>cv2.fitEllipse</code> 函数直接返回的原始角度值，表示椭圆的方向。这个角度测量的是椭圆宽度方向（可能是长轴或短轴）与水平线的夹角，范围为0-180度。</p>
-                    <p><b>注意：</b>在可视化显示中，系统会自动确定哪个是主轴（长轴）并用红色显示，哪个是次轴（短轴）并用蓝色显示。但保存的角度数据始终是 <code>cv2.fitEllipse</code> 的原始返回值，没有经过调整。</p>
+                    <h4 class="lang-cn">关于姿态角度 (posture angle) 的理解</h4>
+                    <h4 class="lang-en">About Posture Angle</h4>
+                    <p class="lang-cn">导出的轨迹数据中的姿态角度是OpenCV的 <code>cv2.fitEllipse</code> 函数直接返回的原始角度值，表示椭圆的方向。这个角度测量的是椭圆宽度方向（可能是长轴或短轴）与水平线的夹角，范围为0-180度。</p>
+                    <p class="lang-en">The exported posture angle is the raw value from OpenCV's <code>cv2.fitEllipse</code>. It measures the angle between the ellipse width (could be major or minor axis) and the horizontal line (0-180 degrees).</p>
+                    <p class="lang-cn"><b>注意：</b>在可视化显示中，系统会自动确定哪个是主轴（长轴）并用红色显示，哪个是次轴（短轴）并用蓝色显示。但保存的角度数据始终是 <code>cv2.fitEllipse</code> 的原始返回值，没有经过调整。</p>
+                    <p class="lang-en"><b>Note:</b> In visualization, Red is always Major axis and Blue is Minor. However, the saved data is the raw unadjusted value.</p>
                 </div>
             </section>
 
             <!-- 第8章：键盘快捷键参考 -->
             <section id="section-8">
-                <h2>⌨️ 键盘快捷键参考</h2>
+                <h2 class="lang-cn">⌨️ 键盘快捷键参考</h2>
+                <h2 class="lang-en">⌨️ Keyboard Shortcuts</h2>
 
-                <h3>视频控制</h3>
+                <h3 class="lang-cn">视频控制</h3>
+                <h3 class="lang-en">Video Control</h3>
                 <table>
-                    <tr>
-                        <th style="width: 30%;">快捷键</th>
-                        <th>功能</th>
-                    </tr>
-                    <tr>
-                        <td><kbd>空格</kbd></td>
-                        <td>播放/暂停视频</td>
-                    </tr>
-                    <tr>
-                        <td><kbd>F</kbd></td>
-                        <td>下一帧</td>
-                    </tr>
-                    <tr>
-                        <td><kbd>D</kbd></td>
-                        <td>上一帧</td>
-                    </tr>
-                    <tr>
-                        <td><kbd>Home</kbd></td>
-                        <td>重置缩放</td>
-                    </tr>
+                    <thead>
+                        <tr>
+                            <th style="width: 30%;" class="lang-cn">快捷键</th>
+                            <th style="width: 30%;" class="lang-en">Shortcut</th>
+                            <th class="lang-cn">功能</th>
+                            <th class="lang-en">Function</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><kbd>Space</kbd></td>
+                            <td class="lang-cn">播放/暂停视频</td>
+                            <td class="lang-en">Play/Pause</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>F</kbd></td>
+                            <td class="lang-cn">下一帧</td>
+                            <td class="lang-en">Next Frame</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>D</kbd></td>
+                            <td class="lang-cn">上一帧</td>
+                            <td class="lang-en">Previous Frame</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>Home</kbd></td>
+                            <td class="lang-cn">重置缩放</td>
+                            <td class="lang-en">Reset Zoom</td>
+                        </tr>
+                    </tbody>
                 </table>
 
-                <h3>标注编辑</h3>
+                <h3 class="lang-cn">标注编辑</h3>
+                <h3 class="lang-en">Annotation Editing</h3>
                 <table>
-                    <tr>
-                        <th style="width: 30%;">快捷键</th>
-                        <th>功能</th>
-                    </tr>
-                    <tr>
-                        <td><kbd>Delete</kbd></td>
-                        <td>删除选中的边界框</td>
-                    </tr>
-                    <tr>
-                        <td><kbd>A</kbd></td>
-                        <td>保存临时点击到标注</td>
-                    </tr>
-                    <tr>
-                        <td><kbd>Ctrl+C</kbd></td>
-                        <td>清除临时点击</td>
-                    </tr>
-                    <tr>
-                        <td><kbd>Ctrl+S</kbd></td>
-                        <td>保存临时点击并切换到下一帧</td>
-                    </tr>
+                    <thead>
+                        <tr>
+                            <th style="width: 30%;" class="lang-cn">快捷键</th>
+                            <th style="width: 30%;" class="lang-en">Shortcut</th>
+                            <th class="lang-cn">功能</th>
+                            <th class="lang-en">Function</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><kbd>Delete</kbd></td>
+                            <td class="lang-cn">删除选中的边界框</td>
+                            <td class="lang-en">Delete selected box</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>A</kbd></td>
+                            <td class="lang-cn">保存临时点击到标注</td>
+                            <td class="lang-en">Save temp clicks</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>Ctrl+C</kbd></td>
+                            <td class="lang-cn">清除临时点击</td>
+                            <td class="lang-en">Clear temp clicks</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>Ctrl+S</kbd></td>
+                            <td class="lang-cn">保存临时点击并切换到下一帧</td>
+                            <td class="lang-en">Save clicks & Next frame</td>
+                        </tr>
+                    </tbody>
                 </table>
 
-                <h3>模式切换</h3>
+                <h3 class="lang-cn">模式切换</h3>
+                <h3 class="lang-en">Mode Switching</h3>
                 <table>
-                    <tr>
-                        <th style="width: 30%;">快捷键</th>
-                        <th>功能</th>
-                    </tr>
-                    <tr>
-                        <td><kbd>Ctrl+Q</kbd></td>
-                        <td>切换提示类型（边界框/点击模式）</td>
-                    </tr>
-                    <tr>
-                        <td><kbd>Ctrl+H</kbd></td>
-                        <td>隐藏/显示提示标记（便于绘制新提示）</td>
-                    </tr>
+                    <thead>
+                        <tr>
+                            <th style="width: 30%;" class="lang-cn">快捷键</th>
+                            <th style="width: 30%;" class="lang-en">Shortcut</th>
+                            <th class="lang-cn">功能</th>
+                            <th class="lang-en">Function</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><kbd>Ctrl+Q</kbd></td>
+                            <td class="lang-cn">切换提示类型（边界框/点击模式）</td>
+                            <td class="lang-en">Toggle Box/Point Mode</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>Ctrl+H</kbd></td>
+                            <td class="lang-cn">隐藏/显示提示标记（便于绘制新提示）</td>
+                            <td class="lang-en">Toggle Prompts Visibility</td>
+                        </tr>
+                    </tbody>
                 </table>
 
-                <h3>鼠标操作</h3>
+                <h3 class="lang-cn">鼠标操作</h3>
+                <h3 class="lang-en">Mouse Actions</h3>
                 <table>
-                    <tr>
-                        <th style="width: 30%;">操作</th>
-                        <th>功能</th>
-                    </tr>
-                    <tr>
-                        <td><b>左键拖拽</b></td>
-                        <td>绘制边界框（新对象模式）</td>
-                    </tr>
-                    <tr>
-                        <td><b>左键点击</b></td>
-                        <td>添加正向点击 - 绿色标记（点击模式）</td>
-                    </tr>
-                    <tr>
-                        <td><b>右键点击</b></td>
-                        <td>添加负向点击 - 红色标记（点击模式）</td>
-                    </tr>
-                    <tr>
-                        <td><b>单击边界框</b></td>
-                        <td>选中边界框</td>
-                    </tr>
-                    <tr>
-                        <td><kbd>Ctrl</kbd> + <b>滚轮</b></td>
-                        <td>缩放图像（100%-1000%，以鼠标位置为中心）</td>
-                    </tr>
-                    <tr>
-                        <td><kbd>Ctrl</kbd> + <b>左键拖拽</b></td>
-                        <td>拖拽平移图像（缩放后）</td>
-                    </tr>
-                    <tr>
-                        <td><b>中键点击</b> / <kbd>Home</kbd></td>
-                        <td>重置缩放至自适应状态</td>
-                    </tr>
+                    <thead>
+                        <tr>
+                            <th style="width: 30%;" class="lang-cn">操作</th>
+                            <th style="width: 30%;" class="lang-en">Action</th>
+                            <th class="lang-cn">功能</th>
+                            <th class="lang-en">Function</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="lang-cn"><b>左键拖拽</b></td>
+                            <td class="lang-en"><b>Left Drag</b></td>
+                            <td class="lang-cn">绘制边界框（新对象模式）</td>
+                            <td class="lang-en">Draw Bounding Box (New Object)</td>
+                        </tr>
+                        <tr>
+                            <td class="lang-cn"><b>左键点击</b></td>
+                            <td class="lang-en"><b>Left Click</b></td>
+                            <td class="lang-cn">添加正向点击 - 绿色标记（点击模式）</td>
+                            <td class="lang-en">Add Positive Click (Green)</td>
+                        </tr>
+                        <tr>
+                            <td class="lang-cn"><b>右键点击</b></td>
+                            <td class="lang-en"><b>Right Click</b></td>
+                            <td class="lang-cn">添加负向点击 - 红色标记（点击模式）</td>
+                            <td class="lang-en">Add Negative Click (Red)</td>
+                        </tr>
+                        <tr>
+                            <td class="lang-cn"><b>单击边界框</b></td>
+                            <td class="lang-en"><b>Click Box</b></td>
+                            <td class="lang-cn">选中边界框</td>
+                            <td class="lang-en">Select Box</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>Ctrl</kbd> + <b>Scroll</b></td>
+                            <td class="lang-cn">缩放图像（100%-1000%，以鼠标位置为中心）</td>
+                            <td class="lang-en">Zoom (100%-1000% around cursor)</td>
+                        </tr>
+                        <tr>
+                            <td class="lang-cn"><kbd>Ctrl</kbd> + <b>左键拖拽</b></td>
+                            <td class="lang-en"><kbd>Ctrl</kbd> + <b>Left Drag</b></td>
+                            <td class="lang-cn">拖拽平移图像（缩放后）</td>
+                            <td class="lang-en">Pan Image (when zoomed)</td>
+                        </tr>
+                        <tr>
+                            <td class="lang-cn"><b>中键点击</b> / <kbd>Home</kbd></td>
+                            <td class="lang-en"><b>Middle Click</b> / <kbd>Home</kbd></td>
+                            <td class="lang-cn">重置缩放至自适应状态</td>
+                            <td class="lang-en">Reset Zoom to Fit</td>
+                        </tr>
+                    </tbody>
                 </table>
             </section>
 
             <!-- 第9章：后处理工具推荐 -->
             <section id="section-9">
-                <h2>🔬 后处理工具推荐</h2>
+                <h2 class="lang-cn">🔬 后处理工具推荐</h2>
+                <h2 class="lang-en">🔬 Post-processing Tools</h2>
 
                 <div class="success">
-                    <h3>Micro Post - 细菌轨迹运动分析器</h3>
-                    <p><b>仓库地址：</b><a href="https://github.com/Lucien-6/Micro-Post" target="_blank">https://github.com/Lucien-6/Micro-Post</a></p>
-                    <p>在通过 Micro Tracker 获得追踪结果后，强烈推荐使用 <b>Micro Post</b> 进行深度运动分析。该工具专为处理 Micro Tracker 输出的 Excel 数据而设计，提供：</p>
+                    <h3 class="lang-cn">Micro Post - 细菌轨迹运动分析器</h3>
+                    <h3 class="lang-en">Micro Post - Bacterial Trajectory Analyzer</h3>
+                    <p><b>Repo:</b> <a href="https://github.com/Lucien-6/Micro-Post" target="_blank">https://github.com/Lucien-6/Micro-Post</a></p>
+                    <p class="lang-cn">在通过 Micro Tracker 获得追踪结果后，强烈推荐使用 <b>Micro Post</b> 进行深度运动分析。该工具专为处理 Micro Tracker 输出的 Excel 数据而设计，提供：</p>
+                    <p class="lang-en">After obtaining tracking results, <b>Micro Post</b> is highly recommended for in-depth motion analysis. It is designed to process Micro Tracker Excel output.</p>
                     
-                    <h4>主要功能</h4>
-                    <ul>
+                    <h4 class="lang-cn">主要功能</h4>
+                    <h4 class="lang-en">Key Features</h4>
+                    <ul class="lang-cn">
                         <li><b>交互式轨迹可视化：</b>支持缩放、平移和悬停交互，直观展示对象运动轨迹</li>
                         <li><b>高级运动分析：</b>
                             <ul>
@@ -1041,55 +1664,102 @@
                         <li><b>MSD/MSAD 曲线拟合：</b>支持恒定速度漂移模型和主动扩散模型</li>
                         <li><b>Excel 导出：</b>自动调整列宽的格式化输出</li>
                     </ul>
+                    <ul class="lang-en">
+                        <li><b>Interactive Visualization:</b> Zoom, pan, hover.</li>
+                        <li><b>Advanced Analysis:</b>
+                            <ul>
+                                <li>Displacement (X/Y, Total).</li>
+                                <li>Angular displacement (180° symmetry).</li>
+                                <li>MSD and MSAD.</li>
+                                <li>Ellipse fitting and oscillation index.</li>
+                            </ul>
+                        </li>
+                        <li><b>Filtering:</b> Filter by minimum track length.</li>
+                        <li><b>Stats:</b> Mean and Std Dev statistics.</li>
+                        <li><b>Curve Fitting:</b> Constant velocity drift & Active diffusion models.</li>
+                        <li><b>Excel Export:</b> Formatted output.</li>
+                    </ul>
                     
-                    <h4>使用建议</h4>
-                    <p>在 Micro Tracker 完成数据导出后，直接使用 Micro Post 加载导出的 Excel 文件进行后续分析。两个工具的数据格式完全兼容，无需手动转换。</p>
+                    <h4 class="lang-cn">使用建议</h4>
+                    <h4 class="lang-en">Recommendation</h4>
+                    <p class="lang-cn">在 Micro Tracker 完成数据导出后，直接使用 Micro Post 加载导出的 Excel 文件进行后续分析。两个工具的数据格式完全兼容，无需手动转换。</p>
+                    <p class="lang-en">Load Micro Tracker's exported Excel file directly into Micro Post. Data formats are fully compatible.</p>
                 </div>
             </section>
 
             <!-- 第10章：常见问题与故障排除 -->
             <section id="section-10">
-                <h2>❓ 常见问题与故障排除</h2>
+                <h2 class="lang-cn">❓ 常见问题与故障排除</h2>
+                <h2 class="lang-en">❓ FAQ & Troubleshooting</h2>
 
-                <h3>标注相关问题</h3>
+                <h3 class="lang-cn">标注相关问题</h3>
+                <h3 class="lang-en">Annotation</h3>
                 
-                <h4>Q: 标注会自动保存吗？</h4>
-                <p>A: 是的，点击"开始处理"时会自动保存到Results文件夹，无需手动导出。文件名格式为 <code>{输入名}_annotations.json</code>。</p>
+                <h4 class="lang-cn">Q: 标注会自动保存吗？</h4>
+                <h4 class="lang-en">Q: Is auto-save supported?</h4>
+                <p class="lang-cn">A: 是的，点击"开始处理"时会自动保存到Results文件夹，无需手动导出。文件名格式为 <code>{输入名}_annotations.json</code>。</p>
+                <p class="lang-en">A: Yes, it saves automatically to the Results folder when you click "Start Processing". Filename: <code>{input_name}_annotations.json</code>.</p>
 
-                <h4>Q: 临时点击无法保存？</h4>
-                <p>A: 检查是否在正确的帧上（临时点击只能在添加它的帧上保存）。确保按 <kbd>A</kbd> 键保存临时点击后再切换帧。</p>
+                <h4 class="lang-cn">Q: 临时点击无法保存？</h4>
+                <h4 class="lang-en">Q: Temporary clicks not saving?</h4>
+                <p class="lang-cn">A: 检查是否在正确的帧上（临时点击只能在添加它的帧上保存）。确保按 <kbd>A</kbd> 键保存临时点击后再切换帧。</p>
+                <p class="lang-en">A: Ensure you are on the frame where clicks were added. Press <kbd>A</kbd> to save BEFORE switching frames.</p>
 
-                <h4>Q: 预览效果不理想？</h4>
-                <p>A: 尝试添加更多点击（正向或负向）来精细化分割。如果是边界框，尝试调整框的大小和位置。如果实时预览完全失败，可能是GPU不支持，系统会自动降级为仅显示边界框。</p>
+                <h4 class="lang-cn">Q: 预览效果不理想？</h4>
+                <h4 class="lang-en">Q: Poor preview quality?</h4>
+                <p class="lang-cn">A: 尝试添加更多点击（正向或负向）来精细化分割。如果是边界框，尝试调整框的大小和位置。如果实时预览完全失败，可能是GPU不支持，系统会自动降级为仅显示边界框。</p>
+                <p class="lang-en">A: Add more clicks (positive/negative) to refine. Adjust box size/position. If preview fails entirely, check GPU support (it downgrades to box-only if unsupported).</p>
 
-                <h4>Q: 如何修改已有标注？</h4>
-                <p>A: 切换到对应帧，删除原标注（选中后按<kbd>Delete</kbd>键或使用标注管理面板的"删除"按钮），然后重新绘制。</p>
+                <h4 class="lang-cn">Q: 如何修改已有标注？</h4>
+                <h4 class="lang-en">Q: How to modify annotations?</h4>
+                <p class="lang-cn">A: 切换到对应帧，删除原标注（选中后按<kbd>Delete</kbd>键或使用标注管理面板的"删除"按钮），然后重新绘制。</p>
+                <p class="lang-en">A: Go to the frame, delete the old annotation (<kbd>Delete</kbd> key or "Delete" button), and redraw.</p>
 
-                <h4>Q: 导入标注失败？</h4>
-                <p>A: 检查JSON文件格式是否正确，查看错误提示信息。确保文件是由Micro Tracker导出或符合规定格式的标注文件。</p>
+                <h4 class="lang-cn">Q: 导入标注失败？</h4>
+                <h4 class="lang-en">Q: Import failed?</h4>
+                <p class="lang-cn">A: 检查JSON文件格式是否正确，查看错误提示信息。确保文件是由Micro Tracker导出或符合规定格式的标注文件。</p>
+                <p class="lang-en">A: Check JSON format and error messages. Ensure the file was exported by Micro Tracker or follows the schema.</p>
 
-                <h3>处理相关问题</h3>
+                <h3 class="lang-cn">处理相关问题</h3>
+                <h3 class="lang-en">Processing</h3>
 
-                <h4>Q: 处理速度很慢？</h4>
-                <p>A: 
+                <h4 class="lang-cn">Q: 处理速度很慢？</h4>
+                <h4 class="lang-en">Q: Slow processing?</h4>
+                <p class="lang-cn">A: 
                     <ul>
                         <li>确保选择了GPU设备（CUDA:0）而非CPU</li>
                         <li>考虑使用更小的模型（Tiny或Small）</li>
                         <li>减少标注帧数（5-10个关键帧通常已足够）</li>
                     </ul>
                 </p>
+                <p class="lang-en">A: 
+                    <ul>
+                        <li>Use GPU (CUDA:0) instead of CPU.</li>
+                        <li>Use smaller models (Tiny/Small).</li>
+                        <li>Reduce keyframes (5-10 are usually enough).</li>
+                    </ul>
+                </p>
 
-                <h4>Q: GPU内存不足？</h4>
-                <p>A: 
+                <h4 class="lang-cn">Q: GPU内存不足？</h4>
+                <h4 class="lang-en">Q: GPU Out of Memory?</h4>
+                <p class="lang-cn">A: 
                     <ul>
                         <li>关闭其他占用GPU的应用程序</li>
                         <li>使用更小的模型（Tiny）</li>
                         <li>降低视频分辨率</li>
                     </ul>
                 </p>
+                <p class="lang-en">A: 
+                    <ul>
+                        <li>Close other GPU apps.</li>
+                        <li>Use "Tiny" model.</li>
+                        <li>Lower video resolution.</li>
+                    </ul>
+                </p>
 
-                <h4>Q: 追踪质量不佳？</h4>
-                <p>A: 
+                <h4 class="lang-cn">Q: 追踪质量不佳？</h4>
+                <h4 class="lang-en">Q: Poor tracking quality?</h4>
+                <p class="lang-cn">A: 
                     <ul>
                         <li>在更多关键帧添加修正标注</li>
                         <li>使用更大的模型（Base+或Large）</li>
@@ -1097,55 +1767,96 @@
                         <li>在对象发生显著变化的帧添加修正</li>
                     </ul>
                 </p>
+                <p class="lang-en">A: 
+                    <ul>
+                        <li>Add refinements on more keyframes.</li>
+                        <li>Use larger models (Base+/Large).</li>
+                        <li>Ensure initial Frame 0 annotations are accurate.</li>
+                        <li>Correct frames where object appearance changes significantly.</li>
+                    </ul>
+                </p>
 
-                <h3>筛选过滤问题</h3>
+                <h3 class="lang-cn">筛选过滤问题</h3>
+                <h3 class="lang-en">Filtering</h3>
 
-                <h4>Q: 所有对象都被过滤掉了？</h4>
-                <p>A: 检查筛选条件是否过于严格。尝试逐个启用筛选条件，找出导致过滤的具体原因。查看筛选日志了解详细信息。</p>
+                <h4 class="lang-cn">Q: 所有对象都被过滤掉了？</h4>
+                <h4 class="lang-en">Q: All objects filtered out?</h4>
+                <p class="lang-cn">A: 检查筛选条件是否过于严格。尝试逐个启用筛选条件，找出导致过滤的具体原因。查看筛选日志了解详细信息。</p>
+                <p class="lang-en">A: Check if conditions are too strict. Enable conditions one by one to isolate the cause. Check the filter log.</p>
 
-                <h4>Q: 如何选择合适的参数？</h4>
-                <p>A: 
+                <h4 class="lang-cn">Q: 如何选择合适的参数？</h4>
+                <h4 class="lang-en">Q: How to choose parameters?</h4>
+                <p class="lang-cn">A: 
                     <ul>
                         <li>FPS：根据实际拍摄帧率设置</li>
                         <li>比例系数：咨询显微镜设备文档或技术人员</li>
                         <li>筛选阈值：先用默认值，根据结果逐步调整</li>
                     </ul>
                 </p>
+                <p class="lang-en">A: 
+                    <ul>
+                        <li>FPS: Based on recording settings.</li>
+                        <li>Scale: Consult microscope docs.</li>
+                        <li>Thresholds: Start with defaults and adjust.</li>
+                    </ul>
+                </p>
 
-                <h3>性能优化建议</h3>
-                <ul>
+                <h3 class="lang-cn">性能优化建议</h3>
+                <h3 class="lang-en">Performance Tips</h3>
+                <ul class="lang-cn">
                     <li>使用GPU加速（CUDA设备）</li>
                     <li>根据需求选择合适的模型（速度 vs 精度）</li>
                     <li>标注关键帧（5-10个），避免过度标注</li>
                     <li>处理前关闭不必要的应用程序</li>
                     <li>确保有足够的磁盘空间保存结果</li>
                 </ul>
+                <ul class="lang-en">
+                    <li>Use GPU (CUDA).</li>
+                    <li>Choose appropriate model (Speed vs Accuracy).</li>
+                    <li>Annotate sparsely (5-10 keyframes).</li>
+                    <li>Close background apps.</li>
+                    <li>Ensure sufficient disk space.</li>
+                </ul>
             </section>
 
             <!-- 第11章：附录 -->
             <section id="section-11">
-                <h2>📎 附录</h2>
+                <h2 class="lang-cn">📎 附录</h2>
+                <h2 class="lang-en">📎 Appendix</h2>
 
-                <h3>关于姿态角度的理解</h3>
-                <p>导出的轨迹数据中的姿态角度是OpenCV的 <code>cv2.fitEllipse</code> 函数直接返回的原始角度值，表示椭圆的方向。这个角度测量的是椭圆宽度方向（可能是长轴或短轴）与水平线的夹角，范围为0-180度。</p>
-                <p><b>注意：</b>在可视化显示中，系统会自动确定哪个是主轴（长轴）并用红色显示，哪个是次轴（短轴）并用蓝色显示。但保存的角度数据始终是 <code>cv2.fitEllipse</code> 的原始返回值，没有经过调整。</p>
+                <h3 class="lang-cn">关于姿态角度的理解</h3>
+                <h3 class="lang-en">Understanding Posture Angle</h3>
+                <p class="lang-cn">导出的轨迹数据中的姿态角度是OpenCV的 <code>cv2.fitEllipse</code> 函数直接返回的原始角度值，表示椭圆的方向。这个角度测量的是椭圆宽度方向（可能是长轴或短轴）与水平线的夹角，范围为0-180度。</p>
+                <p class="lang-en">The exported posture angle is the raw value from OpenCV's <code>cv2.fitEllipse</code>, representing ellipse orientation (0-180 degrees).</p>
+                <p class="lang-cn"><b>注意：</b>在可视化显示中，系统会自动确定哪个是主轴（长轴）并用红色显示，哪个是次轴（短轴）并用蓝色显示。但保存的角度数据始终是 <code>cv2.fitEllipse</code> 的原始返回值，没有经过调整。</p>
+                <p class="lang-en"><b>Note:</b> Visualization automatically distinguishes Major (Red) vs Minor (Blue) axes. Exported data uses the raw return value without adjustment.</p>
 
-                <h3>技术支持</h3>
-                <p>如果您在使用过程中遇到问题或有任何建议，欢迎通过以下方式联系作者：</p>
-                <ul>
+                <h3 class="lang-cn">技术支持</h3>
+                <h3 class="lang-en">Support</h3>
+                <p class="lang-cn">如果您在使用过程中遇到问题或有任何建议，欢迎通过以下方式联系作者：</p>
+                <p class="lang-en">For issues or suggestions, contact:</p>
+                <ul class="lang-cn">
                     <li><b>邮箱：</b>lucien-6@qq.com</li>
                     <li><b>GitHub：</b><a href="https://github.com/Lucien-6/Micro-Post" target="_blank">Micro Post 仓库</a>（后处理工具）</li>
                 </ul>
+                <ul class="lang-en">
+                    <li><b>Email:</b> lucien-6@qq.com</li>
+                    <li><b>GitHub:</b> <a href="https://github.com/Lucien-6/Micro-Post" target="_blank">Micro Post Repo</a></li>
+                </ul>
 
-                <h3>版权声明</h3>
-                <p>Copyright © 2026 LUCIEN. 保留所有权利。</p>
-                <p>本软件采用 MIT 许可证。您可以自由使用、修改和分发本软件，但必须保留版权声明和许可证声明。</p>
+                <h3 class="lang-cn">版权声明</h3>
+                <h3 class="lang-en">Copyright</h3>
+                <p class="lang-cn">Copyright © 2026 LUCIEN. 保留所有权利。</p>
+                <p class="lang-en">Copyright © 2026 LUCIEN. All rights reserved.</p>
+                <p class="lang-cn">本软件采用 MIT 许可证。您可以自由使用、修改和分发本软件，但必须保留版权声明和许可证声明。</p>
+                <p class="lang-en">Licensed under MIT License.</p>
             </section>
 
             <!-- 页脚 -->
             <div class="footer">
                 <p>Micro Tracker v2.7.0 | Copyright © 2026 LUCIEN | 2026-02-04
-                <p>基于 SAM2 (Segment Anything Model 2) 构建</p>
+                <p class="lang-cn">基于 SAM2 (Segment Anything Model 2) 构建</p>
+                <p class="lang-en">Built on SAM2 (Segment Anything Model 2)</p>
             </div>
         </main>
     </div>
@@ -1156,6 +1867,9 @@
             // 初始化主题
             initTheme();
             
+            // 初始化语言
+            initLanguage();
+            
             // 初始化侧边栏导航
             initSidebar();
             
@@ -1165,6 +1879,32 @@
             // 初始化滚动同步
             initScrollSync();
         });
+
+        // ===== 语言切换 =====
+        function initLanguage() {
+            const langToggle = document.getElementById('langToggle');
+            const body = document.body;
+            
+            // 从localStorage读取语言偏好
+            const savedLang = localStorage.getItem('lang');
+            if (savedLang === 'en') {
+                body.classList.add('lang-en');
+                document.documentElement.lang = 'en';
+            }
+            
+            // 切换按钮点击事件
+            langToggle.addEventListener('click', function() {
+                body.classList.toggle('lang-en');
+                
+                if (body.classList.contains('lang-en')) {
+                    localStorage.setItem('lang', 'en');
+                    document.documentElement.lang = 'en';
+                } else {
+                    localStorage.setItem('lang', 'zh');
+                    document.documentElement.lang = 'zh-CN';
+                }
+            });
+        }
 
         // ===== 暗色模式切换 =====
         function initTheme() {
@@ -1220,6 +1960,7 @@
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
                     
+                    // 更新URL hash（不触发页面跳转）
                     const targetId = this.getAttribute('href').substring(1);
                     const targetElement = document.getElementById(targetId);
                     
@@ -1229,7 +1970,6 @@
                             block: 'start'
                         });
                         
-                        // 更新URL hash（不触发页面跳转）
                         history.pushState(null, null, '#' + targetId);
                     }
                 });
@@ -1259,18 +1999,39 @@
                         });
                         
                         // 添加当前章节的active类
-                        const activeLink = document.querySelector(`.sidebar a[href="#${id}"]`);
-                        if (activeLink) {
-                            activeLink.classList.add('active');
-                            
-                            // 自动展开父级章节
-                            const parentToggle = activeLink.closest('.nav-subsection')?.previousElementSibling;
-                            if (parentToggle && parentToggle.classList.contains('section-toggle')) {
-                                if (!parentToggle.classList.contains('expanded')) {
-                                    parentToggle.classList.add('expanded');
-                                    parentToggle.nextElementSibling.classList.add('expanded');
-                                }
-                            }
+                        // 注意：这里需要根据当前语言选择对应的链接
+                        const isEn = document.body.classList.contains('lang-en');
+                        const langClass = isEn ? '.lang-en' : '.lang-cn';
+                        
+                        // 由于我们有双语链接，需要匹配对应的那个
+                        // 简单起见，我们给所有语言版本的链接都加上active，依靠CSS显示正确的
+                        const activeLinks = document.querySelectorAll(`.sidebar a[href="#${id}"]`);
+                        activeLinks.forEach(link => link.classList.add('active'));
+                        
+                        // 自动展开父级章节
+                        if (activeLinks.length > 0) {
+                             const parentToggle = activeLinks[0].closest('.nav-subsection')?.previousElementSibling;
+                             // 注意：previousElementSibling可能是英文标题（如果当前是中文子菜单），所以要多找一下
+                             // 实际上HTML结构是 ul > li > a.toggle(cn) > a.toggle(en) > ul
+                             // 结构是:
+                             // li
+                             //   a.cn
+                             //   a.en
+                             //   ul
+                             // 所以 closest('.nav-subsection') 的 prevSibling 是 text 节点或 a 标签
+                             
+                             const subSection = activeLinks[0].closest('.nav-subsection');
+                             if (subSection) {
+                                 const siblings = Array.from(subSection.parentElement.children);
+                                 siblings.forEach(sib => {
+                                     if (sib.classList.contains('section-toggle')) {
+                                         if (!sib.classList.contains('expanded')) {
+                                             sib.classList.add('expanded');
+                                         }
+                                     }
+                                 });
+                                 subSection.classList.add('expanded');
+                             }
                         }
                     }
                 });

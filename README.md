@@ -15,7 +15,7 @@
 </div>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-2.8.0-brightgreen.svg" alt="Version 2.8.0">
+  <img src="https://img.shields.io/badge/Version-2.9.0-brightgreen.svg" alt="Version 2.9.0">
   <img src="https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white" alt="Python 3.10+">
   <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License: Apache 2.0">
   <img src="https://img.shields.io/badge/PyQt5-5.15%2B-green.svg" alt="PyQt5 5.15+">
@@ -262,6 +262,7 @@ python -m main
 | `Space`  | Play/Pause video |
 | `F`      | Next frame       |
 | `D`      | Previous frame   |
+| `Ctrl+J` | Jump to frame    |
 
 #### Annotation Editing
 
@@ -281,15 +282,16 @@ python -m main
 
 #### Mouse Operations
 
-| Action                | Function                            |
-| --------------------- | ----------------------------------- |
-| Left drag             | Draw bounding box (New Object mode) |
-| Left click            | Add positive point (Point mode)     |
-| Right click           | Add negative point (Point mode)     |
-| Click on box          | Select bounding box                 |
-| Ctrl+Scroll           | Zoom in/out (100%-1000%)            |
-| Ctrl+Left drag        | Pan image (when zoomed)             |
-| Middle-click / `Home` | Reset zoom to fit view              |
+| Action                     | Function                                         |
+| -------------------------- | ------------------------------------------------ |
+| Left drag                  | Draw bounding box (New Object mode)              |
+| Left click                 | Add positive point (Point mode)                  |
+| Right click                | Add negative point (Point mode)                  |
+| Click on box               | Select bounding box                              |
+| Left double-click (Result) | Jump to annotation tab at the same frame         |
+| Ctrl+Scroll                | Zoom in/out (100%-1000%)                         |
+| Ctrl+Left drag             | Pan image (when zoomed)                          |
+| Middle-click / `Home`      | Reset zoom to fit view                           |
 
 ## 📁 Project Structure
 
@@ -607,11 +609,12 @@ python -m main
 
 #### 视频控制
 
-| 快捷键 | 功能          |
-| ------ | ------------- |
-| `空格` | 播放/暂停视频 |
-| `F`    | 下一帧        |
-| `D`    | 上一帧        |
+| 快捷键   | 功能          |
+| -------- | ------------- |
+| `空格`   | 播放/暂停视频 |
+| `F`      | 下一帧        |
+| `D`      | 上一帧        |
+| `Ctrl+J` | 跳转到指定帧  |
 
 #### 标注编辑
 
@@ -631,15 +634,16 @@ python -m main
 
 #### 鼠标操作
 
-| 操作                 | 功能                     |
-| -------------------- | ------------------------ |
-| 左键拖拽             | 绘制边界框（新对象模式） |
-| 左键点击             | 添加正向点击（点击模式） |
-| 右键点击             | 添加负向点击（点击模式） |
-| 单击边界框           | 选中边界框               |
-| Ctrl+滚轮            | 缩放图像（100%-1000%）   |
-| Ctrl+左键拖拽        | 拖拽平移图像（缩放后）   |
-| 中键点击 / `Home` 键 | 重置缩放至自适应         |
+| 操作                       | 功能                                       |
+| -------------------------- | ------------------------------------------ |
+| 左键拖拽                   | 绘制边界框（新对象模式）                   |
+| 左键点击                   | 添加正向点击（点击模式）                   |
+| 右键点击                   | 添加负向点击（点击模式）                   |
+| 单击边界框                 | 选中边界框                                 |
+| 左键双击（结果预览画布）   | 跳转至标注标签页并定位到相同帧             |
+| Ctrl+滚轮                  | 缩放图像（100%-1000%）                     |
+| Ctrl+左键拖拽              | 拖拽平移图像（缩放后）                     |
+| 中键点击 / `Home` 键       | 重置缩放至自适应                           |
 
 ## 📁 项目结构
 

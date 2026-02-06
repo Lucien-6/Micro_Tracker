@@ -695,6 +695,9 @@ class AnnotationManagerWidget(QWidget):
             self.refresh_table()
             self.main_window._update_annotation_status_display()
             
+            # Restore preview masks for the current frame after import
+            self.main_window._restore_preview_for_current_frame()
+            
             format_msg = "（Refinement格式）" if format_type == "refinement" else "（旧格式）"
             self.main_window.log_message(f"标注已从 {file_path} 导入 {format_msg}", "success")
             QMessageBox.information(self, "成功", f"标注导入成功！\n格式: {format_type}")

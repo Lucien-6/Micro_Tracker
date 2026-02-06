@@ -278,6 +278,52 @@ def process_video_with_refinement(args, annotations_data):
         progress_callback("\n✅ Refinement模式处理完成！")
 
 
+def _draw_id_labels_on_frame(frame, masks_dict, width, height):
+    """
+    Draw object ID labels at the centroid of each mask on the frame.
+
+    Args:
+        frame (np.ndarray): The video frame to draw on (modified in-place).
+        masks_dict (dict): Mapping of obj_id -> mask array for a single frame.
+        width (int): Frame width.
+        height (int): Frame height.
+    """
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    font_scale = 0.7  # ~15px text height
+    thickness = 2
+    color = (255, 255, 255)  # Pure white
+
+    for obj_id, mask in masks_dict.items():
+        # Resize mask if needed
+        if mask.shape != (height, width):
+            mask_resized = cv2.resize(
+                mask.astype(np.uint8), (width, height),
+                interpolation=cv2.INTER_NEAREST
+            )
+        else:
+            mask_resized = mask.astype(np.uint8)
+
+        # Compute centroid via image moments
+        moments = cv2.moments(mask_resized)
+        if moments["m00"] == 0:
+            continue  # Skip empty masks
+
+        cx = int(moments["m10"] / moments["m00"])
+        cy = int(moments["m01"] / moments["m00"])
+
+        # Prepare label text (just the ID number)
+        label = str(int(obj_id))
+
+        # Compute text size for centering
+        (text_w, text_h), baseline = cv2.getTextSize(label, font, font_scale, thickness)
+        text_x = cx - text_w // 2
+        text_y = cy + text_h // 2
+
+        # Draw anti-aliased white text
+        cv2.putText(frame, label, (text_x, text_y), font, font_scale,
+                    color, thickness, cv2.LINE_AA)
+
+
 def save_results(all_masks, video_path, output_path, mask_dir, save_to_video, 
                  progress_callback=None, input_type="video", image_files=None, 
                  image_sequence_fps=10.0):
@@ -375,6 +421,9 @@ def save_results(all_masks, video_path, output_path, mask_dir, save_to_video,
                     
                     color = np.array(color_map[int(obj_id) % len(color_map)])
                     frame[mask_resized > 0] = (frame[mask_resized > 0] * 0.5 + color * 0.5).astype(np.uint8)
+                
+                # Draw object ID labels at mask centroids
+                _draw_id_labels_on_frame(frame, all_masks[frame_idx], width, height)
             
             # 保存视频帧
             if video_writer:
@@ -421,6 +470,9 @@ def save_results(all_masks, video_path, output_path, mask_dir, save_to_video,
                     
                     # 半透明叠加
                     frame[mask_resized > 0] = (frame[mask_resized > 0] * 0.5 + color * 0.5).astype(np.uint8)
+                
+                # Draw object ID labels at mask centroids
+                _draw_id_labels_on_frame(frame, all_masks[frame_idx], width, height)
             
             # 保存视频帧
             if video_writer:

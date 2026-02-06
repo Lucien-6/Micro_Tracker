@@ -8,7 +8,8 @@ import subprocess
 from pathlib import Path
 
 from PyQt5.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QLabel, 
-                            QFileDialog, QMessageBox, QApplication, QTabWidget)
+                            QFileDialog, QMessageBox, QApplication, QTabWidget,
+                            QInputDialog)
 from PyQt5.QtGui import QIcon, QTextCursor
 from PyQt5.QtCore import Qt, QDateTime, QMutex
 
@@ -789,6 +790,12 @@ class MainWindow(QMainWindow):
             super().keyPressEvent(event)
             return
         
+        # Ctrl+J - Jump to a specific frame (works on all tabs)
+        if event.key() == Qt.Key_J and event.modifiers() == Qt.ControlModifier:
+            self._show_jump_to_frame_dialog()
+            event.accept()
+            return
+        
         # 根据当前激活的标签页来判断要控制哪个视频
         current_tab = self.tab_widget.currentIndex()
         
@@ -855,6 +862,88 @@ class MainWindow(QMainWindow):
         # 调用父类的keyPressEvent以确保其他按键事件正常处理
         super().keyPressEvent(event)
     
+    def _show_jump_to_frame_dialog(self):
+        """
+        Show a dialog to jump to a specific frame index.
+
+        Determines the active tab and corresponding video thread / slider,
+        then prompts the user for a frame number via QInputDialog.
+        """
+        current_tab = self.tab_widget.currentIndex()
+
+        # Determine the video thread and slider for the active tab
+        if current_tab == 0:
+            video_thread = self.video_thread
+            slider = self.frame_slider
+            pause_fn = self.toggle_play_pause
+        elif current_tab == 1:
+            video_thread = self.result_video_thread
+            slider = self.result_slider
+            pause_fn = self.toggle_result_play_pause
+        elif current_tab == 2:
+            video_thread = getattr(self, 'filter_video_thread', None)
+            slider = getattr(self, 'filter_slider', None)
+            pause_fn = self.toggle_filter_play_pause
+        else:
+            return
+
+        # Ensure the video thread is running
+        if not video_thread or not video_thread.isRunning():
+            return
+
+        total_frames = video_thread.total_frames
+        current_value = slider.value() if slider else 0
+
+        frame_index, ok = QInputDialog.getInt(
+            self,
+            "Jump to Frame",
+            f"Enter frame index (0 - {total_frames - 1}):",
+            value=current_value,
+            min=0,
+            max=total_frames - 1,
+            step=1
+        )
+
+        if ok:
+            # Pause the video if it is currently playing
+            mutex = QMutex()
+            mutex.lock()
+            is_paused = video_thread.paused
+            mutex.unlock()
+
+            if not is_paused:
+                pause_fn()
+
+            # Set the slider value, which triggers the connected frame navigation slot
+            slider.setValue(frame_index)
+
+    def _on_result_preview_double_click(self):
+        """
+        Handle double-click on the result preview canvas.
+
+        Switches to the annotation tab (tab 0) and navigates the original
+        video to the same frame that was displayed in the result preview.
+        """
+        # Get the current frame index from the result slider
+        frame_index = self.result_slider.value()
+
+        # Switch to the annotation tab
+        self.tab_widget.setCurrentIndex(0)
+
+        # Navigate the original video to the same frame if thread is running
+        if self.video_thread and self.video_thread.isRunning():
+            # Pause if currently playing
+            mutex = QMutex()
+            mutex.lock()
+            is_paused = self.video_thread.paused
+            mutex.unlock()
+
+            if not is_paused:
+                self.toggle_play_pause()
+
+            # Jump to the corresponding frame
+            self.frame_slider.setValue(frame_index)
+
     def next_frame(self, video_thread, slider):
         """播放下一帧"""
         if not video_thread or not video_thread.isRunning():

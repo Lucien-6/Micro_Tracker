@@ -592,7 +592,7 @@ class FilterMaskThread(QThread):
                     id_text = str(obj_id)
                     # 计算文本大小以进行居中放置
                     font = cv2.FONT_HERSHEY_SIMPLEX
-                    font_scale = 1.0  # 调整为较小的字体大小
+                    font_scale = 0.7  # ~15px text height
                     thickness = 2     # 调整为较细的线条粗细
                     (text_width, text_height), baseline = cv2.getTextSize(id_text, font, font_scale, thickness)
                     # 计算文本位置使其居中
@@ -675,7 +675,7 @@ class FilterMaskThread(QThread):
                 # 最后，在所有绘制完成后，绘制ID标签，确保它们位于最上层
                 for id_text, pos, font, font_scale, thickness in id_labels:
                     # 绘制白色文本
-                    cv2.putText(vis_mask, id_text, pos, font, font_scale, (255, 255, 255), thickness)
+                    cv2.putText(vis_mask, id_text, pos, font, font_scale, (255, 255, 255), thickness, cv2.LINE_AA)
                 
                 # 添加到筛选后的掩膜列表
                 filtered_viz_frames.append(vis_mask)

@@ -37,6 +37,9 @@ class ResultPreviewTab(BaseTab):
         result_layout.setSpacing(12)  # 增加间距
         
         self.main_window.result_label = ResultVideoLabel()
+        self.main_window.result_label.frame_double_clicked.connect(
+            self.main_window._on_result_preview_double_click
+        )
         self.main_window.result_label.setMinimumSize(800, 500)  # 增加最小尺寸
         self.main_window.result_label.setAlignment(Qt.AlignCenter)
         self.main_window.result_label.setStyleSheet("""

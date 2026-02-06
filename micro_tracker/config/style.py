@@ -143,8 +143,8 @@ QSlider::groove:horizontal {
 }
 
 QSlider::sub-page:horizontal {
-    background: #616161;
-    border: 1px solid #616161;
+    background: #D3D3D3;
+    border: 1px solid #D3D3D3;
     height: 8px;
     border-radius: 4px;
 }

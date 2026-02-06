@@ -4,6 +4,112 @@
 
 ---
 
+## [v2.9.0] - 2026-02-06
+
+### ✨ 新增功能 (New Features)
+
+#### 结果预览视频中显示对象 ID 标签
+
+**功能描述：**
+在处理生成的结果预览视频中，除了叠加显示对象掩膜以外，还会在每个掩膜的质心处显示该对象的 ID 标签（如 "1"、"2"、"3"……），便于用户快速识别各对象。
+
+**技术参数：**
+
+- 字体：`cv2.FONT_HERSHEY_SIMPLEX`
+- 字体高度：~15px（fontScale = 0.6）
+- 粗细：1px
+- 颜色：纯白色 `(255, 255, 255)`
+- 抗锯齿：`cv2.LINE_AA`
+- 居中：使用 `cv2.getTextSize` 计算偏移，确保标签精确居中于掩膜质心
+
+**实现方式：**
+
+1. **新增辅助函数** `_draw_id_labels_on_frame()` (`scripts/process_video_multiframe.py`)
+
+   - 通过 `cv2.moments()` 计算每个掩膜的质心坐标
+   - 在质心处绘制白色抗锯齿 ID 标签
+   - 同时应用于图像序列模式和视频模式两条代码路径
+
+2. **筛选过滤标签页同步更新** (`micro_tracker/threads/filter_mask_thread.py`)
+
+   - 统一 fontScale 为 0.6（原为 1.0）
+   - 统一 thickness 为 1（原为 2）
+   - 添加 `cv2.LINE_AA` 抗锯齿渲染
+
+#### Ctrl+J 快捷键跳转到指定帧
+
+**功能描述：**
+用户可以在三个标签页中通过 `Ctrl+J` 快捷键呼出弹窗，输入想跳转的帧序号后确认便可跳转至指定帧。
+
+**实现方式：**
+
+1. **统一快捷键处理** (`micro_tracker/ui/main_window.py`)
+
+   - 在 `keyPressEvent()` 中添加 `Ctrl+J` 处理，位于所有标签页判断之前，全局生效
+   - 新增 `_show_jump_to_frame_dialog()` 方法，使用 `QInputDialog.getInt()` 弹窗
+   - 自动检测当前标签页，使用对应的视频线程和帧滑块
+   - 跳转前自动暂停视频播放
+
+#### 结果预览双击跳转到标注标签页
+
+**功能描述：**
+用户在结果预览画布上左键双击任意位置时，将自动跳转至标注标签页，且标注标签页中的视频也会跳转至与结果预览当前显示的相同帧，便于用户进行对象修正。
+
+**实现方式：**
+
+1. **新增信号** (`micro_tracker/components/video_widgets.py`)
+
+   - `ResultVideoLabel` 新增 `frame_double_clicked` 信号
+   - 重写 `mouseDoubleClickEvent()`，左键双击时发射信号
+
+2. **跳转处理** (`micro_tracker/ui/main_window.py`)
+
+   - 新增 `_on_result_preview_double_click()` 方法
+   - 获取结果预览当前帧索引 → 切换到标注标签页 → 暂停原始视频 → 跳转到相同帧
+
+3. **信号连接** (`micro_tracker/ui/result_preview_tab.py`)
+
+   - `result_label.frame_double_clicked` 连接到 `_on_result_preview_double_click`
+
+---
+
+### 🐛 修复 (Bug Fixes)
+
+#### 修复导入标注后掩膜未立即更新显示的问题
+
+**问题描述：**
+用户导入标注后，视频中会立即更新显示相应的边界框，但各对象的掩膜预览并未立即更新，需要切换到别的帧再切换回来才会更新掩膜。
+
+**问题根源：**
+`import_annotations()` 方法在导入后清除了预览掩膜并调用 `set_current_frame()` 同步边界框，但没有调用 `_restore_preview_for_current_frame()` 来重新生成掩膜预览。
+
+**修复内容：**
+
+- 在 `annotation_manager.py` 的 `import_annotations()` 方法中，`set_current_frame()` 之后添加 `_restore_preview_for_current_frame()` 调用
+
+---
+
+### 🔄 向后兼容性
+
+- ✅ 完全向后兼容
+- ✅ 不影响数据格式和处理逻辑
+- ✅ 结果视频新增 ID 标签为纯视觉增强
+
+---
+
+### 📊 技术细节
+
+**修改的核心文件：**
+
+- `scripts/process_video_multiframe.py` - 新增 `_draw_id_labels_on_frame()` 辅助函数
+- `micro_tracker/threads/filter_mask_thread.py` - 统一 ID 标签渲染参数
+- `micro_tracker/ui/main_window.py` - 新增 Ctrl+J 帧跳转和双击跳转处理
+- `micro_tracker/components/video_widgets.py` - ResultVideoLabel 新增双击信号
+- `micro_tracker/ui/result_preview_tab.py` - 连接双击信号
+- `micro_tracker/ui/annotation_manager.py` - 修复导入后掩膜预览
+
+---
+
 ## [v2.8.0] - 2026-02-06
 
 ### 🎨 GUI 布局优化与处理期间 UI 锁定 (GUI Layout Optimization & Processing UI Lock)

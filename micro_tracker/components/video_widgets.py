@@ -1558,6 +1558,7 @@ class ResultVideoLabel(MultiLayerVideoView):
         - Middle click to reset zoom
         - Home key to reset zoom
         - Space/F/D keys for video playback control (handled by main window)
+        - Left double-click to jump to annotation tab at the same frame
     
     Disabled features:
         - Left click to draw bounding boxes
@@ -1569,6 +1570,9 @@ class ResultVideoLabel(MultiLayerVideoView):
         - Ctrl+C to clear temporary clicks
         - Ctrl+H to hide prompts
     """
+    
+    # Signal emitted on left-button double-click (for jumping to annotation tab)
+    frame_double_clicked = pyqtSignal()
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -1653,6 +1657,21 @@ class ResultVideoLabel(MultiLayerVideoView):
             return
         
         # Ignore annotation completion logic
+        event.accept()
+    
+    def mouseDoubleClickEvent(self, event):
+        """
+        Handle double-click to jump to annotation tab at the current frame.
+        Only left-button double-click triggers the signal.
+        """
+        if self.frame is None:
+            return
+        
+        if event.button() == Qt.LeftButton:
+            self.frame_double_clicked.emit()
+            event.accept()
+            return
+        
         event.accept()
     
     def keyPressEvent(self, event):

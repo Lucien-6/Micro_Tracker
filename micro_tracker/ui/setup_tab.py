@@ -190,15 +190,15 @@ class SetupTab(BaseTab):
             }
         """)
         
-        model_browse_btn = RippleButton("浏览", "选择预设的SAM2模型文件")
-        model_browse_btn.setIcon(QIcon.fromTheme("document-open"))
-        model_browse_btn.setMinimumWidth(60)
-        model_browse_btn.setMaximumWidth(60)
-        model_browse_btn.setMinimumHeight(24)
-        model_browse_btn.clicked.connect(self.main_window.browse_model)
+        self.model_browse_btn = RippleButton("浏览", "选择预设的SAM2模型文件")
+        self.model_browse_btn.setIcon(QIcon.fromTheme("document-open"))
+        self.model_browse_btn.setMinimumWidth(60)
+        self.model_browse_btn.setMaximumWidth(60)
+        self.model_browse_btn.setMinimumHeight(24)
+        self.model_browse_btn.clicked.connect(self.main_window.browse_model)
         
         model_layout.addWidget(self.main_window.model_combo)
-        model_layout.addWidget(model_browse_btn)
+        model_layout.addWidget(self.model_browse_btn)
         file_layout.addRow("SAM2 模型:", model_layout)
         
         # 输出视频路径
@@ -208,14 +208,14 @@ class SetupTab(BaseTab):
         self.main_window.output_path_edit.setReadOnly(True)
         self.main_window.output_path_edit.setPlaceholderText("(默认由系统自动设置)")
         self.main_window.output_path_edit.setMinimumHeight(24)  # 设置输入框高度
-        output_browse_btn = RippleButton("浏览", "设置处理后视频的保存位置")
-        output_browse_btn.setIcon(QIcon.fromTheme("document-save"))
-        output_browse_btn.setMinimumWidth(60)
-        output_browse_btn.setMaximumWidth(60)
-        output_browse_btn.setMinimumHeight(24)  # 设置按钮高度与输入框一致
-        output_browse_btn.clicked.connect(self.main_window.browse_output)
+        self.output_browse_btn = RippleButton("浏览", "设置处理后视频的保存位置")
+        self.output_browse_btn.setIcon(QIcon.fromTheme("document-save"))
+        self.output_browse_btn.setMinimumWidth(60)
+        self.output_browse_btn.setMaximumWidth(60)
+        self.output_browse_btn.setMinimumHeight(24)  # 设置按钮高度与输入框一致
+        self.output_browse_btn.clicked.connect(self.main_window.browse_output)
         output_layout.addWidget(self.main_window.output_path_edit)
-        output_layout.addWidget(output_browse_btn)
+        output_layout.addWidget(self.output_browse_btn)
         file_layout.addRow("结果视频输出:", output_layout)
         
         # 掩码保存目录
@@ -225,14 +225,14 @@ class SetupTab(BaseTab):
         self.main_window.mask_dir_edit.setReadOnly(True)
         self.main_window.mask_dir_edit.setPlaceholderText("(默认由系统自动设置)")
         self.main_window.mask_dir_edit.setMinimumHeight(24)  # 设置输入框高度
-        mask_browse_btn = RippleButton("浏览", "设置掩码图片的保存目录")
-        mask_browse_btn.setIcon(QIcon.fromTheme("folder"))
-        mask_browse_btn.setMinimumWidth(60)
-        mask_browse_btn.setMaximumWidth(60)
-        mask_browse_btn.setMinimumHeight(24)  # 设置按钮高度与输入框一致
-        mask_browse_btn.clicked.connect(self.main_window.browse_mask_dir)
+        self.mask_browse_btn = RippleButton("浏览", "设置掩码图片的保存目录")
+        self.mask_browse_btn.setIcon(QIcon.fromTheme("folder"))
+        self.mask_browse_btn.setMinimumWidth(60)
+        self.mask_browse_btn.setMaximumWidth(60)
+        self.mask_browse_btn.setMinimumHeight(24)  # 设置按钮高度与输入框一致
+        self.mask_browse_btn.clicked.connect(self.main_window.browse_mask_dir)
         mask_layout.addWidget(self.main_window.mask_dir_edit)
-        mask_layout.addWidget(mask_browse_btn)
+        mask_layout.addWidget(self.mask_browse_btn)
         file_layout.addRow("掩码保存目录:", mask_layout)
         
         file_group.setLayout(file_layout)
@@ -464,8 +464,9 @@ class SetupTab(BaseTab):
         annotation_mode_layout.setSpacing(5)
         annotation_mode_layout.setContentsMargins(8, 5, 8, 5)
         
-        # 模式选择按钮（左右排列）
+        # 模式选择按钮和对象选择下拉框（水平并列）
         mode_selection_layout = QHBoxLayout()
+        mode_selection_layout.setSpacing(8)
         
         self.new_object_radio = QRadioButton("新对象")
         self.new_object_radio.setChecked(True)
@@ -473,7 +474,7 @@ class SetupTab(BaseTab):
         self.new_object_radio.setStyleSheet("""
             QRadioButton {
                 font-size: 9pt;
-                padding: 6px 12px;
+                padding: 4px 10px;
                 border-radius: 4px;
             }
             QRadioButton::indicator {
@@ -486,6 +487,14 @@ class SetupTab(BaseTab):
                 border: 2px solid #0D47A1;
                 font-weight: bold;
             }
+            QRadioButton:disabled {
+                color: #aaaaaa;
+            }
+            QRadioButton:checked:disabled {
+                background-color: #e8e8e8;
+                color: #aaaaaa;
+                border: 2px solid #cccccc;
+            }
         """)
         
         self.refine_object_radio = QRadioButton("修正对象")
@@ -493,7 +502,7 @@ class SetupTab(BaseTab):
         self.refine_object_radio.setStyleSheet("""
             QRadioButton {
                 font-size: 9pt;
-                padding: 6px 12px;
+                padding: 4px 10px;
                 border-radius: 4px;
             }
             QRadioButton:checked {
@@ -501,6 +510,14 @@ class SetupTab(BaseTab):
                 color: #01579B;
                 border: 2px solid #0D47A1;
                 font-weight: bold;
+            }
+            QRadioButton:disabled {
+                color: #aaaaaa;
+            }
+            QRadioButton:checked:disabled {
+                background-color: #e8e8e8;
+                color: #aaaaaa;
+                border: 2px solid #cccccc;
             }
         """)
         
@@ -510,19 +527,12 @@ class SetupTab(BaseTab):
         
         mode_selection_layout.addWidget(self.new_object_radio)
         mode_selection_layout.addWidget(self.refine_object_radio)
-        mode_selection_layout.addStretch()
-        annotation_mode_layout.addLayout(mode_selection_layout)
         
-        # 对象选择下拉框（水平排列）
-        object_selector_layout = QHBoxLayout()
-        object_selector_layout.setSpacing(8)
-        
-        object_selector_label = QLabel("选择对象:")
-        object_selector_label.setStyleSheet("font-size: 9pt;")
-        
+        # 对象选择下拉框（直接添加到同一水平布局）
         self.main_window.object_selector_combo = QComboBox()
         self.main_window.object_selector_combo.setEnabled(False)
-        self.main_window.object_selector_combo.setMinimumWidth(240)
+        self.main_window.object_selector_combo.setMinimumWidth(180)
+        self.main_window.object_selector_combo.setMaximumWidth(180)
         self.main_window.object_selector_combo.setMaximumHeight(28)
         self.main_window.object_selector_combo.setStyleSheet("""
             QComboBox {
@@ -530,14 +540,12 @@ class SetupTab(BaseTab):
                 padding: 2px 4px;
             }
         """)
+        mode_selection_layout.addWidget(self.main_window.object_selector_combo)
         
-        object_selector_layout.addWidget(object_selector_label)
-        object_selector_layout.addWidget(self.main_window.object_selector_combo)
-        object_selector_layout.addStretch()
-        annotation_mode_layout.addLayout(object_selector_layout)
+        annotation_mode_layout.addLayout(mode_selection_layout)
         
         annotation_mode_group.setLayout(annotation_mode_layout)
-        mode_prompt_layout.addWidget(annotation_mode_group)
+        mode_prompt_layout.addWidget(annotation_mode_group, 5)  # 权重5，占比增加
         
         # 右侧：提示类型
         prompt_type_group = QGroupBox("提示类型")
@@ -558,7 +566,7 @@ class SetupTab(BaseTab):
         """)
         
         prompt_type_layout = QVBoxLayout()
-        prompt_type_layout.setSpacing(4)
+        prompt_type_layout.setSpacing(5)
         prompt_type_layout.setContentsMargins(8, 5, 8, 5)
         
         # 主要提示类型（左右排列）
@@ -570,7 +578,7 @@ class SetupTab(BaseTab):
         self.box_mode_radio.setStyleSheet("""
             QRadioButton {
                 font-size: 9pt;
-                padding: 6px 12px;
+                padding: 4px 10px;
                 border-radius: 4px;
             }
             QRadioButton:checked {
@@ -578,6 +586,14 @@ class SetupTab(BaseTab):
                 color: #01579B;
                 border: 2px solid #0D47A1;
                 font-weight: bold;
+            }
+            QRadioButton:disabled {
+                color: #aaaaaa;
+            }
+            QRadioButton:checked:disabled {
+                background-color: #e8e8e8;
+                color: #aaaaaa;
+                border: 2px solid #cccccc;
             }
         """)
         
@@ -586,7 +602,7 @@ class SetupTab(BaseTab):
         self.point_mode_radio.setStyleSheet("""
             QRadioButton {
                 font-size: 9pt;
-                padding: 6px 12px;
+                padding: 4px 10px;
                 border-radius: 4px;
             }
             QRadioButton:checked {
@@ -594,6 +610,14 @@ class SetupTab(BaseTab):
                 color: #01579B;
                 border: 2px solid #0D47A1;
                 font-weight: bold;
+            }
+            QRadioButton:disabled {
+                color: #aaaaaa;
+            }
+            QRadioButton:checked:disabled {
+                background-color: #e8e8e8;
+                color: #aaaaaa;
+                border: 2px solid #cccccc;
             }
         """)
         
@@ -603,16 +627,10 @@ class SetupTab(BaseTab):
         
         prompt_mode_layout.addWidget(self.box_mode_radio)
         prompt_mode_layout.addWidget(self.point_mode_radio)
-        prompt_mode_layout.addStretch()
         prompt_type_layout.addLayout(prompt_mode_layout)
         
-        # 说明文字
-        hint_label = QLabel("点击模式: 左键添加区域，右键移除区域")
-        hint_label.setStyleSheet("font-size: 8pt; color: #666; padding-left: 5px;")
-        prompt_type_layout.addWidget(hint_label)
-        
         prompt_type_group.setLayout(prompt_type_layout)
-        mode_prompt_layout.addWidget(prompt_type_group)
+        mode_prompt_layout.addWidget(prompt_type_group, 3)  # 权重3，宽度减小1/4
         
         preview_layout.addLayout(mode_prompt_layout)
         
@@ -684,18 +702,14 @@ class SetupTab(BaseTab):
         registry = self.main_window.video_label.overlay_layer.object_registry
         
         if not registry:
-            combo.addItem("（无可用对象，请先添加对象）", None)
+            combo.addItem("（无可用对象，请先添加）", None)
             combo.blockSignals(False)
             return
         
         # 按对象ID排序
         for obj_id in sorted(registry.keys()):
-            info = registry[obj_id]
-            first_frame = info["first_frame"]
-            frame_count = len(info["frames"])
-            
-            # 显示对象信息
-            text = f"对象 {obj_id} (首次: 第{first_frame}帧, {frame_count}个标注)"
+            # 仅显示对象ID
+            text = f"对象 {obj_id}"
             combo.addItem(text, obj_id)
         
         # 恢复信号

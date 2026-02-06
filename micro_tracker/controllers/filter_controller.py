@@ -197,8 +197,8 @@ class FilterController:
         self.main_window.filter_progress_bar.setValue(0)
         self.main_window.filter_progress_bar.setVisible(True)
         
-        # 禁用筛选按钮
-        self.main_window.apply_filter_btn.setEnabled(False)
+        # 禁用所有UI交互控件（筛选期间锁定界面）
+        self.main_window.set_ui_interactive(False)
         
         # 开始筛选
         self.main_window.filter_thread.start()
@@ -281,6 +281,9 @@ class FilterController:
         """筛选处理完成回调"""
         # 隐藏进度条
         self.main_window.filter_progress_bar.setVisible(False)
+        
+        # 恢复所有UI交互控件
+        self.main_window.set_ui_interactive(True)
         
         # 更新日志
         if success:

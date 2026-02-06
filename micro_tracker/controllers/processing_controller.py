@@ -169,8 +169,8 @@ class ProcessingController:
         self.main_window.progress_bar.setValue(0)
         self.main_window.progress_bar.setVisible(True)
         
-        # 禁用开始按钮
-        self.main_window.setup_tab.start_btn.setEnabled(False)
+        # 禁用所有UI交互控件（处理期间锁定界面）
+        self.main_window.set_ui_interactive(False)
         
         # 开始处理
         self.main_window.processing_thread.start()

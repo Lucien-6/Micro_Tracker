@@ -120,11 +120,39 @@ QCheckBox::indicator:hover {
     border: 1px solid #0D47A1;
 }
 
+QCheckBox:disabled {
+    color: #aaaaaa;
+}
+
+QCheckBox::indicator:disabled {
+    border: 1px solid #cccccc;
+    background-color: #e8e8e8;
+}
+
+QCheckBox::indicator:checked:disabled {
+    background-color: #cccccc;
+    border: 1px solid #cccccc;
+}
+
 QSlider::groove:horizontal {
     border: 1px solid #e0e0e0;
     height: 8px;
     background: #f5f5f5;
     margin: 2px 0;
+    border-radius: 4px;
+}
+
+QSlider::sub-page:horizontal {
+    background: #616161;
+    border: 1px solid #616161;
+    height: 8px;
+    border-radius: 4px;
+}
+
+QSlider::add-page:horizontal {
+    background: #f5f5f5;
+    border: 1px solid #e0e0e0;
+    height: 8px;
     border-radius: 4px;
 }
 
@@ -139,6 +167,25 @@ QSlider::handle:horizontal {
 
 QSlider::handle:horizontal:hover {
     background: #1565C0;
+}
+
+QSlider::sub-page:horizontal:disabled {
+    background: #cccccc;
+    border: 1px solid #cccccc;
+}
+
+QSlider::add-page:horizontal:disabled {
+    background: #e8e8e8;
+    border: 1px solid #d0d0d0;
+}
+
+QSlider::groove:horizontal:disabled {
+    background: #e8e8e8;
+    border: 1px solid #d0d0d0;
+}
+
+QSlider::handle:horizontal:disabled {
+    background: #cccccc;
 }
 
 QProgressBar {
@@ -267,6 +314,7 @@ QRadioButton::indicator {
     width: 16px;
     height: 16px;
 }
+
 """
 
 # 将QTextEdit日志样式直接集成到全局样式中，避免单独应用导致的解析问题

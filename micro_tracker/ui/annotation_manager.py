@@ -291,7 +291,10 @@ class AnnotationManagerWidget(QWidget):
         self.clear_all_btn = RippleButton("清空所有", "清空所有帧的标注（不可撤销）")
         self.clear_all_btn.setMinimumWidth(80)
         self.clear_all_btn.setMinimumHeight(35)
-        self.clear_all_btn.setStyleSheet("QPushButton { background-color: #f44336; color: white; }")
+        self.clear_all_btn.setStyleSheet("""
+            QPushButton { background-color: #f44336; color: white; }
+            QPushButton:disabled { background-color: #cccccc; color: #888888; }
+        """)
         self.clear_all_btn.clicked.connect(self.clear_all_annotations)
         button_layout.addWidget(self.clear_all_btn)
         
@@ -417,7 +420,10 @@ class AnnotationManagerWidget(QWidget):
             delete_btn = RippleButton("删除", "删除该帧的所有标注（不可撤销）")
             delete_btn.setMaximumWidth(50)
             delete_btn.setMinimumHeight(22)
-            delete_btn.setStyleSheet("QPushButton { background-color: #ff5252; color: white; }")
+            delete_btn.setStyleSheet("""
+                QPushButton { background-color: #ff5252; color: white; }
+                QPushButton:disabled { background-color: #cccccc; color: #888888; }
+            """)
             delete_btn.clicked.connect(lambda checked, f=frame_idx: self.delete_frame_annotation(f))
             
             action_layout.addWidget(jump_btn)

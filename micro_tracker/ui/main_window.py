@@ -26,7 +26,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Micro Tracker | 显微视频目标分割和追踪工具")
-        self.setMinimumSize(1200, 920)  # 调整最小窗口大小
+        self.setMinimumSize(1200, 910)  # 调整最小窗口大小
         self.setStyleSheet(COMPLETE_STYLE)  # 应用预组合的完整样式，避免运行时叠加导致的解析问题
         
         # 添加应用图标
@@ -69,6 +69,9 @@ class MainWindow(QMainWindow):
         
         # === 实时预览管理器（懒加载）===
         self.preview_manager = None
+        
+        # === 处理状态标志（用于禁用UI交互）===
+        self._processing_active = False
         
         # 初始化UI
         self.init_ui()
@@ -541,6 +544,9 @@ class MainWindow(QMainWindow):
         # 隐藏进度条
         self.progress_bar.setVisible(False)
         
+        # 恢复所有UI交互控件
+        self.set_ui_interactive(True)
+        
         # 更新日志
         if success:
             self.log_message("====== 处理完成 ======", "highlight")
@@ -571,9 +577,6 @@ class MainWindow(QMainWindow):
             self.log_message(f"处理失败: {message}", "error")
             # 显示错误提示
             QMessageBox.critical(self, "处理失败", f"视频处理失败！\n错误信息: {message}")
-        
-        # 重新启用开始按钮
-        self.setup_tab.start_btn.setEnabled(True)
     
     # 委托给FilterController的方法
     def apply_mask_filter(self):
@@ -781,6 +784,11 @@ class MainWindow(QMainWindow):
     
     def keyPressEvent(self, event):
         """处理键盘按键事件"""
+        # 处理期间屏蔽所有功能快捷键
+        if self._processing_active:
+            super().keyPressEvent(event)
+            return
+        
         # 根据当前激活的标签页来判断要控制哪个视频
         current_tab = self.tab_widget.currentIndex()
         
@@ -1115,6 +1123,124 @@ class MainWindow(QMainWindow):
         # 第三个标签页 - 筛选过滤
         elif index == 2 and hasattr(self, 'filter_video_label'):
             self.filter_video_label.setFocus()
+    
+    # === 处理期间UI锁定/解锁 ===
+    def set_ui_interactive(self, enabled):
+        """
+        统一启用/禁用所有交互控件（处理期间锁定UI）
+        
+        Args:
+            enabled (bool): True=启用所有控件, False=禁用所有控件
+        
+        Notes:
+            - 处理期间仅保留窗口最小化、最大化、关闭功能
+            - 进度条和日志区域保持可见但不可交互
+            - 快捷键通过 _processing_active 标志在 keyPressEvent 中屏蔽
+            - 标签页切换也被禁用
+            - 所有带自定义颜色的按钮/复选框/单选按钮的禁用态样式均正确变灰
+        """
+        self._processing_active = not enabled
+        
+        # === 禁用/启用标签页切换 ===
+        if hasattr(self, 'tab_widget'):
+            self.tab_widget.tabBar().setEnabled(enabled)
+        
+        # === 分割追踪标签页（SetupTab）的控件 ===
+        if hasattr(self, 'setup_tab') and self.setup_tab:
+            tab = self.setup_tab
+            # 浏览按钮
+            tab.input_browse_btn.setEnabled(enabled)
+            if hasattr(tab, 'model_browse_btn'):
+                tab.model_browse_btn.setEnabled(enabled)
+            if hasattr(tab, 'output_browse_btn'):
+                tab.output_browse_btn.setEnabled(enabled)
+            if hasattr(tab, 'mask_browse_btn'):
+                tab.mask_browse_btn.setEnabled(enabled)
+            # 开始处理按钮
+            tab.start_btn.setEnabled(enabled)
+            # 输入类型单选按钮
+            tab.video_input_radio.setEnabled(enabled)
+            tab.image_seq_input_radio.setEnabled(enabled)
+            # 标注模式单选按钮
+            tab.new_object_radio.setEnabled(enabled)
+            tab.refine_object_radio.setEnabled(enabled)
+            # 提示类型单选按钮
+            tab.box_mode_radio.setEnabled(enabled)
+            tab.point_mode_radio.setEnabled(enabled)
+        
+        # 下拉框
+        if hasattr(self, 'model_combo'):
+            self.model_combo.setEnabled(enabled)
+        if hasattr(self, 'device_combo'):
+            self.device_combo.setEnabled(enabled)
+        if hasattr(self, 'object_selector_combo'):
+            self.object_selector_combo.setEnabled(enabled)
+        
+        # 复选框
+        if hasattr(self, 'save_video_check'):
+            self.save_video_check.setEnabled(enabled)
+        if hasattr(self, 'save_mask_check'):
+            self.save_mask_check.setEnabled(enabled)
+        
+        # 播放控制
+        if hasattr(self, 'play_pause_btn'):
+            self.play_pause_btn.setEnabled(enabled)
+        if hasattr(self, 'frame_slider'):
+            self.frame_slider.setEnabled(enabled)
+        
+        # 视频标注层交互（禁止鼠标绘制）
+        if hasattr(self, 'video_label') and self.video_label:
+            self.video_label.setEnabled(enabled)
+        
+        # === 标注管理器控件 ===
+        if hasattr(self, 'annotation_manager') and self.annotation_manager:
+            self.annotation_manager.import_btn.setEnabled(enabled)
+            self.annotation_manager.clear_all_btn.setEnabled(enabled)
+            self.annotation_manager.help_btn.setEnabled(enabled)
+            # 禁用表格中的动态按钮（跳转/删除）
+            self.annotation_manager.table.setEnabled(enabled)
+        
+        # === 筛选过滤标签页（FilterTab）的控件 ===
+        if hasattr(self, 'filter_tab') and self.filter_tab:
+            ftab = self.filter_tab
+            if hasattr(ftab, 'mask_folder_browse_btn'):
+                ftab.mask_folder_browse_btn.setEnabled(enabled)
+        
+        if hasattr(self, 'apply_filter_btn'):
+            self.apply_filter_btn.setEnabled(enabled)
+        if hasattr(self, 'save_filter_btn'):
+            self.save_filter_btn.setEnabled(enabled)
+        if hasattr(self, 'filter_play_pause_btn'):
+            self.filter_play_pause_btn.setEnabled(enabled)
+        if hasattr(self, 'filter_slider'):
+            self.filter_slider.setEnabled(enabled)
+        
+        # 筛选参数输入框
+        if hasattr(self, 'fps_input'):
+            self.fps_input.setEnabled(enabled)
+        if hasattr(self, 'um_per_pixel_input'):
+            self.um_per_pixel_input.setEnabled(enabled)
+        if hasattr(self, 'exclude_ids_input'):
+            self.exclude_ids_input.setEnabled(enabled)
+        
+        # 筛选条件复选框和输入框
+        for attr_name in [
+            'area_filter_check', 'area_min_input', 'area_max_input',
+            'area_change_check', 'area_change_input',
+            'velocity_check', 'velocity_min_input', 'velocity_max_input',
+            'displacement_check', 'displacement_min_input', 'displacement_max_input',
+            'boundary_check',
+            'min_distance_check', 'min_distance_input',
+        ]:
+            widget = getattr(self, attr_name, None)
+            if widget is not None:
+                widget.setEnabled(enabled)
+        
+        # === 结果预览标签页控件 ===
+        if hasattr(self, 'result_play_pause_btn'):
+            self.result_play_pause_btn.setEnabled(enabled)
+        if hasattr(self, 'result_slider'):
+            self.result_slider.setEnabled(enabled)
     
     # === Phase 1 MVP: 辅助方法 ===
     def _update_annotation_status_display(self):

@@ -41,8 +41,8 @@ class FilterTab(BaseTab):
     def create_left_panel(self):
         """创建左侧控制面板"""
         filter_left_panel = QWidget()
-        filter_left_panel.setMinimumWidth(400)  # 设置最小宽度
-        filter_left_panel.setMaximumWidth(500)  # 设置最大宽度
+        filter_left_panel.setMinimumWidth(320)  # 设置最小宽度
+        filter_left_panel.setMaximumWidth(420)  # 设置最大宽度
         filter_left_layout = QVBoxLayout(filter_left_panel)
         filter_left_layout.setContentsMargins(0, 0, 0, 0)
         filter_left_layout.setSpacing(0)  # 使用addSpacing单独控制间距
@@ -79,6 +79,10 @@ class FilterTab(BaseTab):
                 padding: 5px;
                 background-color: #4CAF50;
                 border-radius: 6px;
+            }
+            QPushButton:disabled {
+                background-color: #cccccc;
+                color: #888888;
             }
         """)
         self.main_window.apply_filter_btn.setMinimumHeight(40)
@@ -139,12 +143,15 @@ class FilterTab(BaseTab):
         self.main_window.filter_info_label.setStyleSheet("font-weight: bold; color: #455a64;")
         
         # 保存按钮
-        self.main_window.save_filter_btn = RippleButton("输出保存", "将筛选后的结果保存为新视频")
+        self.main_window.save_filter_btn = RippleButton("输出保存", "将筛选后的结果保存到默认文件夹")
         self.main_window.save_filter_btn.setIcon(QIcon.fromTheme("document-save"))
         self.main_window.save_filter_btn.setMinimumWidth(100)
         self.main_window.save_filter_btn.setMaximumWidth(110)
         self.main_window.save_filter_btn.setEnabled(False)
-        self.main_window.save_filter_btn.setStyleSheet("QPushButton { background-color: #03A9F4; }")
+        self.main_window.save_filter_btn.setStyleSheet("""
+            QPushButton { background-color: #03A9F4; }
+            QPushButton:disabled { background-color: #cccccc; color: #888888; }
+        """)
         self.main_window.save_filter_btn.clicked.connect(self.main_window.save_filter_results)
         
         filter_control_layout.addWidget(self.main_window.filter_play_pause_btn, 0)  # 不伸展
@@ -200,14 +207,14 @@ class FilterTab(BaseTab):
         self.main_window.filter_mask_dir_edit.setReadOnly(True)
         self.main_window.filter_mask_dir_edit.setPlaceholderText("选择掩膜图片文件夹...")
         self.main_window.filter_mask_dir_edit.setMinimumHeight(24)
-        mask_folder_browse_btn = RippleButton("浏览", "选择包含掩膜图片的文件夹")
-        mask_folder_browse_btn.setIcon(QIcon.fromTheme("folder"))
-        mask_folder_browse_btn.setMinimumWidth(60)
-        mask_folder_browse_btn.setMaximumWidth(60)
-        mask_folder_browse_btn.setMinimumHeight(24)
-        mask_folder_browse_btn.clicked.connect(self.main_window.browse_filter_mask_dir)
+        self.mask_folder_browse_btn = RippleButton("浏览", "选择包含掩膜图片的文件夹")
+        self.mask_folder_browse_btn.setIcon(QIcon.fromTheme("folder"))
+        self.mask_folder_browse_btn.setMinimumWidth(60)
+        self.mask_folder_browse_btn.setMaximumWidth(60)
+        self.mask_folder_browse_btn.setMinimumHeight(24)
+        self.mask_folder_browse_btn.clicked.connect(self.main_window.browse_filter_mask_dir)
         mask_folder_layout.addWidget(self.main_window.filter_mask_dir_edit)
-        mask_folder_layout.addWidget(mask_folder_browse_btn)
+        mask_folder_layout.addWidget(self.mask_folder_browse_btn)
         mask_select_layout.addRow("掩膜文件夹:", mask_folder_layout)
         
         mask_select_group.setLayout(mask_select_layout)

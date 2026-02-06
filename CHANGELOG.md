@@ -4,6 +4,118 @@
 
 ---
 
+## [v2.8.0] - 2026-02-06
+
+### 🎨 GUI 布局优化与处理期间 UI 锁定 (GUI Layout Optimization & Processing UI Lock)
+
+#### 标注标签页布局优化
+
+**优化目标：**
+优化标注标签页的空间利用率，使标注管理器（提示统计栏）获得更多垂直空间。
+
+**核心改进内容：**
+
+1. **标注模式区域布局调整** (`micro_tracker/ui/setup_tab.py`)
+
+   - 将"选择对象"下拉框与"新对象"、"修正对象"按钮放在同一水平行
+   - 移除"选择对象:"标签文字，布局更简洁
+   - 对象下拉框仅显示对象 ID（移除首次标注帧号和标注数目信息）
+
+2. **提示类型区域精简**
+
+   - 删除提示类型中的点击提示说明文字（tooltip 已包含完整信息）
+   - 调整标注模式与提示类型的水平宽度比例为 5:3
+   - 提示类型宽度减小 1/4，标注模式获得更多水平空间
+
+3. **Group Box 高度缩减**
+
+   - 减小两个 Group Box 的内边距（从 5px 改为 3px）
+   - 减小所有 RadioButton 的 padding（从 6px 12px 改为 4px 10px）
+   - 总体高度减小约 20-30%，为下方标注管理器预留更多垂直空间
+
+4. **筛选过滤标签页微调** (`micro_tracker/ui/filter_tab.py`)
+
+   - 左侧设置区域宽度减小 40px（最小宽度 360px，最大宽度 460px）
+   - 右侧视频预览区域获得更多显示空间
+
+#### 处理期间 UI 锁定功能
+
+**功能描述：**
+用户点击"开始处理"或"应用筛选"按钮后，直至处理完毕前，GUI 界面中的所有交互功能被禁用，仅保留窗口最小化、最大化和关闭功能。
+
+**核心功能：**
+
+1. **统一的 UI 锁定/解锁机制** (`micro_tracker/ui/main_window.py`)
+
+   - 新增 `_processing_active` 状态标志
+   - 新增 `set_ui_interactive(enabled)` 方法，统一控制所有交互控件
+   - 处理开始时自动禁用，处理完成时自动恢复
+
+2. **禁用的交互控件范围**：
+
+   - **标签页切换**：处理期间标签栏变灰且不可点击
+   - **按钮**：所有浏览按钮、开始处理、应用筛选、播放/暂停、保存筛选结果、导入标注、清空所有、使用指南
+   - **下拉框**：模型选择、设备选择、对象选择
+   - **复选框**：保存视频、保存掩码、所有筛选条件复选框
+   - **单选按钮**：输入类型、标注模式、提示类型
+   - **滑块**：帧滑块、结果滑块、筛选滑块
+   - **输入框**：帧率、像素比例、排除 ID、所有筛选参数
+   - **视频标注层**：鼠标绘制交互
+   - **标注管理器**：表格（含动态跳转/删除按钮）
+   - **快捷键**：空格、F、D、Ctrl+Q 等全部屏蔽
+
+3. **禁用态视觉反馈**：
+
+   - 带自定义颜色的按钮（清空所有、删除、应用筛选、输出保存）添加 `:disabled` 伪状态样式，禁用时从彩色变为灰色
+   - 标注模式和提示类型中选中项的蓝色边框在禁用时变为灰色
+   - 复选框勾选指示器禁用时变灰
+   - 滑块手柄和填充条禁用时变灰
+
+#### 视频进度条样式增强
+
+**改进内容：**
+
+- 三个标签页中视频播放进度条增加已播放部分的颜色填充
+- 使用 `QSlider::sub-page:horizontal` 实现左端起点到滑块之间的深灰色填充（`#616161`）
+- 禁用态下填充条变灰（`#cccccc`）
+
+**技术实现：**
+
+1. **局部变量按钮实例化** (`setup_tab.py`, `filter_tab.py`)
+
+   - 将 4 个局部变量浏览按钮改为实例变量（`self.model_browse_btn`、`self.output_browse_btn`、`self.mask_browse_btn`、`self.mask_folder_browse_btn`）
+   - 便于 `set_ui_interactive()` 方法统一管理
+
+2. **全局样式扩展** (`micro_tracker/config/style.py`)
+
+   - 新增 `QCheckBox:disabled`、`QCheckBox::indicator:disabled`、`QCheckBox::indicator:checked:disabled` 样式
+   - 新增 `QSlider::sub-page:horizontal`、`QSlider::add-page:horizontal` 进度填充样式
+   - 新增 `QSlider::groove:horizontal:disabled`、`QSlider::handle:horizontal:disabled` 禁用态样式
+
+3. **控制器集成** (`processing_controller.py`, `filter_controller.py`)
+   - 处理开始时调用 `set_ui_interactive(False)`
+   - 处理完成回调中调用 `set_ui_interactive(True)`
+
+**影响范围：**
+
+- ✅ 标注标签页布局更紧凑，标注管理器获得更多垂直空间
+- ✅ 处理期间防止误操作，数据安全性提升
+- ✅ 视频进度条视觉效果更直观
+- ✅ 不影响任何业务逻辑和数据处理
+- ✅ 完全向后兼容
+
+**修改的核心文件：**
+
+- `micro_tracker/ui/setup_tab.py` - 布局调整、按钮实例化、禁用态样式
+- `micro_tracker/ui/filter_tab.py` - 宽度调整、按钮实例化、禁用态样式
+- `micro_tracker/ui/main_window.py` - UI 锁定机制、快捷键屏蔽
+- `micro_tracker/ui/annotation_manager.py` - 按钮禁用态样式
+- `micro_tracker/config/style.py` - 全局禁用态样式、进度条填充样式
+- `micro_tracker/controllers/processing_controller.py` - 处理开始锁定 UI
+- `micro_tracker/controllers/filter_controller.py` - 筛选开始锁定 UI
+
+---
+
 ## [v2.7.0] - 2026-02-04
 
 ### 📖 文档系统重大升级 (Documentation System Overhaul)

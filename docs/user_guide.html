@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Micro Tracker 使用指南 / User Guide v2.7.0</title>
+    <title>Micro Tracker 使用指南 / User Guide v2.8.0</title>
     <style>
         /* ===== 全局样式重置和基础设置 ===== */
         :root {
@@ -527,7 +527,7 @@
             <h1>
                 <span class="lang-cn">Micro Tracker 使用指南</span>
                 <span class="lang-en">Micro Tracker User Guide</span>
-                <span class="version">v2.7.0</span>
+                <span class="version">v2.8.0</span>
             </h1>
         </div>
         <div class="header-controls">
@@ -652,10 +652,10 @@
                     <p class="lang-en"><b>Author:</b> LUCIEN</p>
                     <p class="lang-cn"><b>邮箱：</b>lucien-6@qq.com</p>
                     <p class="lang-en"><b>Email:</b> lucien-6@qq.com</p>
-                    <p class="lang-cn"><b>版本：</b>2.7.0</p>
-                    <p class="lang-en"><b>Version:</b> 2.7.0</p>
-                    <p class="lang-cn"><b>发布日期：</b>2026-02-04</p>
-                    <p class="lang-en"><b>Release Date:</b> 2026-02-04</p>
+                    <p class="lang-cn"><b>版本：</b>2.8.0</p>
+                    <p class="lang-en"><b>Version:</b> 2.8.0</p>
+                    <p class="lang-cn"><b>发布日期：</b>2026-02-06</p>
+                    <p class="lang-en"><b>Release Date:</b> 2026-02-06</p>
                     <p class="lang-cn"><b>版权：</b>Copyright © 2026 LUCIEN. 保留所有权利。</p>
                     <p class="lang-en"><b>Copyright:</b> Copyright © 2026 LUCIEN. All rights reserved.</p>
                 </div>
@@ -1725,56 +1725,53 @@
 
                 <h4 class="lang-cn">Q: 处理速度很慢？</h4>
                 <h4 class="lang-en">Q: Slow processing?</h4>
-                <p class="lang-cn">A: 
-                    <ul>
-                        <li>确保选择了GPU设备（CUDA:0）而非CPU</li>
-                        <li>考虑使用更小的模型（Tiny或Small）</li>
-                        <li>减少标注帧数（5-10个关键帧通常已足够）</li>
-                    </ul>
-                </p>
-                <p class="lang-en">A: 
-                    <ul>
-                        <li>Use GPU (CUDA:0) instead of CPU.</li>
-                        <li>Use smaller models (Tiny/Small).</li>
-                        <li>Reduce keyframes (5-10 are usually enough).</li>
-                    </ul>
-                </p>
+                <p class="lang-cn">A:</p>
+                <ul class="lang-cn">
+                    <li>确保选择了GPU设备（CUDA:0）而非CPU</li>
+                    <li>考虑使用更小的模型（Tiny或Small）</li>
+                    <li>减少标注帧数（5-10个关键帧通常已足够）</li>
+                </ul>
+                
+                <p class="lang-en">A:</p>
+                <ul class="lang-en">
+                    <li>Use GPU (CUDA:0) instead of CPU.</li>
+                    <li>Use smaller models (Tiny/Small).</li>
+                    <li>Reduce keyframes (5-10 are usually enough).</li>
+                </ul>
 
                 <h4 class="lang-cn">Q: GPU内存不足？</h4>
                 <h4 class="lang-en">Q: GPU Out of Memory?</h4>
-                <p class="lang-cn">A: 
-                    <ul>
-                        <li>关闭其他占用GPU的应用程序</li>
-                        <li>使用更小的模型（Tiny）</li>
-                        <li>降低视频分辨率</li>
-                    </ul>
-                </p>
-                <p class="lang-en">A: 
-                    <ul>
-                        <li>Close other GPU apps.</li>
-                        <li>Use "Tiny" model.</li>
-                        <li>Lower video resolution.</li>
-                    </ul>
-                </p>
+                <p class="lang-cn">A:</p>
+                <ul class="lang-cn">
+                    <li>关闭其他占用GPU的应用程序</li>
+                    <li>使用更小的模型（Tiny）</li>
+                    <li>降低视频分辨率</li>
+                </ul>
+                
+                <p class="lang-en">A:</p>
+                <ul class="lang-en">
+                    <li>Close other GPU apps.</li>
+                    <li>Use "Tiny" model.</li>
+                    <li>Lower video resolution.</li>
+                </ul>
 
                 <h4 class="lang-cn">Q: 追踪质量不佳？</h4>
                 <h4 class="lang-en">Q: Poor tracking quality?</h4>
-                <p class="lang-cn">A: 
-                    <ul>
-                        <li>在更多关键帧添加修正标注</li>
-                        <li>使用更大的模型（Base+或Large）</li>
-                        <li>确保第0帧的初始标注准确</li>
-                        <li>在对象发生显著变化的帧添加修正</li>
-                    </ul>
-                </p>
-                <p class="lang-en">A: 
-                    <ul>
-                        <li>Add refinements on more keyframes.</li>
-                        <li>Use larger models (Base+/Large).</li>
-                        <li>Ensure initial Frame 0 annotations are accurate.</li>
-                        <li>Correct frames where object appearance changes significantly.</li>
-                    </ul>
-                </p>
+                <p class="lang-cn">A:</p>
+                <ul class="lang-cn">
+                    <li>在更多关键帧添加修正标注</li>
+                    <li>使用更大的模型（Base+或Large）</li>
+                    <li>确保第0帧的初始标注准确</li>
+                    <li>在对象发生显著变化的帧添加修正</li>
+                </ul>
+                
+                <p class="lang-en">A:</p>
+                <ul class="lang-en">
+                    <li>Add refinements on more keyframes.</li>
+                    <li>Use larger models (Base+/Large).</li>
+                    <li>Ensure initial Frame 0 annotations are accurate.</li>
+                    <li>Correct frames where object appearance changes significantly.</li>
+                </ul>
 
                 <h3 class="lang-cn">筛选过滤问题</h3>
                 <h3 class="lang-en">Filtering</h3>
@@ -1786,20 +1783,19 @@
 
                 <h4 class="lang-cn">Q: 如何选择合适的参数？</h4>
                 <h4 class="lang-en">Q: How to choose parameters?</h4>
-                <p class="lang-cn">A: 
-                    <ul>
-                        <li>FPS：根据实际拍摄帧率设置</li>
-                        <li>比例系数：咨询显微镜设备文档或技术人员</li>
-                        <li>筛选阈值：先用默认值，根据结果逐步调整</li>
-                    </ul>
-                </p>
-                <p class="lang-en">A: 
-                    <ul>
-                        <li>FPS: Based on recording settings.</li>
-                        <li>Scale: Consult microscope docs.</li>
-                        <li>Thresholds: Start with defaults and adjust.</li>
-                    </ul>
-                </p>
+                <p class="lang-cn">A:</p>
+                <ul class="lang-cn">
+                    <li>FPS：根据实际拍摄帧率设置</li>
+                    <li>比例系数：咨询显微镜设备文档或技术人员</li>
+                    <li>筛选阈值：先用默认值，根据结果逐步调整</li>
+                </ul>
+                
+                <p class="lang-en">A:</p>
+                <ul class="lang-en">
+                    <li>FPS: Based on recording settings.</li>
+                    <li>Scale: Consult microscope docs.</li>
+                    <li>Thresholds: Start with defaults and adjust.</li>
+                </ul>
 
                 <h3 class="lang-cn">性能优化建议</h3>
                 <h3 class="lang-en">Performance Tips</h3>

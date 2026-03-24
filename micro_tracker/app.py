@@ -5,10 +5,12 @@ from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QIcon
 import os
 
+from micro_tracker import __version__
 from micro_tracker.ui.main_window import MainWindow
 
+
 def main():
-    """程序入口点"""
+    """Application entry point (Micro Tracker)."""
     # 启用高DPI支持
     if hasattr(Qt, 'AA_EnableHighDpiScaling'):
         QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
@@ -30,7 +32,12 @@ def main():
     window.show()
     
     # 使用定时器确保GUI完全初始化后再显示欢迎消息
-    QTimer.singleShot(100, lambda: window.log_message("欢迎使用 Micro Tracker - 显微视频目标分割和追踪工具", "highlight"))
+    QTimer.singleShot(
+        100,
+        lambda: window.log_message(
+            f"欢迎使用 Micro Tracker v{__version__} - 显微视频目标分割和追踪工具", "highlight"
+        ),
+    )
     QTimer.singleShot(200, lambda: window.log_message("请选择一个视频文件开始... (支持格式: mp4, avi, mov, mkv)", "info"))
     
     sys.exit(app.exec_())

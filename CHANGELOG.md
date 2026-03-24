@@ -4,6 +4,25 @@
 
 ---
 
+## [v2.9.1] - 2026-03-24
+
+### ✨ 优化 (Improvements)
+
+#### 掩膜筛选：分析结果缓存与失效策略
+
+**行为说明：**
+
+- 在**同一会话**中，对**同一掩膜目录**且 **帧率 (FPS)**、**微米/像素 (μm/pixel)** 以及 **`frame_*.png` 文件名集合**与上次**成功**的全量分析一致时，再次点击「应用筛选」将**跳过**磁盘掩膜加载与逐对象几何/运动统计，直接进入筛选条件应用与可视化生成，缩短反复调参时的等待时间。
+- 若用户更改 **FPS**、**μm/pixel**、掩膜文件夹路径，或目录内 `frame_*.png` 集合发生变化，将自动执行完整分析。
+- 加载新视频/图像序列时通过 `reset_filter_state()` **清空**掩膜分析缓存，避免误用旧数据。
+
+**涉及文件：**
+
+- `micro_tracker/controllers/filter_controller.py` — 缓存键、`apply_mask_filter` / `filter_processing_done` / `reset_filter_state`
+- `micro_tracker/threads/filter_mask_thread.py` — `precomputed` 分支与 `_apply_filters_and_visualize`
+
+---
+
 ## [v2.9.0] - 2026-02-06
 
 ### ✨ 新增功能 (New Features)

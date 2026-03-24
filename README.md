@@ -15,7 +15,7 @@
 </div>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-2.9.0-brightgreen.svg" alt="Version 2.9.0">
+  <img src="https://img.shields.io/badge/Version-2.9.1-brightgreen.svg" alt="Version 2.9.1">
   <img src="https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white" alt="Python 3.10+">
   <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License: Apache 2.0">
   <img src="https://img.shields.io/badge/PyQt5-5.15%2B-green.svg" alt="PyQt5 5.15+">
@@ -110,6 +110,7 @@ Micro_Tracker is a powerful microscopy video analysis tool based on the SAM2 mod
 - **📊 Data Extraction**: Extract key parameters such as position, size, and shape of target objects.
 - **🎭 Mask Export**: Save segmentation results as mask images for subsequent analysis.
 - **🔎 Filtering Function**: Filter target objects based on criteria like size, position, and speed.
+- **⚡ Mask analysis reuse**: After a successful **Apply Filter** run, subsequent applies reuse disk-loaded masks and per-object geometry/kinematics when the mask folder (same `frame_*.png` set), **FPS**, and **μm/pixel** are unchanged; changing any of these or starting a new session (new video load) performs a full reanalysis.
 - **📈 Data Export**: Export trajectory and morphological data of filtered objects as Excel spreadsheets for subsequent analysis.
 
 ## 💻 System Requirements
@@ -250,6 +251,7 @@ python -m main
 3. Set filtering parameters (e.g., area range, instantaneous velocity, displacement, area change rate, etc.).
 4. You can specify object IDs to exclude (separate multiple IDs with commas).
 5. Click the "**Apply Filter**" button.
+   - **Note:** After a successful run, clicking **Apply Filter** again skips reloading masks and recomputing object metrics if the mask directory (same `frame_*.png` filenames), **FPS**, and **μm/pixel** are unchanged. Change any of these, replace mask files, or load a new video to force a full analysis. The mask-analysis cache is cleared when you load a new video or image sequence.
 6. View filtering results and statistics, including details of objects that passed filtering, were partially truncated, or completely filtered.
 7. Click "**Save Results**" to export filtered mask images and trajectory data (Excel format).
 
@@ -462,6 +464,7 @@ Micro_Tracker 是一个功能强大的基于 SAM2 模型的显微镜视频分析
 - **📊 数据提取**：提取目标物体的位置、大小、形状等关键参数。
 - **🎭 掩膜导出**：将分割结果保存为掩膜图像，便于后续分析。
 - **🔎 筛选功能**：根据尺寸、位置、速度等条件筛选目标物体。
+- **⚡ 掩膜分析复用**：在首次**应用筛选**成功后，若掩膜目录（同一批 `frame_*.png` 文件名集合）、**帧率**与 **μm/pixel** 未变，再次点击**应用筛选**将复用已加载掩膜与逐对象几何/运动统计，仅重新执行筛选与预览生成；更改任一项、更换掩膜文件或新会话（重新加载视频）将触发完整重算。
 - **📈 数据导出**：将通过筛选的对象轨迹与形态数据输出保存为 Excel 表格，便于后续分析使用。
 
 ## 💻 系统要求
@@ -602,6 +605,7 @@ python -m main
 3.  设置筛选参数 (例如：面积范围、瞬时速度、位移、面积变化率等)。
 4.  可以指定要排除的对象 ID（多个 ID 用逗号分隔）。
 5.  点击 "**应用筛选**" 按钮。
+   - **说明：** 首次成功后，若掩膜文件夹（`frame_*.png` 文件名集合）、**帧率**与 **微米/像素** 与上次一致，再次应用筛选将**不会**重新从磁盘加载掩膜或重算逐对象几何/运动统计，仅重新应用筛选条件并生成预览；更改目录、帧率、像素比例、掩膜文件集合或重新加载视频后会完整重算。加载新视频/图像序列时会清空掩膜分析缓存。
 6.  查看筛选结果和统计信息，包括通过筛选、部分截断和完全过滤的对象详情。
 7.  点击 "**保存结果**" 导出筛选后的掩膜图像和轨迹数据（Excel 格式）。
 

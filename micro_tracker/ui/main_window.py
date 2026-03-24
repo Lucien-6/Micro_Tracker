@@ -13,6 +13,7 @@ from PyQt5.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QLabel,
 from PyQt5.QtGui import QIcon, QTextCursor
 from PyQt5.QtCore import Qt, QDateTime, QMutex
 
+from micro_tracker import __version__
 from micro_tracker.config.style import COMPLETE_STYLE
 from micro_tracker.ui.setup_tab import SetupTab
 from micro_tracker.ui.result_preview_tab import ResultPreviewTab
@@ -26,7 +27,7 @@ class MainWindow(QMainWindow):
     
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Micro Tracker | 显微视频目标分割和追踪工具")
+        self.setWindowTitle(f"Micro Tracker v{__version__} | 显微视频目标分割和追踪工具")
         self.setMinimumSize(1200, 910)  # 调整最小窗口大小
         self.setStyleSheet(COMPLETE_STYLE)  # 应用预组合的完整样式，避免运行时叠加导致的解析问题
         
@@ -581,7 +582,7 @@ class MainWindow(QMainWindow):
     
     # 委托给FilterController的方法
     def apply_mask_filter(self):
-        """应用筛选"""
+        """Apply mask filters via FilterController (may reuse cached mask analysis; see FilterController)."""
         self.filter_controller.apply_mask_filter()
     
     def save_filter_results(self):

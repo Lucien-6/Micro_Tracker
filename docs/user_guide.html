@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Micro Tracker 使用指南 / User Guide v2.8.0</title>
+    <title>Micro Tracker 使用指南 / User Guide v2.9.1</title>
     <style>
         /* ===== 全局样式重置和基础设置 ===== */
         :root {
@@ -527,7 +527,7 @@
             <h1>
                 <span class="lang-cn">Micro Tracker 使用指南</span>
                 <span class="lang-en">Micro Tracker User Guide</span>
-                <span class="version">v2.9.0</span>
+                <span class="version">v2.9.1</span>
             </h1>
         </div>
         <div class="header-controls">
@@ -652,10 +652,10 @@
                     <p class="lang-en"><b>Author:</b> LUCIEN</p>
                     <p class="lang-cn"><b>邮箱：</b>lucien-6@qq.com</p>
                     <p class="lang-en"><b>Email:</b> lucien-6@qq.com</p>
-                    <p class="lang-cn"><b>版本：</b>2.9.0</p>
-                    <p class="lang-en"><b>Version:</b> 2.9.0</p>
-                    <p class="lang-cn"><b>发布日期：</b>2026-02-06</p>
-                    <p class="lang-en"><b>Release Date:</b> 2026-02-06</p>
+                    <p class="lang-cn"><b>版本：</b>2.9.1</p>
+                    <p class="lang-en"><b>Version:</b> 2.9.1</p>
+                    <p class="lang-cn"><b>发布日期：</b>2026-03-24</p>
+                    <p class="lang-en"><b>Release Date:</b> 2026-03-24</p>
                     <p class="lang-cn"><b>版权：</b>Copyright © 2026 LUCIEN. 保留所有权利。</p>
                     <p class="lang-en"><b>Copyright:</b> Copyright © 2026 LUCIEN. All rights reserved.</p>
                 </div>
@@ -1321,6 +1321,13 @@
                     <li><b>Scale (μm/pixel):</b> Conversion factor from pixels to physical units. Determined by microscope settings. Affects area, distance, and speed.</li>
                 </ul>
 
+                <div class="note">
+                    <h4 class="lang-cn">应用筛选与分析缓存</h4>
+                    <h4 class="lang-en">Apply Filter &amp; analysis cache</h4>
+                    <p class="lang-cn">在<strong>同一会话</strong>中，当掩膜目录（同一批 <code>frame_*.png</code> 文件名）、<strong>帧率</strong>与<strong>微米/像素</strong>与上一次<strong>成功完成</strong>的全量分析一致时，再次点击「应用筛选」将复用已载入的掩膜与逐对象几何/运动统计，仅重新执行筛选与预览生成，以加快反复调整筛选条件的速度。若更改帧率、微米/像素、掩膜路径或目录内掩膜文件集合，将自动进行完整重算。加载新视频或图像序列时会清空该缓存。</p>
+                    <p class="lang-en">In the same session, after a <strong>successful</strong> full analysis, clicking <b>Apply Filter</b> again reuses loaded masks and per-object geometry/kinematics when the mask folder (same <code>frame_*.png</code> set), <b>FPS</b>, and <b>μm/pixel</b> are unchanged—only criteria and preview are recomputed. Changing FPS, μm/pixel, the mask path, or the set of mask files triggers a full reanalysis. Loading a new video or image sequence clears this cache.</p>
+                </div>
+
                 <h3 class="lang-cn" id="section-7-3">7.3 筛选条件详解</h3>
                 <h3 class="lang-en" id="section-7-3">7.3 Filter Conditions</h3>
                 <p class="lang-cn">可以设置六种不同的筛选条件：</p>
@@ -1861,7 +1868,7 @@
 
             <!-- 页脚 -->
             <div class="footer">
-                <p>Micro Tracker v2.9.0 | Copyright © 2026 LUCIEN | 2026-02-06
+                <p>Micro Tracker v2.9.1 | Copyright © 2026 LUCIEN | 2026-03-24</p>
                 <p class="lang-cn">基于 SAM2 (Segment Anything Model 2) 构建</p>
                 <p class="lang-en">Built on SAM2 (Segment Anything Model 2)</p>
             </div>

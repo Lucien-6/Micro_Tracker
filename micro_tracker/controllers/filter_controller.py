@@ -9,7 +9,13 @@ import numpy as np
 from pathlib import Path
 
 class FilterController:
-    """筛选控制器，负责管理筛选过滤相关功能"""
+    """Filter tab controller: criteria, apply pipeline, export, and mask-analysis cache.
+
+    After a successful full run, raw masks plus per-object geometry/kinematics may be reused
+    on the next Apply if the normalized mask directory, fps, μm/pixel, and sorted frame_*.png
+    name list are unchanged. Any change to fps or μm/pixel (or folder / file set) forces a full
+    reload and recomputation. Cache is cleared in reset_filter_state().
+    """
     
     def __init__(self, main_window):
         """
@@ -19,6 +25,19 @@ class FilterController:
             main_window: 主窗口引用
         """
         self.main_window = main_window
+        # Cache hit only when mask set, fps, and um/pixel match prior successful full analysis;
+        # any change to fps or um_per_pixel forces full reload + per-object geometry/kinematics.
+        self._mask_analysis_cache = None
+    
+    @staticmethod
+    def _mask_fingerprint(mask_dir):
+        """Sorted tuple of frame_*.png basenames; combined with dir/fps/um_per_pixel for cache key."""
+        names = sorted(
+            f
+            for f in os.listdir(mask_dir)
+            if f.endswith(".png") and f.startswith("frame_")
+        )
+        return tuple(names)
     
     def try_install_pandas(self):
         """
@@ -62,7 +81,7 @@ class FilterController:
             return False
     
     def apply_mask_filter(self):
-        """应用掩膜筛选"""
+        """Run mask filtering; may skip disk load + geometry/kinematics when cache hits (see class doc)."""
         # 获取掩膜目录
         mask_dir = self.main_window.filter_mask_dir_edit.text()
         if not mask_dir or not os.path.exists(mask_dir):
@@ -185,8 +204,33 @@ class FilterController:
         else:
             self.filter_log_message("未启用任何筛选条件，将保留所有对象", "warning")
         
+        mask_dir_norm = os.path.normpath(os.path.abspath(mask_dir))
+        fingerprint = self._mask_fingerprint(mask_dir)
+        precomputed = None
+        cac = self._mask_analysis_cache
+        # object_data depends on um_per_pixel (areas, positions, distances) and fps (time, velocities)
+        if (
+            cac is not None
+            and cac.get("mask_dir") == mask_dir_norm
+            and cac.get("fps") == fps
+            and cac.get("um_per_pixel") == um_per_pixel
+            and cac.get("fingerprint") == fingerprint
+        ):
+            precomputed = {
+                "masks_data": cac["masks_data"],
+                "object_ids": cac["object_ids"],
+                "object_data": cac["object_data"],
+                "mask_filenames": cac["mask_filenames"],
+            }
+            self.filter_log_message(
+                "掩膜集与帧率、像素比例未变，复用上次分析结果（跳过磁盘加载与几何/运动统计）。",
+                "success",
+            )
+        
         # 创建并启动筛选线程
-        self.main_window.filter_thread = self.main_window.FilterMaskThread(mask_dir, fps, um_per_pixel, filter_params)
+        self.main_window.filter_thread = self.main_window.FilterMaskThread(
+            mask_dir, fps, um_per_pixel, filter_params, precomputed=precomputed
+        )
         self.main_window.filter_thread.progress_update.connect(self.update_filter_progress)
         self.main_window.filter_thread.progress_percent.connect(self.update_filter_progress_bar)
         self.main_window.filter_thread.filter_finished.connect(self.filter_processing_done)
@@ -287,6 +331,20 @@ class FilterController:
         
         # 更新日志
         if success:
+            thr = self.main_window.filter_thread
+            # Full analysis path only: persist snapshot for reuse (precomputed runs set snap to None).
+            snap = getattr(thr, "_analysis_cache_for_controller", None)
+            if snap is not None:
+                self._mask_analysis_cache = {
+                    "mask_dir": os.path.normpath(os.path.abspath(thr.masks_dir)),
+                    "fps": thr.fps,
+                    "um_per_pixel": thr.um_per_pixel,
+                    "fingerprint": snap["mask_filenames"],
+                    "masks_data": snap["masks_data"],
+                    "object_ids": snap["object_ids"],
+                    "object_data": snap["object_data"],
+                    "mask_filenames": snap["mask_filenames"],
+                }
             self.filter_log_message("====== 筛选完成 ======", "highlight")
             self.filter_log_message(message, "success")
             
@@ -743,7 +801,7 @@ class FilterController:
         
         Notes:
             - 停止运行中的筛选线程和视频播放线程
-            - 清空所有筛选数据缓存
+            - 清空所有筛选数据缓存（含掩膜分析缓存 _mask_analysis_cache）
             - 重置UI状态到初始状态
             - 静默清理，不显示日志消息
         """
@@ -797,4 +855,7 @@ class FilterController:
         self.main_window.save_filter_btn.setEnabled(False)
         
         # 日志区域
-        self.main_window.filter_log_text.clear() 
+        self.main_window.filter_log_text.clear()
+        
+        # Drop mask load / geometry cache so a new video or session cannot reuse stale analysis
+        self._mask_analysis_cache = None

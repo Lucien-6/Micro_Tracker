@@ -7,6 +7,9 @@ Micro Tracker - 显微视频目标分割和追踪工具
 
 基于SAM2 (Segment Anything Model 2)的显微视频目标分割和追踪工具。
 
+Version: 2.9.1
+Release date: 2026-03-24
+
 作者: Lucien
 版权所有 © 2026 Lucien. 保留所有权利。
 """

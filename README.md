@@ -15,7 +15,7 @@
 </div>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-2.9.1-brightgreen.svg" alt="Version 2.9.1">
+  <img src="https://img.shields.io/badge/Version-2.9.2-brightgreen.svg" alt="Version 2.9.2">
   <img src="https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white" alt="Python 3.10+">
   <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License: Apache 2.0">
   <img src="https://img.shields.io/badge/PyQt5-5.15%2B-green.svg" alt="PyQt5 5.15+">
@@ -98,7 +98,7 @@ Micro_Tracker is a powerful microscopy video analysis tool based on the SAM2 mod
   - Mixed prompt handling (box + points) follows SAM2 official implementation with single API call
   - Refinement mode enforces point prompts only (UI auto-constraints per SAM2 best practices)
   - Ensures optimal refinement quality and temporal consistency
-- **📋 Annotation Management**: Comprehensive annotation management panel with frame list, quick jump, delete, and import functionality (JSON format). Annotations are automatically saved when processing starts.
+- **📋 Annotation Management**: Comprehensive annotation management panel with frame list, quick jump, delete, and import functionality (JSON format). Annotations are automatically saved when processing starts. Deleting a frame cascades removal of orphan point prompts when an object's last bounding box is removed; import validates that every object has at least one bounding box.
 - **💾 Auto-Save Annotations**: Annotations are automatically saved to the Results folder when you start processing, ensuring your work is always preserved without manual intervention.
 - **🔍 Image Zoom & Pan**: Interactive canvas controls for detailed inspection:
   - Mouse wheel zoom with Ctrl (100%-1000%, centered on cursor position)
@@ -452,7 +452,7 @@ Micro_Tracker 是一个功能强大的基于 SAM2 模型的显微镜视频分析
   - 混合提示处理（box + points）遵循 SAM2 官方实现方式，单次 API 调用
   - 修正模式强制使用点击提示（UI 自动约束符合 SAM2 最佳实践）
   - 确保最优的 refinement 质量和时序一致性
-- **📋 标注管理功能**：完善的标注管理面板，支持帧列表查看、快速跳转、删除和导入（JSON 格式）。开始处理时自动保存标注数据。
+- **📋 标注管理功能**：完善的标注管理面板，支持帧列表查看、快速跳转、删除和导入（JSON 格式）。开始处理时自动保存标注数据。删除帧时若移除某对象最后一处边界框，将级联删除其在所有帧的点提示；导入时校验每个对象至少有一处边界框。
 - **💾 标注自动保存**：点击"开始处理"时，标注数据会自动保存到 Results 文件夹，无需手动操作，确保数据安全。
 - **🔍 图像缩放与拖拽**：交互式画布控制，便于细节检查：
   - Ctrl+鼠标滚轮缩放（100%-1000%，以鼠标位置为中心）

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Micro Tracker 使用指南 / User Guide v2.9.1</title>
+    <title>Micro Tracker 使用指南 / User Guide v2.9.2</title>
     <style>
         /* ===== 全局样式重置和基础设置 ===== */
         :root {
@@ -527,7 +527,7 @@
             <h1>
                 <span class="lang-cn">Micro Tracker 使用指南</span>
                 <span class="lang-en">Micro Tracker User Guide</span>
-                <span class="version">v2.9.1</span>
+                <span class="version">v2.9.2</span>
             </h1>
         </div>
         <div class="header-controls">
@@ -652,10 +652,10 @@
                     <p class="lang-en"><b>Author:</b> LUCIEN</p>
                     <p class="lang-cn"><b>邮箱：</b>lucien-6@qq.com</p>
                     <p class="lang-en"><b>Email:</b> lucien-6@qq.com</p>
-                    <p class="lang-cn"><b>版本：</b>2.9.1</p>
-                    <p class="lang-en"><b>Version:</b> 2.9.1</p>
-                    <p class="lang-cn"><b>发布日期：</b>2026-03-24</p>
-                    <p class="lang-en"><b>Release Date:</b> 2026-03-24</p>
+                    <p class="lang-cn"><b>版本：</b>2.9.2</p>
+                    <p class="lang-en"><b>Version:</b> 2.9.2</p>
+                    <p class="lang-cn"><b>发布日期：</b>2026-05-26</p>
+                    <p class="lang-en"><b>Release Date:</b> 2026-05-26</p>
                     <p class="lang-cn"><b>版权：</b>Copyright © 2026 LUCIEN. 保留所有权利。</p>
                     <p class="lang-en"><b>Copyright:</b> Copyright © 2026 LUCIEN. All rights reserved.</p>
                 </div>
@@ -1028,7 +1028,7 @@
                         </ul>
                     </li>
                     <li><b>"跳转"按钮：</b>快速切换到指定标注帧（表格中的按钮）</li>
-                    <li><b>"删除"按钮：</b>移除单帧的所有标注（表格中的按钮，不可撤销）</li>
+                    <li><b>"删除"按钮：</b>移除单帧的所有标注（表格中的按钮，不可撤销）。若该帧包含某对象的<b>最后一处边界框</b>，将同步删除该对象在<b>所有帧</b>的点提示</li>
                     <li><b>"清空所有"按钮：</b>移除所有帧的标注（右侧按钮，需确认，不可撤销）</li>
                 </ul>
                 <ul class="lang-en">
@@ -1043,7 +1043,7 @@
                         </ul>
                     </li>
                     <li><b>Jump:</b> Go to the specific annotated frame.</li>
-                    <li><b>Delete:</b> Remove all annotations for a single frame (Irreversible).</li>
+                    <li><b>Delete:</b> Remove all annotations for a single frame (Irreversible). If the frame contains an object's <b>last bounding box</b>, all point prompts for that object on <b>all frames</b> are also removed.</li>
                     <li><b>Clear All:</b> Remove annotations for ALL frames (Requires confirmation).</li>
                 </ul>
 
@@ -1061,7 +1061,8 @@
                     <li><b>导入标注：</b>从JSON文件恢复标注（右侧"导入标注"按钮）
                         <ul>
                             <li>支持新旧格式自动识别</li>
-                            <li>导入前会进行数据验证</li>
+                            <li>导入前会进行数据验证（Refinement 格式要求每个对象至少在一帧上有边界框；有点提示时必须提供等长 labels）</li>
+                            <li>Legacy 导入会完全覆盖当前边界框与点提示数据</li>
                             <li>可用于恢复之前的标注或在不同会话间迁移</li>
                             <li>⚠️ 导入会覆盖当前所有标注</li>
                         </ul>
@@ -1079,7 +1080,8 @@
                     <li><b>Import:</b> Load from JSON (Right-side "Import" button).
                         <ul>
                             <li>Supports legacy formats.</li>
-                            <li>Validates data before loading.</li>
+                            <li>Validates data before loading (Refinement: each object needs at least one bounding box; point prompts require matching labels).</li>
+                            <li>Legacy import fully replaces current box and point annotation data.</li>
                             <li>Useful for restoring sessions.</li>
                             <li>⚠️ Import overwrites ALL current annotations.</li>
                         </ul>
@@ -1132,6 +1134,9 @@
                         <li>切换帧前记得保存临时点击（按<kbd>A</kbd>键）</li>
                         <li>未保存的临时点击切换帧后会丢失（有警告提示）</li>
                         <li>标注信息在点击"开始处理"时自动保存</li>
+                        <li>每个对象至少需在一帧上提供边界框（新对象模式创建；修正模式仅添加点提示）</li>
+                        <li>删除某帧时若移除对象最后一处边界框，其在所有帧的点提示会被一并删除</li>
+                        <li>开始处理前会校验标注合规性（无有效标注或不合规对象将被拦截）</li>
                         <li>导入标注会覆盖当前所有标注</li>
                         <li>删除操作不可撤销，请谨慎操作</li>
                     </ul>
@@ -1139,6 +1144,9 @@
                         <li>Save temporary clicks (<kbd>A</kbd>) before switching frames.</li>
                         <li>Unsaved clicks are lost upon frame switch (warning provided).</li>
                         <li>Annotations save automatically on "Start Processing".</li>
+                        <li>Each object must have at least one bounding box on some frame (created in New Object mode; Refine mode adds points only).</li>
+                        <li>Deleting a frame that removes an object's last bounding box also removes all its point prompts on every frame.</li>
+                        <li>Annotation compliance is checked before processing starts.</li>
                         <li>Importing overwrites current annotations.</li>
                         <li>Deletion is irreversible.</li>
                     </ul>
@@ -1868,7 +1876,7 @@
 
             <!-- 页脚 -->
             <div class="footer">
-                <p>Micro Tracker v2.9.1 | Copyright © 2026 LUCIEN | 2026-03-24</p>
+                <p>Micro Tracker v2.9.2 | Copyright © 2026 LUCIEN | 2026-05-26</p>
                 <p class="lang-cn">基于 SAM2 (Segment Anything Model 2) 构建</p>
                 <p class="lang-en">Built on SAM2 (Segment Anything Model 2)</p>
             </div>

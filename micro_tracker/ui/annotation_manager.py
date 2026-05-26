@@ -55,6 +55,10 @@ def validate_annotation_data(import_data, video_width=None, video_height=None):
     if format_type not in ["refinement", "legacy"]:
         return False, f"不支持的格式类型: {format_type}"
     
+    is_refinement_format = format_type == "refinement" or "refinement" in import_data.get("version", "")
+    obj_ids_with_bbox = set()
+    all_refinement_obj_ids = set()
+    
     # 4. 逐帧验证
     for frame_idx_str, frame_data in annotations.items():
         # 验证帧索引
@@ -66,7 +70,7 @@ def validate_annotation_data(import_data, video_width=None, video_height=None):
             return False, f"无效的帧索引: {frame_idx_str}（必须为整数）"
         
         # 根据格式类型验证frame_data
-        if format_type == "refinement" or "refinement" in import_data.get("version", ""):
+        if is_refinement_format:
             # 新格式: {obj_id: {"box": [...], "points": [...], "labels": [...]}}
             if not isinstance(frame_data, dict):
                 return False, f"第 {frame_idx} 帧的数据格式错误（必须为字典）"
@@ -134,6 +138,26 @@ def validate_annotation_data(import_data, video_width=None, video_height=None):
                         for i, label in enumerate(labels):
                             if label not in [0, 1]:
                                 return False, f"第 {frame_idx} 帧对象 {obj_id}：第 {i+1} 个标签值无效（必须为0或1）"
+                
+                all_refinement_obj_ids.add(obj_id)
+                has_valid_box = (
+                    "box" in prompts
+                    and prompts["box"] is not None
+                    and isinstance(prompts["box"], (list, tuple))
+                    and len(prompts["box"]) == 4
+                )
+                has_points = bool(prompts.get("points"))
+                if has_points:
+                    if "labels" not in prompts or not prompts["labels"]:
+                        return False, (
+                            f"第 {frame_idx} 帧对象 {obj_id}：提供点提示时必须包含等长的 labels 列表（值为 0 或 1）"
+                        )
+                if not has_valid_box and not has_points:
+                    return False, (
+                        f"第 {frame_idx} 帧对象 {obj_id}：至少需提供边界框或点提示之一"
+                    )
+                if has_valid_box:
+                    obj_ids_with_bbox.add(obj_id)
         
         else:
             # 旧格式: [[x1, y1, x2, y2, obj_id], ...]
@@ -161,6 +185,15 @@ def validate_annotation_data(import_data, video_width=None, video_height=None):
                 except (ValueError, TypeError) as e:
                     return False, f"第 {frame_idx} 帧第 {i+1} 个边界框数据类型错误"
     
+    # 4b. Refinement 格式：每个对象全局至少一处有效边界框
+    if is_refinement_format:
+        for obj_id in all_refinement_obj_ids:
+            if obj_id not in obj_ids_with_bbox:
+                return False, (
+                    f"对象 {obj_id} 没有任何边界框提示，不符合项目要求"
+                    f"（每个对象至少需在一帧上提供边界框）"
+                )
+    
     # 5. 验证object_registry（如果存在）
     if "object_registry" in import_data:
         registry = import_data["object_registry"]
@@ -183,6 +216,80 @@ def validate_annotation_data(import_data, video_width=None, video_height=None):
             for field in required_fields:
                 if field not in obj_info:
                     return False, f"对象 {obj_id} 的注册信息缺少 '{field}' 字段"
+        
+        if is_refinement_format:
+            for obj_id_str in registry.keys():
+                obj_id = int(obj_id_str)
+                if obj_id not in obj_ids_with_bbox:
+                    return False, (
+                        f"对象注册表中的对象 {obj_id} 在标注数据中没有任何边界框"
+                    )
+    
+    return True, "验证通过"
+
+
+def _rebuild_object_registry_from_bboxes(overlay):
+    """Rebuild object_registry and next_available_id from bboxes_per_frame."""
+    overlay.object_registry.clear()
+    for frame_idx, bbox_list in overlay.bboxes_per_frame.items():
+        for bbox in bbox_list:
+            obj_id = bbox[4]
+            overlay.register_object(obj_id, frame_idx)
+    if overlay.object_registry:
+        overlay.next_available_id = max(overlay.object_registry.keys()) + 1
+    else:
+        overlay.next_available_id = 0
+
+
+def validate_runtime_refinement_annotations(refinement_data):
+    """
+    Validate in-memory refinement annotations before processing.
+    
+    Returns:
+        tuple: (bool, str) - (是否有效, 错误信息)
+    """
+    if not refinement_data:
+        return False, "没有标注数据"
+    
+    all_obj_ids = set()
+    obj_ids_with_bbox = set()
+    
+    for frame_idx, frame_data in refinement_data.items():
+        for obj_id, prompts in frame_data.items():
+            all_obj_ids.add(obj_id)
+            
+            has_valid_box = (
+                isinstance(prompts, dict)
+                and prompts.get("box") is not None
+                and isinstance(prompts.get("box"), (list, tuple))
+                and len(prompts["box"]) == 4
+            )
+            if has_valid_box:
+                obj_ids_with_bbox.add(obj_id)
+            
+            points = prompts.get("points") if isinstance(prompts, dict) else None
+            if points:
+                labels = prompts.get("labels")
+                if not labels:
+                    return False, (
+                        f"第 {frame_idx} 帧对象 {obj_id}：提供点提示时必须包含等长的 labels 列表（值为 0 或 1）"
+                    )
+                if not isinstance(labels, list) or len(labels) != len(points):
+                    return False, (
+                        f"第 {frame_idx} 帧对象 {obj_id}：提供点提示时必须包含等长的 labels 列表（值为 0 或 1）"
+                    )
+                for i, label in enumerate(labels):
+                    if label not in [0, 1]:
+                        return False, (
+                            f"第 {frame_idx} 帧对象 {obj_id}：第 {i+1} 个标签值无效（必须为0或1）"
+                        )
+    
+    for obj_id in all_obj_ids:
+        if obj_id not in obj_ids_with_bbox:
+            return False, (
+                f"对象 {obj_id} 没有任何边界框提示，无法开始处理"
+                f"（每个对象至少需在一帧上提供边界框）"
+            )
     
     return True, "验证通过"
 
@@ -417,7 +524,7 @@ class AnnotationManagerWidget(QWidget):
             jump_btn.setMinimumHeight(22)
             jump_btn.clicked.connect(lambda checked, f=frame_idx: self.jump_to_frame(f))
             
-            delete_btn = RippleButton("删除", "删除该帧的所有标注（不可撤销）")
+            delete_btn = RippleButton("删除", "删除该帧的所有标注；若含某对象最后一处边界框，将同步删除其全部点提示（不可撤销）")
             delete_btn.setMaximumWidth(50)
             delete_btn.setMinimumHeight(22)
             delete_btn.setStyleSheet("""
@@ -447,13 +554,24 @@ class AnnotationManagerWidget(QWidget):
         reply = QMessageBox.question(
             self,
             "确认删除",
-            f"确定要删除第 {frame_idx} 帧的所有标注吗？",
+            f"确定要删除第 {frame_idx} 帧的所有标注吗？\n"
+            f"若该帧包含某对象的最后一处边界框，将同步删除该对象在所有帧的点提示。",
             QMessageBox.Yes | QMessageBox.No,
             QMessageBox.No
         )
         
         if reply == QMessageBox.Yes:
             overlay = self.main_window.video_label.overlay_layer
+            
+            # Snapshot obj_ids on this frame before deletion
+            obj_ids_on_frame = set()
+            obj_ids_with_bbox_on_frame = set()
+            if frame_idx in overlay.bboxes_per_frame:
+                for bbox in overlay.bboxes_per_frame[frame_idx]:
+                    obj_ids_on_frame.add(bbox[4])
+                    obj_ids_with_bbox_on_frame.add(bbox[4])
+            if frame_idx in overlay.annotations_per_frame:
+                obj_ids_on_frame.update(overlay.annotations_per_frame[frame_idx].keys())
             
             # 删除该帧的边界框标注
             if frame_idx in overlay.bboxes_per_frame:
@@ -475,6 +593,30 @@ class AnnotationManagerWidget(QWidget):
             if frame_idx in overlay.annotations_per_frame:
                 del overlay.annotations_per_frame[frame_idx]
             
+            # 若对象已无任意帧的边界框，级联删除其在所有帧的点提示
+            obj_ids_cascaded = set()
+            for obj_id in obj_ids_with_bbox_on_frame:
+                has_bbox = any(
+                    obj_id == bbox[4]
+                    for bboxes_list in overlay.bboxes_per_frame.values()
+                    for bbox in bboxes_list
+                )
+                if not has_bbox:
+                    obj_ids_cascaded.add(obj_id)
+                    for other_frame_idx in list(overlay.annotations_per_frame.keys()):
+                        frame_data = overlay.annotations_per_frame[other_frame_idx]
+                        if obj_id in frame_data:
+                            del frame_data[obj_id]
+                            if not frame_data:
+                                del overlay.annotations_per_frame[other_frame_idx]
+            
+            # 级联移除的对象：清除临时点击
+            if overlay.current_editing_obj_id in obj_ids_cascaded:
+                overlay.temp_points = []
+                overlay.temp_labels = []
+                overlay.temp_points_frame_idx = None
+                overlay.current_editing_obj_id = None
+            
             # 如果是当前帧，清空显示并同步
             if frame_idx == overlay.current_frame_idx:
                 overlay.bboxes = []
@@ -484,15 +626,32 @@ class AnnotationManagerWidget(QWidget):
                     overlay.temp_labels = []
                     overlay.temp_points_frame_idx = None
                     overlay.current_editing_obj_id = None
-                
-                # === 清除该帧所有对象的预览masks ===
-                if frame_idx in overlay.bboxes_per_frame or bboxes:
-                    for bbox in bboxes:
-                        obj_id = bbox[4]
-                        if obj_id in overlay.preview_masks:
-                            del overlay.preview_masks[obj_id]
-                
+            
+            # 清除已无标注对象的轨迹、特征和预览 masks
+            for obj_id in obj_ids_cascaded:
+                if obj_id in overlay.tracks:
+                    del overlay.tracks[obj_id]
+                if obj_id in overlay.object_features:
+                    del overlay.object_features[obj_id]
+                if obj_id in overlay.preview_masks:
+                    del overlay.preview_masks[obj_id]
+            if frame_idx == overlay.current_frame_idx:
+                for obj_id in obj_ids_on_frame:
+                    if obj_id in overlay.preview_masks:
+                        del overlay.preview_masks[obj_id]
+            
+            if frame_idx == overlay.current_frame_idx or obj_ids_cascaded:
                 overlay.update()
+            
+            if obj_ids_cascaded:
+                ids_str = ", ".join(str(i) for i in sorted(obj_ids_cascaded))
+                self.main_window.log_message(
+                    f"对象 {ids_str} 已无边界框，已同步删除其在所有帧的点提示",
+                    "warning"
+                )
+                if hasattr(self.main_window, 'setup_tab') and self.main_window.setup_tab:
+                    if hasattr(self.main_window.setup_tab, 'update_object_selector'):
+                        self.main_window.setup_tab.update_object_selector()
             
             self.main_window.log_message(f"已删除第 {frame_idx} 帧的所有标注", "warning")
             self.refresh_table()
@@ -501,7 +660,11 @@ class AnnotationManagerWidget(QWidget):
     def clear_all_annotations(self):
         """清空所有标注"""
         overlay = self.main_window.video_label.overlay_layer
-        annotations = overlay.get_all_annotations()
+        
+        if hasattr(overlay, 'get_refinement_annotations'):
+            annotations = overlay.get_refinement_annotations()
+        else:
+            annotations = overlay.get_all_annotations()
         
         if not annotations:
             QMessageBox.information(self, "提示", "没有标注需要清空")
@@ -533,6 +696,8 @@ class AnnotationManagerWidget(QWidget):
             
             # === 清除所有预览masks ===
             overlay.preview_masks.clear()
+            overlay.tracks.clear()
+            overlay.object_features.clear()
             
             # 强制刷新当前帧显示（确保点击标注也被清除）
             current_frame = overlay.current_frame_idx
@@ -541,6 +706,10 @@ class AnnotationManagerWidget(QWidget):
             self.main_window.log_message("已清空所有标注（包括边界框和点击标注）", "warning")
             self.refresh_table()
             self.main_window._update_annotation_status_display()
+            
+            if hasattr(self.main_window, 'setup_tab') and self.main_window.setup_tab:
+                if hasattr(self.main_window.setup_tab, 'update_object_selector'):
+                    self.main_window.setup_tab.update_object_selector()
     
     def auto_save_annotations(self, file_path):
         """
@@ -641,6 +810,9 @@ class AnnotationManagerWidget(QWidget):
             # 导入
             overlay = self.main_window.video_label.overlay_layer
             
+            overlay.tracks.clear()
+            overlay.object_features.clear()
+            
             # 检测格式
             format_type = import_data.get("format", "legacy")
             version = import_data.get("version", "")
@@ -669,6 +841,7 @@ class AnnotationManagerWidget(QWidget):
                 overlay.bboxes_per_frame = bbox_data
             else:
                 # 旧格式
+                overlay.annotations_per_frame.clear()
                 annotations = {int(k): v for k, v in import_data["annotations"].items()}
                 overlay.bboxes_per_frame = annotations
             
@@ -680,6 +853,8 @@ class AnnotationManagerWidget(QWidget):
                 # 更新next_available_id
                 if registry:
                     overlay.next_available_id = max(registry.keys()) + 1
+            else:
+                _rebuild_object_registry_from_bboxes(overlay)
             
             # === 清空所有临时状态，避免与导入数据混淆 ===
             overlay.temp_points = []
@@ -694,6 +869,10 @@ class AnnotationManagerWidget(QWidget):
             overlay.set_current_frame(overlay.current_frame_idx)
             self.refresh_table()
             self.main_window._update_annotation_status_display()
+            
+            if hasattr(self.main_window, 'setup_tab') and self.main_window.setup_tab:
+                if hasattr(self.main_window.setup_tab, 'update_object_selector'):
+                    self.main_window.setup_tab.update_object_selector()
             
             # Restore preview masks for the current frame after import
             self.main_window._restore_preview_for_current_frame()

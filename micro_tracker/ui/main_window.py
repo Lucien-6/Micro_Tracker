@@ -1362,14 +1362,11 @@ class MainWindow(QMainWindow):
         # 更新已标注帧数标签（如果存在）
         if hasattr(self, 'annotated_frames_label'):
             annotated_frames = self.video_label.get_annotated_frame_indices()
-            annotations_dict = self.video_label.get_multi_frame_annotations()
             
-            # 统计唯一对象数量（而非标注总数）
             unique_obj_ids = set()
-            for bboxes in annotations_dict.values():
-                for bbox in bboxes:
-                    if len(bbox) >= 5:  # 确保bbox包含obj_id
-                        unique_obj_ids.add(bbox[4])
+            refinement_data = self.video_label.get_refinement_annotations()
+            for frame_data in refinement_data.values():
+                unique_obj_ids.update(frame_data.keys())
             total_objects = len(unique_obj_ids)
             
             self.annotated_frames_label.setText(

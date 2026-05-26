@@ -4,6 +4,56 @@
 
 ---
 
+## [v2.9.2] - 2026-05-26
+
+### 🐛 修复 (Bug Fixes)
+
+#### 修正模式下删除点提示导致程序崩溃
+
+**问题描述：**
+在「修正对象」模式下，通过提示管理栏删除某帧已保存的点提示时，程序抛出 `UnboundLocalError` 并卡退。
+
+**修复内容：**
+- 重构 `delete_frame_annotation()`，在删除前快照对象 ID，消除对未初始化变量的引用
+- 正确清理当前帧预览 mask 与 UI 状态
+
+#### 标注导入与清空逻辑不一致
+
+**问题描述：**
+- Legacy 格式导入未清空 `annotations_per_frame`，可能导致旧点提示残留
+- JSON 无 `object_registry` 时对象选择器显示幽灵对象
+- 「清空所有」无法识别仅有点提示、无边界框的帧
+
+**修复内容：**
+- Legacy 导入前清空 `annotations_per_frame`；导入时统一清理 `tracks` / `object_features`
+- 无 registry 时从 `bboxes_per_frame` 自动重建 `object_registry`
+- 「清空所有」改用 `get_refinement_annotations()` 检测是否有标注
+
+### ✨ 优化 (Improvements)
+
+#### 标注数据一致性与防御性校验
+
+**行为说明：**
+
+- **边界框优先原则**：每个对象至少需在一帧上提供边界框；删除某帧时若移除对象最后一处边界框，级联删除该对象在所有帧的点提示
+- **导入校验（Refinement）**：每个对象全局至少一处有效 `box`；有 `points` 时必须提供等长 `labels`（0/1）
+- **处理前校验**：开始处理前调用 `validate_runtime_refinement_annotations()`，拦截不合规内存数据
+- **状态栏**：对象计数与提示管理栏一致（基于 `get_refinement_annotations()`）
+- **交互**：删帧确认框与删除按钮 tooltip 说明级联删除后果；清空/导入后刷新对象选择器
+
+**涉及文件：**
+
+- `micro_tracker/ui/annotation_manager.py` — 删除、导入、校验、`clear_all`
+- `micro_tracker/controllers/processing_controller.py` — 处理前运行时校验
+- `micro_tracker/ui/main_window.py` — 状态栏对象计数
+
+### 🔄 向后兼容性
+
+- ✅ GUI 正常标注流程完全兼容
+- ⚠️ 不合规 Refinement JSON（无边界框对象、有点无 labels）将无法导入；需在至少一帧为每个对象补全 `box`
+
+---
+
 ## [v2.9.1] - 2026-03-24
 
 ### ✨ 优化 (Improvements)

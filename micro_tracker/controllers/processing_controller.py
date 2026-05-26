@@ -5,6 +5,8 @@ from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QMutex
 
+from micro_tracker.ui.annotation_manager import validate_runtime_refinement_annotations
+
 class ProcessingController:
     """处理控制器，负责管理视频处理相关功能"""
     
@@ -63,9 +65,10 @@ class ProcessingController:
         # === Phase 2: 获取refinement格式标注数据（包含边界框和点击）===
         multi_frame_annotations = self.main_window.video_label.get_refinement_annotations()
         
-        if not multi_frame_annotations:
-            self.main_window.log_message("错误: 未标注任何边界框！", "error")
-            QMessageBox.warning(self.main_window, "警告", "请至少在一帧上绘制一个边界框！")
+        is_valid, error_msg = validate_runtime_refinement_annotations(multi_frame_annotations)
+        if not is_valid:
+            self.main_window.log_message(f"错误: {error_msg}", "error")
+            QMessageBox.warning(self.main_window, "警告", error_msg)
             return
         
         # 准备处理参数
